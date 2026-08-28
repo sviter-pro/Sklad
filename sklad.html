@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes" />
-    <title>Интернет-магазин</title>
+    <title>Интернет-склад</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
@@ -252,6 +253,8 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
+            height: 100%;
+            min-height: 380px;
         }
         .product-card:hover {
             transform: translateY(-3px);
@@ -264,6 +267,7 @@
             border-radius: 10px;
             background: #f1f5f9;
             margin-bottom: 8px;
+            flex-shrink: 0;
         }
         .product-card .product-img-placeholder {
             width: 100%;
@@ -276,17 +280,21 @@
             font-size: 40px;
             color: #cbd5e1;
             margin-bottom: 8px;
+            flex-shrink: 0;
         }
         .product-card .name {
             font-size: 15px;
             font-weight: 600;
             color: #0f172a;
             margin-bottom: 2px;
-            line-height: 1.2;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            line-height: 1.3;
             overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            min-height: 58px;
+            word-break: break-word;
         }
         .product-card .category {
             font-size: 12px;
@@ -434,6 +442,8 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1;
+            min-width: 0;
         }
         .cart-modal .cart-item .item-img {
             width: 50px;
@@ -441,6 +451,7 @@
             object-fit: cover;
             border-radius: 8px;
             background: #f1f5f9;
+            flex-shrink: 0;
         }
         .cart-modal .cart-item .item-img-placeholder {
             width: 50px;
@@ -452,24 +463,40 @@
             justify-content: center;
             font-size: 24px;
             color: #cbd5e1;
+            flex-shrink: 0;
         }
         .cart-modal .cart-item .item-info {
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
         .cart-modal .cart-item .item-name {
             font-weight: 600;
             color: #0f172a;
             font-size: 14px;
+            word-break: break-word;
         }
         .cart-modal .cart-item .item-details {
             font-size: 11px;
             color: #94a3b8;
+            word-break: break-word;
+        }
+        .cart-modal .cart-item .item-address {
+            font-size: 11px;
+            color: #475569;
+            background: #f8fafc;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 2px;
+            display: inline-block;
+            align-self: flex-start;
+            font-weight: 500;
         }
         .cart-modal .cart-item .item-qty {
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
         }
         .cart-modal .cart-item .item-qty button {
             width: 28px;
@@ -499,12 +526,12 @@
             font-size: 18px;
             margin-left: 8px;
             transition: 0.2s;
+            flex-shrink: 0;
         }
         .cart-modal .cart-item .item-remove:hover {
             transform: scale(1.2);
         }
 
-        /* Форма заказа */
         .order-form {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -659,6 +686,9 @@
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
                 gap: 10px;
             }
+            .product-card {
+                min-height: 340px;
+            }
             .product-card .product-img {
                 height: 100px;
             }
@@ -668,6 +698,8 @@
             }
             .product-card .name {
                 font-size: 13px;
+                min-height: 50px;
+                -webkit-line-clamp: 3;
             }
             .product-card .category,
             .product-card .location {
@@ -707,6 +739,7 @@
                 flex-direction: column;
                 align-items: stretch;
                 padding: 10px;
+                min-height: auto;
             }
             .products-grid.list-view .product-card .product-img {
                 width: 100%;
@@ -734,7 +767,6 @@
             }
         }
 
-        /* Новые стили для статуса и адресного хранения */
         .product-card .status-badge {
             font-size: 11px;
             font-weight: 600;
@@ -762,6 +794,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            word-break: break-word;
         }
         .product-card .address-row svg {
             width: 14px;
@@ -771,6 +804,7 @@
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -924,7 +958,6 @@
         // 4. LOAD DATA
         // ============================================================
         function loadData() {
-            // Загружаем категории
             db.ref(`${SKLAD_REF}/categories`).on('value', snap => {
                 const data = snap.val();
                 categories = [];
@@ -934,14 +967,12 @@
                     });
                 }
                 categoriesLoaded = true;
-                // Если товары уже загружены - обновляем категории
                 if (productsLoaded) {
                     renderCategories();
                 }
                 updateStats();
             });
 
-            // Загружаем товары
             db.ref(`${SKLAD_REF}/products`).on('value', snap => {
                 const data = snap.val();
                 products = [];
@@ -952,7 +983,6 @@
                 }
                 productsLoaded = true;
                 renderProducts();
-                // Если категории уже загружены - обновляем категории с количеством
                 if (categoriesLoaded) {
                     renderCategories();
                 }
@@ -961,12 +991,10 @@
         }
 
         // ============================================================
-        // 5. RENDER CATEGORIES (с количеством товаров)
+        // 5. RENDER CATEGORIES
         // ============================================================
         function renderCategories() {
             const container = document.getElementById('categoriesContainer');
-            
-            // Считаем количество товаров в каждой категории
             const categoryCount = {};
             let totalProducts = 0;
             products.forEach(p => {
@@ -976,10 +1004,7 @@
             });
 
             let html = `<button class="active" data-cat="all" onclick="filterByCategory('all')">📌 Все (${totalProducts})</button>`;
-
-            // Сортируем категории по алфавиту
             const sortedCategories = [...categories].sort((a, b) => a.name.localeCompare(b.name));
-            
             sortedCategories.forEach(c => {
                 const count = categoryCount[c.name] || 0;
                 html += `
@@ -988,17 +1013,14 @@
                         </button>
                     `;
             });
-
             container.innerHTML = html;
-
-            // Обновляем активную категорию
             document.querySelectorAll('.categories button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.cat === currentCategory);
             });
         }
 
         // ============================================================
-        // 6. RENDER PRODUCTS (со статусом и адресом)
+        // 6. RENDER PRODUCTS
         // ============================================================
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
@@ -1006,7 +1028,6 @@
             const location = document.getElementById('locationFilter').value;
 
             let filtered = products;
-
             if (currentCategory !== 'all') {
                 filtered = filtered.filter(p => p.category === currentCategory);
             }
@@ -1077,14 +1098,12 @@
                     imgHtml = `<div class="product-img-placeholder">📦</div>`;
                 }
 
-                // Информация о штрихкоде/артикуле
                 let barcodeInfo = '';
                 if (p.barcode) {
                     const isBarcode = /^[0-9]{13}$/.test(p.barcode) || p.barcode.startsWith('460');
                     barcodeInfo = `<div class="barcode">${isBarcode ? '📊 Штрихкод' : '🔢 Артикул'}: ${p.barcode}</div>`;
                 }
 
-                // Информация о единице измерения
                 let unitInfo = '';
                 if (p.unitType || p.customUnit) {
                     const unit = p.unitType || '';
@@ -1092,12 +1111,10 @@
                     unitInfo = `<div class="unit-info">📏 ${unit}${custom}</div>`;
                 }
 
-                // Статус (новый/б/у)
                 const isUsed = p.condition && (p.condition.toLowerCase() === 'used' || p.condition.toLowerCase() === 'б/у');
                 const statusClass = isUsed ? 'status-used' : 'status-new';
                 const statusText = isUsed ? '♻️ Б/у' : '🆕 Новый';
 
-                // Адресное хранение
                 let addressHtml = '';
                 if (p.storageAddress && p.storageAddress.trim() !== '') {
                     addressHtml = `
@@ -1276,6 +1293,12 @@
                     barcodeText = `${isBarcode ? 'Штрихкод' : 'Артикул'}: ${product.barcode}`;
                 }
 
+                // Адресное хранение в корзине (добавлено явно)
+                let addressText = '';
+                if (product.storageAddress && product.storageAddress.trim() !== '') {
+                    addressText = `📍 ${product.storageAddress}`;
+                }
+
                 html += `
                         <div class="cart-item">
                             <div class="item-left">
@@ -1284,6 +1307,7 @@
                                     <span class="item-name">${product.name}</span>
                                     <span class="item-details">${product.category} ${locIcon} ${product.location || ''}</span>
                                     ${barcodeText ? `<span class="item-details">${barcodeText}</span>` : ''}
+                                    ${addressText ? `<span class="item-address">${addressText}</span>` : ''}
                                 </div>
                             </div>
                             <div style="display:flex;align-items:center;">
