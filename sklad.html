@@ -495,7 +495,7 @@
         .cart-modal .cart-item .item-qty {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             flex-shrink: 0;
         }
         .cart-modal .cart-item .item-qty button {
@@ -512,11 +512,20 @@
         .cart-modal .cart-item .item-qty button:hover {
             background: #f1f5f9;
         }
-        .cart-modal .cart-item .item-qty .qty {
-            font-weight: 600;
-            min-width: 18px;
+        .cart-modal .cart-item .item-qty .qty-input {
+            width: 44px;
+            height: 28px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
             text-align: center;
             font-size: 14px;
+            font-weight: 600;
+            background: white;
+            padding: 0 4px;
+        }
+        .cart-modal .cart-item .item-qty .qty-input:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 1px;
         }
         .cart-modal .cart-item .item-remove {
             background: none;
@@ -1003,7 +1012,8 @@
                 categoryCount[cat] = (categoryCount[cat] || 0) + 1;
             });
 
-            let html = `<button class="active" data-cat="all" onclick="filterByCategory('all')">📌 Все (${totalProducts})</button>`;
+            let html =
+            `<button class="active" data-cat="all" onclick="filterByCategory('all')">📌 Все (${totalProducts})</button>`;
             const sortedCategories = [...categories].sort((a, b) => a.name.localeCompare(b.name));
             sortedCategories.forEach(c => {
                 const count = categoryCount[c.name] || 0;
@@ -1202,6 +1212,27 @@
             }
         }
 
+        function updateCartItemQty(productId, newQty) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            // Ограничиваем количество доступным на складе
+            const maxQty = product.qty || 0;
+            let qty = parseInt(newQty) || 0;
+            if (qty < 0) qty = 0;
+            if (qty > maxQty) qty = maxQty;
+
+            if (qty === 0) {
+                delete cart[productId];
+            } else {
+                cart[productId] = qty;
+            }
+
+            updateCartBadge();
+            renderCart();
+            renderProducts();
+        }
+
         function clearCart() {
             if (Object.keys(cart).length === 0) return;
             if (confirm('Очистить корзину?')) {
@@ -1293,11 +1324,12 @@
                     barcodeText = `${isBarcode ? 'Штрихкод' : 'Артикул'}: ${product.barcode}`;
                 }
 
-                // Адресное хранение в корзине (добавлено явно)
                 let addressText = '';
                 if (product.storageAddress && product.storageAddress.trim() !== '') {
                     addressText = `📍 ${product.storageAddress}`;
                 }
+
+                const maxQty = product.qty || 0;
 
                 html += `
                         <div class="cart-item">
@@ -1313,7 +1345,12 @@
                             <div style="display:flex;align-items:center;">
                                 <div class="item-qty">
                                     <button onclick="removeFromCart('${id}')">−</button>
-                                    <span class="qty">${qty}</span>
+                                    <input type="number" class="qty-input" 
+                                           value="${qty}" 
+                                           min="0" 
+                                           max="${maxQty}" 
+                                           onchange="updateCartItemQty('${id}', this.value)"
+                                           onfocus="this.select()" />
                                     <button onclick="addToCart('${id}')">+</button>
                                 </div>
                                 <button class="item-remove" onclick="removeAllFromCart('${id}')">✕</button>
