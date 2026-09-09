@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -76,21 +75,117 @@
             padding: 16px 16px;
         }
 
-        .back-btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background: #e2e8f0;
-            color: #1e293b;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
+        /* Блок категорий с кнопкой сворачивания */
+        .categories-wrapper {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .categories-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
             cursor: pointer;
-            font-size: 14px;
-            margin-bottom: 12px;
+            user-select: none;
             transition: 0.2s;
         }
-        .back-btn:hover {
-            background: #cbd5e1;
+        .categories-header:hover {
+            background: #f8fafc;
+        }
+        .categories-header h4 {
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 600;
+        }
+        .categories-header .toggle-icon {
+            font-size: 14px;
+            color: #94a3b8;
+            transition: transform 0.3s ease;
+        }
+        .categories-header .toggle-icon.open {
+            transform: rotate(180deg);
+        }
+        .categories-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            padding: 0 16px;
+        }
+        .categories-body.open {
+            max-height: 800px;
+            padding: 0 16px 16px 16px;
+        }
+        .categories {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .categories button {
+            padding: 6px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: 0.2s;
+            color: #64748b;
+            white-space: nowrap;
+        }
+        .categories button:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .categories button.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        /* Поиск с крестиком */
+        .search-wrapper {
+            flex: 1;
+            position: relative;
+            min-width: 160px;
+            display: flex;
+            align-items: center;
+        }
+        .search-wrapper input {
+            width: 100%;
+            padding: 8px 36px 8px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: 0.2s;
+            background: white;
+        }
+        .search-wrapper input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .search-wrapper .clear-btn {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            display: none;
+            border-radius: 50%;
+            transition: 0.2s;
+            line-height: 1;
+        }
+        .search-wrapper .clear-btn:hover {
+            color: #ef4444;
+            background: #f1f5f9;
+        }
+        .search-wrapper .clear-btn.visible {
+            display: block;
         }
 
         .search-bar {
@@ -98,19 +193,6 @@
             gap: 10px;
             margin-bottom: 16px;
             flex-wrap: wrap;
-        }
-        .search-bar input {
-            flex: 1;
-            padding: 8px 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
-            min-width: 160px;
-            transition: 0.2s;
-        }
-        .search-bar input:focus {
-            outline: none;
-            border-color: #3b82f6;
         }
         .search-bar select {
             padding: 8px 14px;
@@ -160,38 +242,6 @@
             padding: 4px 14px;
             border-radius: 16px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-        }
-
-        .categories {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-            background: white;
-            padding: 12px 16px;
-            border-radius: 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-        .categories button {
-            padding: 6px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 20px;
-            background: white;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: 0.2s;
-            color: #64748b;
-            white-space: nowrap;
-        }
-        .categories button:hover {
-            border-color: #3b82f6;
-            color: #3b82f6;
-        }
-        .categories button.active {
-            border-color: #3b82f6;
-            background: #eff6ff;
-            color: #3b82f6;
         }
 
         .products-grid {
@@ -541,6 +591,57 @@
             transform: scale(1.2);
         }
 
+        /* Поля ввода с крестиком в корзине */
+        .order-form .input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .order-form .input-wrapper input,
+        .order-form .input-wrapper textarea {
+            width: 100%;
+            padding: 6px 30px 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .order-form .input-wrapper textarea {
+            padding-right: 30px;
+            resize: vertical;
+            min-height: 50px;
+        }
+        .order-form .input-wrapper input:focus,
+        .order-form .input-wrapper textarea:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 1px;
+        }
+        .order-form .input-wrapper .clear-input-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 2px 4px;
+            display: none;
+            border-radius: 50%;
+            transition: 0.2s;
+            line-height: 1;
+        }
+        .order-form .input-wrapper .clear-input-btn:hover {
+            color: #ef4444;
+            background: #f1f5f9;
+        }
+        .order-form .input-wrapper .clear-input-btn.visible {
+            display: block;
+        }
+        .order-form .input-wrapper textarea~.clear-input-btn {
+            top: 14px;
+            transform: none;
+        }
+
         .order-form {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -559,24 +660,17 @@
             display: block;
             margin-bottom: 2px;
         }
-        .order-form input,
-        .order-form select,
-        .order-form textarea {
+        .order-form select {
             width: 100%;
             padding: 6px 10px;
             border: 1px solid #d1d5db;
             border-radius: 6px;
             font-size: 13px;
+            background: white;
         }
-        .order-form input:focus,
-        .order-form select:focus,
-        .order-form textarea:focus {
+        .order-form select:focus {
             outline: 2px solid #3b82f6;
             outline-offset: 1px;
-        }
-        .order-form textarea {
-            resize: vertical;
-            min-height: 50px;
         }
 
         .cart-total {
@@ -761,6 +855,9 @@
             .products-grid.list-view .product-card .add-btn {
                 width: 100%;
             }
+            .categories-body.open {
+                padding: 0 12px 12px 12px;
+            }
         }
         @media (min-width: 641px) and (max-width: 1024px) {
             .products-grid {
@@ -830,7 +927,10 @@
     <div class="container">
 
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="🔍 Поиск товаров..." oninput="filterProducts()" />
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" placeholder="🔍 Поиск товаров..." oninput="handleSearchInput()" />
+                <button class="clear-btn" id="searchClearBtn" onclick="clearSearch()" title="Очистить поиск">✕</button>
+            </div>
             <select id="locationFilter" onchange="filterProducts()">
                 <option value="all">Все локации</option>
                 <option value="Въезд">🚗 Въезд</option>
@@ -839,10 +939,7 @@
                 <option value="КПП">🛂 КПП</option>
                 <option value="Улица">🌳 Улица</option>
             </select>
-            <div class="view-toggle">
-                <button id="gridViewBtn" class="active" onclick="setView('grid')" title="Сетка">▦</button>
-                <button id="listViewBtn" onclick="setView('list')" title="Список">☰</button>
-            </div>
+  
         </div>
 
         <div class="stats">
@@ -851,13 +948,23 @@
             <span>🛍️ В корзине: <strong id="cartCount">0</strong></span>
         </div>
 
-        <div class="categories" id="categoriesContainer">
-            <button class="active" data-cat="all" onclick="filterByCategory('all')">📌 Все (0)</button>
+        <!-- Блок категорий с возможностью сворачивания -->
+        <div class="categories-wrapper">
+            <div class="categories-header" onclick="toggleCategories()">
+                <h4>📂 Категории</h4>
+                <span class="toggle-icon" id="categoriesToggleIcon">▼</span>
+            </div>
+            <div class="categories-body" id="categoriesBody">
+                <div class="categories" id="categoriesContainer">
+                    <button class="active" data-cat="all" onclick="filterByCategory('all')">📌 Все (0)</button>
+                </div>
+            </div>
         </div>
 
         <div class="products-grid" id="productsGrid"></div>
     </div>
 
+    <!-- Корзина -->
     <div class="cart-overlay" id="cartOverlay" onclick="if(event.target===this) closeCart()">
         <div class="cart-modal">
             <div class="cart-header">
@@ -869,19 +976,31 @@
             <div class="order-form" id="orderForm">
                 <div class="full-width">
                     <label>👤 ФИО заказчика *</label>
-                    <input type="text" id="orderCustomer" placeholder="Иванов Иван Иванович" />
+                    <div class="input-wrapper">
+                        <input type="text" id="orderCustomer" placeholder="Иванов Иван Иванович" oninput="toggleClearBtn(this)" />
+                        <button class="clear-input-btn" onclick="clearInputField('orderCustomer')" title="Очистить">✕</button>
+                    </div>
                 </div>
                 <div>
                     <label>📞 Телефон *</label>
-                    <input type="tel" id="orderPhone" placeholder="+375 (25) 123-45-67" />
+                    <div class="input-wrapper">
+                        <input type="tel" id="orderPhone" placeholder="+375 (25) 123-45-67" oninput="toggleClearBtn(this)" />
+                        <button class="clear-input-btn" onclick="clearInputField('orderPhone')" title="Очистить">✕</button>
+                    </div>
                 </div>
                 <div>
                     <label>🏗️ Объект</label>
-                    <input type="text" id="orderObject" placeholder="Строительная площадка №5" />
+                    <div class="input-wrapper">
+                        <input type="text" id="orderObject" placeholder="Строительная площадка №5" oninput="toggleClearBtn(this)" />
+                        <button class="clear-input-btn" onclick="clearInputField('orderObject')" title="Очистить">✕</button>
+                    </div>
                 </div>
                 <div class="full-width">
                     <label>📝 Комментарий</label>
-                    <textarea id="orderComment" placeholder="Дополнительная информация к заказу..."></textarea>
+                    <div class="input-wrapper">
+                        <textarea id="orderComment" placeholder="Дополнительная информация к заказу..." oninput="toggleClearBtn(this)"></textarea>
+                        <button class="clear-input-btn" onclick="clearInputField('orderComment')" title="Очистить">✕</button>
+                    </div>
                 </div>
                 <div class="full-width">
                     <label>⏰ Когда заберете?</label>
@@ -944,6 +1063,7 @@
         let orderSuccessShown = false;
         let categoriesLoaded = false;
         let productsLoaded = false;
+        let categoriesOpen = false;
 
         // ============================================================
         // 3. TOAST
@@ -1181,7 +1301,72 @@
         }
 
         // ============================================================
-        // 8. CART OPERATIONS
+        // 8. ПОИСК С КРЕСТИКОМ
+        // ============================================================
+        function handleSearchInput() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (input.value.length > 0) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+            filterProducts();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            document.getElementById('searchClearBtn').classList.remove('visible');
+            filterProducts();
+            input.focus();
+        }
+
+        // ============================================================
+        // 9. СВОРАЧИВАНИЕ КАТЕГОРИЙ
+        // ============================================================
+        function toggleCategories() {
+            categoriesOpen = !categoriesOpen;
+            const body = document.getElementById('categoriesBody');
+            const icon = document.getElementById('categoriesToggleIcon');
+            if (categoriesOpen) {
+                body.classList.add('open');
+                icon.classList.add('open');
+            } else {
+                body.classList.remove('open');
+                icon.classList.remove('open');
+            }
+        }
+
+        // ============================================================
+        // 10. КРЕСТИКИ ДЛЯ ПОЛЕЙ ВВОДА В КОРЗИНЕ
+        // ============================================================
+        function toggleClearBtn(input) {
+            const wrapper = input.closest('.input-wrapper');
+            if (!wrapper) return;
+            const btn = wrapper.querySelector('.clear-input-btn');
+            if (!btn) return;
+            if (input.value.length > 0) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        }
+
+        function clearInputField(id) {
+            const input = document.getElementById(id);
+            if (!input) return;
+            input.value = '';
+            const wrapper = input.closest('.input-wrapper');
+            if (wrapper) {
+                const btn = wrapper.querySelector('.clear-input-btn');
+                if (btn) btn.classList.remove('visible');
+            }
+            input.focus();
+        }
+
+        // ============================================================
+        // 11. CART OPERATIONS
         // ============================================================
         function addToCart(productId) {
             const product = products.find(p => p.id === productId);
@@ -1216,7 +1401,6 @@
             const product = products.find(p => p.id === productId);
             if (!product) return;
 
-            // Ограничиваем количество доступным на складе
             const maxQty = product.qty || 0;
             let qty = parseInt(newQty) || 0;
             if (qty < 0) qty = 0;
@@ -1262,7 +1446,7 @@
         }
 
         // ============================================================
-        // 9. CART MODAL
+        // 12. CART MODAL
         // ============================================================
         function openCart() {
             document.getElementById('cartOverlay').classList.add('open');
@@ -1270,6 +1454,10 @@
             document.getElementById('orderSuccess').style.display = 'none';
             document.getElementById('orderSuccess').innerHTML = '';
             orderSuccessShown = false;
+
+            // Показываем крестики для полей с текстом
+            document.querySelectorAll('.order-form .input-wrapper input, .order-form .input-wrapper textarea')
+                .forEach(el => toggleClearBtn(el));
         }
 
         function closeCart() {
@@ -1374,7 +1562,7 @@
         }
 
         // ============================================================
-        // 10. CHECKOUT
+        // 13. CHECKOUT
         // ============================================================
         function checkout() {
             if (Object.keys(cart).length === 0) {
@@ -1469,6 +1657,11 @@
                 document.getElementById('orderComment').value = '';
                 document.getElementById('orderPickup').value = 'через 1 час';
 
+                // Скрываем крестики после очистки
+                document.querySelectorAll('.order-form .input-wrapper .clear-input-btn').forEach(btn => {
+                    btn.classList.remove('visible');
+                });
+
             }).catch(err => {
                 showToast('❌ Ошибка при оформлении заказа', 'error');
                 console.error(err);
@@ -1476,7 +1669,7 @@
         }
 
         // ============================================================
-        // 11. UPDATE STATS
+        // 14. UPDATE STATS
         // ============================================================
         function updateStats() {
             document.getElementById('totalProducts').textContent = products.length;
@@ -1485,10 +1678,22 @@
         }
 
         // ============================================================
-        // 12. INIT
+        // 15. INIT
         // ============================================================
         console.log('🛒 Интернет-магазин запущен!');
         loadData();
+
+        // Инициализация: категории скрыты по умолчанию
+        document.addEventListener('DOMContentLoaded', function() {
+            // Категории уже скрыты по умолчанию благодаря CSS
+            // Добавляем обработчики для полей ввода в корзине при открытии
+            document.querySelectorAll('.order-form .input-wrapper input, .order-form .input-wrapper textarea')
+                .forEach(el => {
+                    el.addEventListener('input', function() {
+                        toggleClearBtn(this);
+                    });
+                });
+        });
     </script>
 
 </body>
