@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -2142,10 +2143,7 @@
         function playICQSound() {
             if (!soundEnabled) return;
             try {
-                // Генерируем звук ICQ "э-оо" через Web Audio API
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Первый тон "э"
                 const osc1 = audioCtx.createOscillator();
                 const gain1 = audioCtx.createGain();
                 osc1.type = 'sine';
@@ -2157,8 +2155,6 @@
                 gain1.connect(audioCtx.destination);
                 osc1.start(audioCtx.currentTime);
                 osc1.stop(audioCtx.currentTime + 0.2);
-                
-                // Второй тон "оо" (ниже, чуть позже)
                 setTimeout(() => {
                     const osc2 = audioCtx.createOscillator();
                     const gain2 = audioCtx.createGain();
@@ -2182,14 +2178,12 @@
             localStorage.setItem('sklad_sound_enabled', enabled ? '1' : '0');
             if (enabled) {
                 showToast('🔔 Звук уведомлений включен', 'success');
-                // Воспроизводим превью
                 playICQSound();
             } else {
                 showToast('🔕 Звук уведомлений выключен', 'info');
             }
         }
 
-        // Загружаем настройку звука
         const savedSound = localStorage.getItem('sklad_sound_enabled');
         if (savedSound !== null) {
             soundEnabled = savedSound === '1';
@@ -2278,13 +2272,10 @@
                 const text = await file.text();
                 const jsonData = JSON.parse(text);
                 
-                // Проверяем формат
                 let importData;
                 if (jsonData.data && jsonData.version) {
-                    // Новый формат с обёрткой
                     importData = jsonData.data;
                 } else {
-                    // Старый формат - просто данные
                     importData = jsonData;
                 }
                 
@@ -2294,13 +2285,11 @@
                     return;
                 }
                 
-                // Записываем данные в Firebase
                 await db.ref(SKLAD_REF).set(importData);
                 
                 showToast('✅ База данных успешно импортирована!', 'success');
                 debugLog('Импорт БД завершён');
                 
-                // Перезагружаем данные
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
@@ -2313,7 +2302,7 @@
         }
 
         // ============================================================
-        // 6. CANVAS MAP (сокращённо, без изменений)
+        // 6. CANVAS MAP
         // ============================================================
         const canvas = document.getElementById('mapCanvas');
         const ctx = canvas.getContext('2d');
@@ -2570,7 +2559,7 @@
         }
 
         // ============================================================
-        // 7. TOOLTIP (сокращён)
+        // 7. TOOLTIP
         // ============================================================
         const tooltip = document.getElementById('productTooltip');
 
@@ -2617,7 +2606,7 @@
         }
 
         // ============================================================
-        // 8. DRAG & DROP (сокращён)
+        // 8. DRAG & DROP
         // ============================================================
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
@@ -2754,7 +2743,7 @@
         });
 
         // ============================================================
-        // 9. ПЕЧАТЬ ЭТИКЕТКИ (без изменений)
+        // 9. ПЕЧАТЬ ЭТИКЕТКИ
         // ============================================================
         function printLabel() {
             const id = fProductId.value;
@@ -2902,7 +2891,7 @@
         }
 
         // ============================================================
-        // 10. КАТЕГОРИИ (без изменений)
+        // 10. КАТЕГОРИИ
         // ============================================================
         function updateCategoryTree() {
             const container = document.getElementById('categoryTree');
@@ -2997,7 +2986,7 @@
         }
 
         // ============================================================
-        // 11. АДРЕСНОЕ ХРАНЕНИЕ (без изменений)
+        // 11. АДРЕСНОЕ ХРАНЕНИЕ
         // ============================================================
         function loadStorageAddresses() {
             db.ref(`${SKLAD_REF}/storageAddresses`).on('value', snap => {
@@ -3099,10 +3088,8 @@
                     orders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 }
                 
-                // Проверяем новые заказы и воспроизводим звук
                 const currentOrderIds = new Set(orders.map(o => o.id));
                 if (!isFirstOrderLoad) {
-                    // Находим новые заказы (которых не было раньше)
                     const newOrders = orders.filter(o => !knownOrderIds.has(o.id));
                     if (newOrders.length > 0) {
                         debugLog(`🔔 Новых заказов: ${newOrders.length}`);
@@ -3114,7 +3101,6 @@
                         }
                     }
                 }
-                // Обновляем известные ID
                 knownOrderIds = currentOrderIds;
                 isFirstOrderLoad = false;
                 
@@ -3609,7 +3595,7 @@
         }
 
         // ============================================================
-        // 13. РЕДАКТИРОВАНИЕ ИСТОРИИ ВЫДАЧ (без изменений)
+        // 13. РЕДАКТИРОВАНИЕ ИСТОРИИ ВЫДАЧ
         // ============================================================
         function openHistoryEdit(historyId) {
             const record = history.find(h => h.id === historyId);
@@ -4144,382 +4130,396 @@
         }
 
         // ============================================================
-        // 18.1. ПЕЧАТЬ ФОРМЫ ПЕРЕМЕЩЕНИЯ (С-13)
+        // 18.1. ПЕЧАТЬ ФОРМЫ ПЕРЕМЕЩЕНИЯ (С-13) — ИСПРАВЛЕНО
         // ============================================================
         function printMovement() {
-            if (selectedHistoryIds.size === 0) {
-                showToast('Выберите хотя бы одну позицию', 'error');
-                return;
+    if (selectedHistoryIds.size === 0) {
+        showToast('Выберите хотя бы одну позицию', 'error');
+        return;
+    }
+
+    const selectedRecords = [];
+    selectedHistoryIds.forEach(id => {
+        const record = history.find(h => h.id === id);
+        if (record) selectedRecords.push(record);
+    });
+
+    selectedRecords.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+    // Формируем данные для печати: наименование, кол-во и объём (единица измерения)
+    const items = selectedRecords.map((record, index) => {
+        // Ищем товар, чтобы получить его единицу измерения (метры/кг/шт и т.д.)
+        const product = products.find(p => p.id === record.productId);
+        let volume = 'шт';
+        if (product) {
+            if (product.customUnit && product.customUnit.trim() !== '') {
+                volume = product.customUnit;
+            } else if (product.unitType && product.unitType.trim() !== '') {
+                volume = product.unitType;
             }
-
-            const selectedRecords = [];
-            selectedHistoryIds.forEach(id => {
-                const record = history.find(h => h.id === id);
-                if (record) selectedRecords.push(record);
-            });
-
-            selectedRecords.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-            const items = selectedRecords.map((record, index) => ({
-                num: index + 1,
-                name: record.productName || '—',
-                qty: record.qty || 0,
-                unit: record.unitType || 'шт'
-            }));
-
-            while (items.length < 15) {
-                items.push({ num: items.length + 1, name: '', qty: '', unit: '' });
-            }
-
-            const today = new Date();
-            const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
-
-            const formHtml = generateMovementFormHTML(items, dateStr);
-
-            const printWindow = window.open('', '_blank', 'width=900,height=700');
-            if (printWindow) {
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Накладная на внутреннее перемещение (С-13)</title>
-                        <style>
-                            @page { size: A4 portrait; margin: 10mm; }
-                            body { 
-                                font-family: 'Times New Roman', Times, serif; 
-                                font-size: 10pt;
-                                margin: 0;
-                                padding: 10px;
-                            }
-                            table { 
-                                border-collapse: collapse; 
-                                width: 100%; 
-                                font-size: 9pt;
-                            }
-                            td, th { 
-                                border: 1px solid #000; 
-                                padding: 2px 4px; 
-                                vertical-align: top;
-                            }
-                            .no-border { border: none !important; }
-                            .center { text-align: center; }
-                            .right { text-align: right; }
-                            .bold { font-weight: bold; }
-                            .small { font-size: 8pt; }
-                            .header-table td { border: none; padding: 1px; }
-                            .items-table td { height: 18px; }
-                            .print-btn {
-                                padding: 10px 24px;
-                                background: #3b82f6;
-                                color: white;
-                                border: none;
-                                border-radius: 6px;
-                                font-size: 14px;
-                                cursor: pointer;
-                                margin-bottom: 16px;
-                                font-family: 'Segoe UI', sans-serif;
-                            }
-                            .print-btn:hover { background: #2563eb; }
-                            @media print {
-                                .no-print { display: none; }
-                                body { padding: 0; }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="no-print" style="text-align:center; margin-bottom:12px;">
-                            <button class="print-btn" onclick="window.print()">🖨️ Печать</button>
-                            <button class="print-btn" onclick="window.close()" style="background:#e2e8f0;color:#1e293b;margin-left:8px;">✕ Закрыть</button>
-                        </div>
-                        ${formHtml}
-                    </body>
-                    </html>
-                `);
-                printWindow.document.close();
-            }
+        } else if (record.unitType) {
+            volume = record.unitType;
         }
+        return {
+            num: index + 1,
+            name: record.productName || '—',
+            qty: record.qty || 0,
+            volume: volume   // сюда попадает м, кг, шт, бухта и т.д.
+        };
+    });
+
+    while (items.length < 15) {
+        items.push({ num: items.length + 1, name: '', qty: '', volume: '' });
+    }
+
+    const today = new Date();
+    const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+
+    const formHtml = generateMovementFormHTML(items, dateStr);
+
+    const printWindow = window.open('', '_blank', 'width=1100,height=800');
+    if (printWindow) {
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Накладная на внутреннее перемещение (С-13)</title>
+                <style>
+                    @page { size: A4 landscape; margin: 8mm; }
+                    body { 
+                        font-family: 'Times New Roman', Times, serif; 
+                        font-size: 9pt;
+                        margin: 0;
+                        padding: 10px;
+                    }
+                    table { 
+                        border-collapse: collapse; 
+                        width: 100%; 
+                        font-size: 8pt;
+                    }
+                    td, th { 
+                        border: 1px solid #000; 
+                        padding: 2px 4px; 
+                        vertical-align: top;
+                    }
+                    .no-border { border: none !important; }
+                    .center { text-align: center; }
+                    .right { text-align: right; }
+                    .bold { font-weight: bold; }
+                    .small { font-size: 7pt; }
+                    .header-table td { border: none; padding: 1px; }
+                    .items-table td { height: 18px; }
+                    .print-btn {
+                        padding: 10px 24px;
+                        background: #3b82f6;
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        margin-bottom: 16px;
+                        font-family: 'Segoe UI', sans-serif;
+                    }
+                    .print-btn:hover { background: #2563eb; }
+                    @media print {
+                        .no-print { display: none; }
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="no-print" style="text-align:center; margin-bottom:12px;">
+                    <button class="print-btn" onclick="window.print()">🖨️ Печать</button>
+                    <button class="print-btn" onclick="window.close()" style="background:#e2e8f0;color:#1e293b;margin-left:8px;">✕ Закрыть</button>
+                </div>
+                ${formHtml}
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+}
 
         function generateMovementFormHTML(items, dateStr) {
-            let itemsRows = '';
-            items.forEach((item, idx) => {
-                const rowNum = idx + 1;
-                itemsRows += `
-                    <tr class="items-table">
-                        <td class="center" style="width:30px;">${item.name ? rowNum : rowNum}</td>
-                        <td style="width:260px;">${item.name || ''}</td>
-                        <td class="center" style="width:50px;">${item.unit || ''}</td>
-                        <td class="center" style="width:50px;">${item.qty !== '' ? item.qty : ''}</td>
-                        <td class="center" style="width:70px;"></td>
-                        <td class="center" style="width:80px;"></td>
+    let itemsRows = '';
+    items.forEach((item, idx) => {
+        const rowNum = idx + 1;
+        itemsRows += `
+            <tr class="items-table">
+                <td class="center" style="width:30px;">${rowNum}</td>
+                <td style="width:300px;">${item.name || ''}</td>
+                <td class="center" style="width:90px;">${item.volume || ''}</td>
+                <td class="center" style="width:60px;">${item.qty !== '' ? item.qty : ''}</td>
+                <td class="center" style="width:70px;"></td>
+                <td class="center" style="width:80px;"></td>
+            </tr>
+        `;
+    });
+
+    const totalQty = items.reduce((sum, item) => {
+        const q = parseInt(item.qty);
+        return sum + (isNaN(q) ? 0 : q);
+    }, 0);
+
+    return `
+        <div style="width:100%; max-width:280mm; margin:0 auto;">
+            <table class="header-table" style="width:100%;">
+                <tr>
+                    <td style="width:60%;"></td>
+                    <td style="width:40%; text-align:right; font-size:8pt;">
+                        Приложение 8<br>
+                        к постановлению Министерства<br>
+                        архитектуры и строительства<br>
+                        Республики Беларусь<br>
+                        25.01.2013 № 3
+                    </td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:4px;">
+                <tr>
+                    <td style="width:80%;"></td>
+                    <td style="width:20%; text-align:right; font-size:10pt;" class="bold">Форма С-13</td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:12px;">
+                <tr>
+                    <td style="width:100%; border-bottom:1px solid #000; padding-bottom:2px;">
+                        ${'ООО "БелНекстЭнерго"'}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center small">(наименование организации)</td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:6px;">
+                <tr>
+                    <td style="width:100%; border-bottom:1px solid #000; padding-bottom:2px;">
+                        ${'РБ, г.Минск, ул.Игнатенко, 7'}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center small">(адрес)</td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:6px;">
+                <tr>
+                    <td style="width:100%;">
+                        УНП <span style="border-bottom:1px solid #000; display:inline-block; min-width:150px;">&nbsp;</span>
+                    </td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:14px;">
+                <tr>
+                    <td style="width:40%;"></td>
+                    <td style="width:60%;" class="bold">
+                        НАКЛАДНАЯ № <span style="border-bottom:1px solid #000; display:inline-block; min-width:80px;">&nbsp;</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>на внутреннее перемещение</td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:8px;">
+                <tr>
+                    <td style="width:60%;"></td>
+                    <td style="width:40%; text-align:right;">
+                        ${dateStr}г. &nbsp;&nbsp;&nbsp; 
+                    </td>
+                </tr>
+            </table>
+            
+            <table style="width:100%; margin-top:10px; border:none;">
+                <tr style="border:none;">
+                    <td style="border:none; width:50%; padding:0 4px 0 0;">
+                        <table class="header-table" style="width:100%;">
+                            <tr>
+                                <td style="width:50%;">Кому</td>
+                                <td style="border-bottom:1px solid #000; width:50%;">
+                                    ${''}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="center small" style="padding-top:1px;">
+                                    (должность, инициалы, фамилия)
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="border:none; width:50%; padding:0 0 0 4px;">
+                        <table class="header-table" style="width:100%;">
+                            <tr>
+                                <td style="width:40%;">Куда</td>
+                                <td style="border-bottom:1px solid #000; width:60%;">
+                                    ${''}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="center small" style="padding-top:1px;">
+                                    (наименование и адрес объекта)
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            
+            <table style="width:100%; margin-top:10px; border:none;">
+                <tr style="border:none;">
+                    <td style="border:none; width:50%; padding:0 4px 0 0;">
+                        <table class="header-table" style="width:100%;">
+                            <tr>
+                                <td style="width:50%;">От кого</td>
+                                <td style="border-bottom:1px solid #000; width:50%;">
+                                    ${'кладовщик, Бондарчик А.А'}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="center small" style="padding-top:1px;">
+                                    (должность, инициалы, фамилия)
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="border:none; width:50%; padding:0 0 0 4px;">
+                        <table class="header-table" style="width:100%;">
+                            <tr>
+                                <td style="width:40%;">Откуда</td>
+                                <td style="border-bottom:1px solid #000; width:60%;">
+                                    ${'РБ, г.Минск, Бетонный проезд 5А/6'}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="center small" style="padding-top:1px;">
+                                    (наименование и адрес объекта)
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:10px;">
+                <tr>
+                    <td style="width:30%;">Основание отпуска</td>
+                    <td style="border-bottom:1px solid #000;">&nbsp;</td>
+                </tr>
+            </table>
+            
+            <table class="items-table" style="width:100%; margin-top:10px;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th class="center" style="width:30px;">№ п/п</th>
+                        <th class="center" style="width:300px;">Наименование материальных ценностей, сорт, размер, марка</th>
+                        <th class="center" style="width:90px;">Объём</th>
+                        <th class="center" style="width:60px;">Количество</th>
+                        <th class="center" style="width:70px;">Цена без НДС, руб.</th>
+                        <th class="center" style="width:80px;">Сумма, руб.</th>
                     </tr>
-                `;
-            });
-
-            const totalQty = items.reduce((sum, item) => {
-                const q = parseInt(item.qty);
-                return sum + (isNaN(q) ? 0 : q);
-            }, 0);
-
-            return `
-                <div style="width:100%; max-width:210mm; margin:0 auto;">
-                    <table class="header-table" style="width:100%;">
-                        <tr>
-                            <td style="width:60%;"></td>
-                            <td style="width:40%; text-align:right; font-size:8pt;">
-                                Приложение 8<br>
-                                к постановлению Министерства<br>
-                                архитектуры и строительства<br>
-                                Республики Беларусь<br>
-                                25.01.2013 № 3
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:4px;">
-                        <tr>
-                            <td style="width:80%;"></td>
-                            <td style="width:20%; text-align:right; font-size:10pt;" class="bold">Форма С-13</td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:12px;">
-                        <tr>
-                            <td style="width:100%; border-bottom:1px solid #000; padding-bottom:2px;">
-                                ${'ООО "БелНекстЭнерго"'}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="center small">(наименование организации)</td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:6px;">
-                        <tr>
-                            <td style="width:100%; border-bottom:1px solid #000; padding-bottom:2px;">
-                                ${'РБ, г.Минск, ул.Игнатенко, 7'}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="center small">(адрес)</td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:6px;">
-                        <tr>
-                            <td style="width:100%;">
-                                УНП <span style="border-bottom:1px solid #000; display:inline-block; min-width:150px;">&nbsp;</span>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:14px;">
-                        <tr>
-                            <td style="width:40%;"></td>
-                            <td style="width:60%;" class="bold">
-                                НАКЛАДНАЯ № <span style="border-bottom:1px solid #000; display:inline-block; min-width:80px;">&nbsp;</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>на внутреннее перемещение</td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:8px;">
-                        <tr>
-                            <td style="width:60%;"></td>
-                            <td style="width:40%; text-align:right;">
-                                ${dateStr}г. &nbsp;&nbsp;&nbsp; 
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <table style="width:100%; margin-top:10px; border:none;">
-                        <tr style="border:none;">
-                            <td style="border:none; width:50%; padding:0 4px 0 0;">
-                                <table class="header-table" style="width:100%;">
-                                    <tr>
-                                        <td style="width:50%;">Кому</td>
-                                        <td style="border-bottom:1px solid #000; width:50%;">
-                                            ${''}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" class="center small" style="padding-top:1px;">
-                                            (должность, инициалы, фамилия)
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                            <td style="border:none; width:50%; padding:0 0 0 4px;">
-                                <table class="header-table" style="width:100%;">
-                                    <tr>
-                                        <td style="width:40%;">Куда</td>
-                                        <td style="border-bottom:1px solid #000; width:60%;">
-                                            ${''}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" class="center small" style="padding-top:1px;">
-                                            (наименование и адрес объекта)
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <table style="width:100%; margin-top:10px; border:none;">
-                        <tr style="border:none;">
-                            <td style="border:none; width:50%; padding:0 4px 0 0;">
-                                <table class="header-table" style="width:100%;">
-                                    <tr>
-                                        <td style="width:50%;">От кого</td>
-                                        <td style="border-bottom:1px solid #000; width:50%;">
-                                            ${'кладовщик, Бондарчик А.А'}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" class="center small" style="padding-top:1px;">
-                                            (должность, инициалы, фамилия)
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                            <td style="border:none; width:50%; padding:0 0 0 4px;">
-                                <table class="header-table" style="width:100%;">
-                                    <tr>
-                                        <td style="width:40%;">Откуда</td>
-                                        <td style="border-bottom:1px solid #000; width:60%;">
-                                            ${'РБ, г.Минск, Бетонный проезд 5А/6'}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" class="center small" style="padding-top:1px;">
-                                            (наименование и адрес объекта)
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:10px;">
-                        <tr>
-                            <td style="width:30%;">Основание отпуска</td>
-                            <td style="border-bottom:1px solid #000;">&nbsp;</td>
-                        </tr>
-                    </table>
-                    
-                    <table class="items-table" style="width:100%; margin-top:10px;">
-                        <thead>
-                            <tr style="background:#f1f5f9;">
-                                <th class="center" style="width:30px;">№ п/п</th>
-                                <th class="center" style="width:260px;">Наименование материальных ценностей, сорт, размер, марка</th>
-                                <th class="center" style="width:50px;">Единица измерения</th>
-                                <th class="center" style="width:50px;">Количество</th>
-                                <th class="center" style="width:70px;">Цена без НДС, руб.</th>
-                                <th class="center" style="width:80px;">Сумма, руб.</th>
-                            </tr>
-                            <tr style="background:#f1f5f9;">
-                                <th class="center small">1</th>
-                                <th class="center small">2</th>
-                                <th class="center small">3</th>
-                                <th class="center small">4</th>
-                                <th class="center small">5</th>
-                                <th class="center small">6</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsRows}
-                            <tr class="items-table" style="background:#f1f5f9; font-weight:bold;">
-                                <td colspan="2" class="center">ИТОГО</td>
-                                <td class="center">X</td>
-                                <td class="center">${totalQty || 0}</td>
-                                <td class="center">X</td>
-                                <td class="center">0</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:10px;">
-                        <tr>
-                            <td style="width:30%;">Всего отпущено</td>
-                            <td style="border-bottom:1px solid #000; width:30%;" class="center">
-                                ${numberToRussianWords(items.filter(i => i.name).length)}
-                            </td>
-                            <td style="width:40%;">наименований.</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td class="center small">(прописью)</td>
-                            <td></td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:6px;">
-                        <tr>
-                            <td style="width:30%;">На сумму</td>
-                            <td style="border-bottom:1px solid #000; width:30%;" class="center">
-                                
-                            </td>
-                            <td style="width:40%;"></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td class="center small">(прописью)</td>
-                            <td></td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:14px;">
-                        <tr>
-                            <td style="width:25%;">Отпуск разрешил</td>
-                            <td style="border-bottom:1px solid #000; width:25%;">${'кладовщик'}</td>
-                            <td style="border-bottom:1px solid #000; width:15%;" class="center">подпись</td>
-                            <td style="border-bottom:1px solid #000; width:35%;">${'Бондарчик А.А'}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td class="center small">(должность)</td>
-                            <td class="center small">(подпись)</td>
-                            <td class="center small">(инициалы, фамилия)</td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:10px;">
-                        <tr>
-                            <td style="width:25%;">Отпустил</td>
-                            <td style="border-bottom:1px solid #000; width:25%;">${'кладовщик'}</td>
-                            <td style="border-bottom:1px solid #000; width:15%;" class="center">подпись</td>
-                            <td style="border-bottom:1px solid #000; width:35%;">${'Бондарчик А.А'}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td class="center small">(должность)</td>
-                            <td class="center small">(подпись)</td>
-                            <td class="center small">(инициалы, фамилия)</td>
-                        </tr>
-                    </table>
-                    
-                    <table class="header-table" style="width:100%; margin-top:10px;">
-                        <tr>
-                            <td style="width:25%;">Получил</td>
-                            <td style="border-bottom:1px solid #000; width:25%;">${''}</td>
-                            <td style="border-bottom:1px solid #000; width:15%;" class="center">подпись</td>
-                            <td style="border-bottom:1px solid #000; width:35%;">${''}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td class="center small">(должность)</td>
-                            <td class="center small">(подпись)</td>
-                            <td class="center small">(инициалы, фамилия)</td>
-                        </tr>
-                    </table>
-                </div>
-            `;
-        }
+                    <tr style="background:#f1f5f9;">
+                        <th class="center small">1</th>
+                        <th class="center small">2</th>
+                        <th class="center small">3</th>
+                        <th class="center small">4</th>
+                        <th class="center small">5</th>
+                        <th class="center small">6</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsRows}
+                    <tr class="items-table" style="background:#f1f5f9; font-weight:bold;">
+                        <td colspan="3" class="center">ИТОГО</td>
+                        <td class="center">${totalQty || 0}</td>
+                        <td class="center">X</td>
+                        <td class="center">0</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:10px;">
+                <tr>
+                    <td style="width:30%;">Всего отпущено</td>
+                    <td style="border-bottom:1px solid #000; width:30%;" class="center">
+                        ${numberToRussianWords(items.filter(i => i.name).length)}
+                    </td>
+                    <td style="width:40%;">наименований.</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="center small">(прописью)</td>
+                    <td></td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:6px;">
+                <tr>
+                    <td style="width:30%;">На сумму</td>
+                    <td style="border-bottom:1px solid #000; width:30%;" class="center">
+                        
+                    </td>
+                    <td style="width:40%;"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="center small">(прописью)</td>
+                    <td></td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:14px;">
+                <tr>
+                    <td style="width:25%;">Отпуск разрешил</td>
+                    <td style="border-bottom:1px solid #000; width:25%;">${'кладовщик'}</td>
+                    <td style="border-bottom:1px solid #000; width:15%;" class="center">подпись</td>
+                    <td style="border-bottom:1px solid #000; width:35%;">${'Бондарчик А.А'}</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="center small">(должность)</td>
+                    <td class="center small">(подпись)</td>
+                    <td class="center small">(инициалы, фамилия)</td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:10px;">
+                <tr>
+                    <td style="width:25%;">Отпустил</td>
+                    <td style="border-bottom:1px solid #000; width:25%;">${'кладовщик'}</td>
+                    <td style="border-bottom:1px solid #000; width:15%;" class="center">подпись</td>
+                    <td style="border-bottom:1px solid #000; width:35%;">${'Бондарчик А.А'}</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="center small">(должность)</td>
+                    <td class="center small">(подпись)</td>
+                    <td class="center small">(инициалы, фамилия)</td>
+                </tr>
+            </table>
+            
+            <table class="header-table" style="width:100%; margin-top:10px;">
+                <tr>
+                    <td style="width:25%;">Получил</td>
+                    <td style="border-bottom:1px solid #000; width:25%;">${''}</td>
+                    <td style="border-bottom:1px solid #000; width:15%;" class="center">подпись</td>
+                    <td style="border-bottom:1px solid #000; width:35%;">${''}</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="center small">(должность)</td>
+                    <td class="center small">(подпись)</td>
+                    <td class="center small">(инициалы, фамилия)</td>
+                </tr>
+            </table>
+        </div>
+    `;
+}
 
         function numberToRussianWords(num) {
             if (num === 0) return 'Ноль';
@@ -4694,7 +4694,7 @@
         }
 
         // ============================================================
-        // 22. MODAL - ОСНОВНЫЕ ФУНКЦИИ (без изменений)
+        // 22. MODAL - ОСНОВНЫЕ ФУНКЦИИ
         // ============================================================
         const modalOverlay = document.getElementById('modalOverlay');
         const modalTitle = document.getElementById('modalTitle');
@@ -5046,7 +5046,7 @@
         document.getElementById('searchInput').addEventListener('input', handleSearchInput);
 
         // ============================================================
-        // 28. ПРИХОД (INCOME) - без изменений
+        // 28. ПРИХОД (INCOME)
         // ============================================================
         function loadIncomes() {
             db.ref(`${SKLAD_REF}/incomes`).on('value', snap => {
