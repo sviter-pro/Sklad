@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -75,7 +76,6 @@
             padding: 16px 16px;
         }
 
-        /* Блок категорий с кнопкой сворачивания */
         .categories-wrapper {
             background: white;
             border-radius: 14px;
@@ -145,7 +145,6 @@
             color: #3b82f6;
         }
 
-        /* Поиск с крестиком */
         .search-wrapper {
             flex: 1;
             position: relative;
@@ -202,32 +201,6 @@
             background: white;
             min-width: 120px;
         }
-        .search-bar .view-toggle {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            background: #e2e8f0;
-            border-radius: 10px;
-            padding: 3px;
-        }
-        .search-bar .view-toggle button {
-            background: transparent;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: 0.2s;
-            color: #64748b;
-        }
-        .search-bar .view-toggle button.active {
-            background: white;
-            color: #1e293b;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        .search-bar .view-toggle button:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
 
         .stats {
             display: flex;
@@ -249,49 +222,6 @@
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 14px;
         }
-        .products-grid.list-view {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .products-grid.list-view .product-card {
-            flex-direction: row;
-            align-items: center;
-            padding: 12px 16px;
-            gap: 16px;
-        }
-        .products-grid.list-view .product-card .product-img {
-            width: 70px;
-            height: 70px;
-            flex-shrink: 0;
-        }
-        .products-grid.list-view .product-card .product-info {
-            flex: 1;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 16px;
-        }
-        .products-grid.list-view .product-card .product-info .name {
-            font-size: 16px;
-            min-width: 120px;
-        }
-        .products-grid.list-view .product-card .product-info .category,
-        .products-grid.list-view .product-card .product-info .location,
-        .products-grid.list-view .product-card .product-info .supplier {
-            font-size: 12px;
-        }
-        .products-grid.list-view .product-card .product-info .stock {
-            margin: 0;
-            font-size: 13px;
-            min-width: 80px;
-        }
-        .products-grid.list-view .product-card .add-btn {
-            width: auto;
-            padding: 6px 18px;
-            font-size: 13px;
-            margin-top: 0;
-        }
 
         .product-card {
             background: white;
@@ -305,6 +235,7 @@
             overflow: hidden;
             height: 100%;
             min-height: 380px;
+            cursor: pointer;
         }
         .product-card:hover {
             transform: translateY(-3px);
@@ -424,6 +355,292 @@
             background: #16a34a;
         }
 
+        .product-card .status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 4px;
+            align-self: flex-start;
+        }
+        .product-card .status-new {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .product-card .status-used {
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .product-card .address-row {
+            font-size: 12px;
+            color: #475569;
+            background: #f8fafc;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            word-break: break-word;
+        }
+        .product-card .address-row svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: #64748b;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           МОДАЛЬНОЕ ОКНО ТОВАРА (детальный просмотр)
+           ============================================================ */
+        .product-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 1500;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .product-modal-overlay.open {
+            display: flex;
+        }
+        .product-modal {
+            background: white;
+            border-radius: 20px;
+            width: 900px;
+            max-width: 100%;
+            max-height: 95vh;
+            padding: 24px;
+            animation: modalFadeIn 0.25s ease;
+            overflow-y: auto;
+            position: relative;
+        }
+        @keyframes modalFadeIn {
+            from {
+                transform: scale(0.94);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Крупная красная кнопка закрытия */
+        .product-modal .modal-close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            z-index: 10;
+            line-height: 1;
+        }
+        .product-modal .modal-close-btn:hover {
+            background: #dc2626;
+            transform: rotate(90deg) scale(1.08);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.6);
+        }
+        .product-modal .modal-close-btn:active {
+            transform: rotate(90deg) scale(0.95);
+        }
+
+        .product-modal .modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .product-modal .modal-image-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .product-modal .modal-image-container {
+            width: 100%;
+            aspect-ratio: 1;
+            max-height: 400px;
+            background: #f1f5f9;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .product-modal .modal-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: zoom-in;
+            transition: 0.3s;
+        }
+        .product-modal .modal-image-container img.zoomed {
+            object-fit: cover;
+            transform: scale(1.6);
+            cursor: zoom-out;
+        }
+        .product-modal .modal-image-placeholder {
+            font-size: 80px;
+            color: #cbd5e1;
+        }
+
+        .product-modal .modal-info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-top: 8px;
+        }
+        .product-modal .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.3;
+            padding-right: 40px;
+        }
+        .product-modal .modal-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .product-modal .modal-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        .product-modal .modal-badge.category {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .product-modal .modal-badge.location {
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .product-modal .modal-badge.condition-new {
+            background: #d1fae5;
+            color: #059669;
+        }
+        .product-modal .modal-badge.condition-used {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .product-modal .modal-badge.address {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .product-modal .modal-info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-top: 4px;
+        }
+        .product-modal .modal-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            gap: 12px;
+        }
+        .product-modal .modal-info-row:last-child {
+            border-bottom: none;
+        }
+        .product-modal .modal-info-label {
+            color: #64748b;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .product-modal .modal-info-value {
+            color: #0f172a;
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+        }
+        .product-modal .modal-info-value.stock-good {
+            color: #16a34a;
+        }
+        .product-modal .modal-info-value.stock-low {
+            color: #f59e0b;
+        }
+        .product-modal .modal-info-value.stock-zero {
+            color: #dc2626;
+        }
+
+        .product-modal .modal-add-btn {
+            margin-top: auto;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .product-modal .modal-add-btn.in-stock {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+        .product-modal .modal-add-btn.in-stock:hover {
+            background: #2563eb;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+        .product-modal .modal-add-btn.in-stock:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .product-modal .modal-add-btn.out-of-stock {
+            background: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+        .product-modal .modal-add-btn.in-cart {
+            background: #22c55e;
+            color: white;
+            box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+        }
+        .product-modal .modal-add-btn.in-cart:hover {
+            background: #16a34a;
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* ============================================================
+           КОРЗИНА
+           ============================================================ */
         .cart-overlay {
             display: none;
             position: fixed;
@@ -591,7 +808,6 @@
             transform: scale(1.2);
         }
 
-        /* Поля ввода с крестиком в корзине */
         .order-form .input-wrapper {
             position: relative;
             width: 100%;
@@ -771,7 +987,7 @@
             margin: 8px 0;
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
             .header {
                 padding: 10px 14px;
             }
@@ -804,23 +1020,9 @@
                 min-height: 50px;
                 -webkit-line-clamp: 3;
             }
-            .product-card .category,
-            .product-card .location {
-                font-size: 11px;
-            }
-            .product-card .stock {
-                font-size: 12px;
-            }
-            .product-card .add-btn {
-                font-size: 12px;
-                padding: 6px;
-            }
             .search-bar {
                 flex-direction: column;
                 align-items: stretch;
-            }
-            .search-bar .view-toggle {
-                align-self: flex-start;
             }
             .categories button {
                 font-size: 12px;
@@ -829,88 +1031,43 @@
             .stats {
                 font-size: 12px;
             }
-            .stats span {
-                padding: 3px 10px;
-            }
             .cart-modal {
                 padding: 16px;
             }
             .order-form {
                 grid-template-columns: 1fr;
             }
-            .products-grid.list-view .product-card {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px;
-                min-height: auto;
-            }
-            .products-grid.list-view .product-card .product-img {
-                width: 100%;
-                height: 120px;
-            }
-            .products-grid.list-view .product-card .product-info {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .products-grid.list-view .product-card .add-btn {
-                width: 100%;
-            }
             .categories-body.open {
                 padding: 0 12px 12px 12px;
             }
-        }
-        @media (min-width: 641px) and (max-width: 1024px) {
-            .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            /* Модальное окно товара на мобильных */
+            .product-modal {
+                padding: 16px;
+                border-radius: 16px;
+                max-height: 95vh;
             }
-            .product-card .product-img {
-                height: 140px;
+            .product-modal .modal-close-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+                top: 10px;
+                right: 10px;
             }
-        }
-        @media (min-width: 1025px) {
-            .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            .product-modal .modal-body {
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
-        }
-
-        .product-card .status-badge {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 10px;
-            border-radius: 12px;
-            display: inline-block;
-            margin-bottom: 4px;
-            align-self: flex-start;
-        }
-        .product-card .status-new {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-        .product-card .status-used {
-            background: #fef3c7;
-            color: #b45309;
-        }
-        .product-card .address-row {
-            font-size: 12px;
-            color: #475569;
-            background: #f8fafc;
-            padding: 3px 8px;
-            border-radius: 6px;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            word-break: break-word;
-        }
-        .product-card .address-row svg {
-            width: 14px;
-            height: 14px;
-            fill: none;
-            stroke: #64748b;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            flex-shrink: 0;
+            .product-modal .modal-title {
+                font-size: 18px;
+                padding-right: 44px;
+            }
+            .product-modal .modal-image-container {
+                max-height: 280px;
+            }
+            .product-modal .modal-add-btn {
+                font-size: 15px;
+                padding: 12px 20px;
+            }
         }
     </style>
 </head>
@@ -939,7 +1096,6 @@
                 <option value="КПП">🛂 КПП</option>
                 <option value="Улица">🌳 Улица</option>
             </select>
-  
         </div>
 
         <div class="stats">
@@ -948,7 +1104,6 @@
             <span>🛍️ В корзине: <strong id="cartCount">0</strong></span>
         </div>
 
-        <!-- Блок категорий с возможностью сворачивания -->
         <div class="categories-wrapper">
             <div class="categories-header" onclick="toggleCategories()">
                 <h4>📂 Категории</h4>
@@ -962,6 +1117,18 @@
         </div>
 
         <div class="products-grid" id="productsGrid"></div>
+    </div>
+
+    <!-- ============================================================
+         МОДАЛЬНОЕ ОКНО ТОВАРА (детальный просмотр)
+         ============================================================ -->
+    <div class="product-modal-overlay" id="productModalOverlay" onclick="if(event.target===this) closeProductModal()">
+        <div class="product-modal">
+            <button class="modal-close-btn" onclick="closeProductModal()" title="Закрыть">✕</button>
+            <div class="modal-body" id="productModalBody">
+                <!-- Содержимое генерируется динамически -->
+            </div>
+        </div>
     </div>
 
     <!-- Корзина -->
@@ -1059,11 +1226,11 @@
         let categories = [];
         let cart = {};
         let currentCategory = 'all';
-        let currentView = 'grid';
         let orderSuccessShown = false;
         let categoriesLoaded = false;
         let productsLoaded = false;
         let categoriesOpen = false;
+        let currentProductModalId = null;
 
         // ============================================================
         // 3. TOAST
@@ -1116,6 +1283,15 @@
                     renderCategories();
                 }
                 updateStats();
+                // Если открыто модальное окно товара, обновляем его
+                if (currentProductModalId) {
+                    const product = products.find(p => p.id === currentProductModalId);
+                    if (product) {
+                        updateProductModalContent(product);
+                    } else {
+                        closeProductModal();
+                    }
+                }
             });
         }
 
@@ -1180,7 +1356,6 @@
             }
 
             filtered.sort((a, b) => (b.qty || 0) - (a.qty || 0));
-            grid.className = 'products-grid' + (currentView === 'list' ? ' list-view' : '');
 
             let html = '';
             filtered.forEach(p => {
@@ -1256,7 +1431,7 @@
                 }
 
                 html += `
-                        <div class="product-card">
+                        <div class="product-card" onclick="openProductModal('${p.id}')">
                             ${imgHtml}
                             <div class="name">${p.name}</div>
                             <div class="category">📁 ${p.category || '—'}</div>
@@ -1267,7 +1442,7 @@
                             ${unitInfo}
                             <div class="stock ${stockClass}">${stockText}</div>
                             <div class="supplier">🏢 ${p.supplier || '—'}</div>
-                            <button class="add-btn ${btnClass}" onclick="addToCart('${p.id}')" ${disabled}>
+                            <button class="add-btn ${btnClass}" onclick="event.stopPropagation(); addToCart('${p.id}')" ${disabled}>
                                 ${btnText}
                             </button>
                         </div>
@@ -1279,7 +1454,179 @@
         }
 
         // ============================================================
-        // 7. FILTERS & VIEW
+        // 6.1. МОДАЛЬНОЕ ОКНО ТОВАРА
+        // ============================================================
+        function openProductModal(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) {
+                showToast('Товар не найден', 'error');
+                return;
+            }
+            currentProductModalId = productId;
+            updateProductModalContent(product);
+            document.getElementById('productModalOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function updateProductModalContent(product) {
+            const body = document.getElementById('productModalBody');
+            const qty = product.qty || 0;
+            const inCart = cart[product.id] || 0;
+            const isInStock = qty > 0;
+            const isInCart = inCart > 0;
+
+            // Изображение
+            let imgHtml = '';
+            if (product.image && product.image.trim() !== '') {
+                imgHtml = `
+                    <div class="modal-image-container">
+                        <img src="${product.image}" alt="${product.name}" 
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" 
+                             onclick="this.classList.toggle('zoomed')" />
+                        <div class="modal-image-placeholder" style="display:none;">📦</div>
+                    </div>
+                `;
+            } else {
+                imgHtml = `
+                    <div class="modal-image-container">
+                        <div class="modal-image-placeholder">📦</div>
+                    </div>
+                `;
+            }
+
+            // Статус состояния
+            const isUsed = product.condition && (product.condition.toLowerCase() === 'used' || product.condition.toLowerCase() === 'б/у');
+            const condBadgeClass = isUsed ? 'condition-used' : 'condition-new';
+            const condText = isUsed ? '♻️ Б/у' : '🆕 Новый';
+
+            // Бейджи
+            const locEmojis = {
+                'Въезд': '🚗',
+                'Здание': '🏢',
+                'Шатер': '⛺',
+                'КПП': '🛂',
+                'Улица': '🌳'
+            };
+            const locationIcon = locEmojis[product.location] || '📍';
+
+            // Класс для остатков
+            let stockClass = 'stock-good';
+            let stockText = `${qty} шт. ✅`;
+            if (qty === 0) {
+                stockClass = 'stock-zero';
+                stockText = '❌ Нет в наличии';
+            } else if (qty < 5) {
+                stockClass = 'stock-low';
+                stockText = `${qty} шт. ⚠️`;
+            }
+
+            // Кнопка
+            let btnClass = 'in-stock';
+            let btnText = '🛒 ДОБАВИТЬ В КОРЗИНУ';
+            let disabled = '';
+            if (!isInStock) {
+                btnClass = 'out-of-stock';
+                btnText = '❌ НЕТ В НАЛИЧИИ';
+                disabled = 'disabled';
+            } else if (isInCart) {
+                btnClass = 'in-cart';
+                btnText = `✅ В КОРЗИНЕ (${inCart}) — ДОБАВИТЬ ЕЩЁ`;
+            }
+
+            // Артикул / Штрихкод
+            let barcodeText = '—';
+            if (product.barcode) {
+                const isBarcode = /^[0-9]{13}$/.test(product.barcode) || product.barcode.startsWith('460');
+                barcodeText = `${isBarcode ? '📊' : '🔢'} ${product.barcode}`;
+            }
+
+            // Единица измерения
+            let unitText = 'шт';
+            if (product.unitType || product.customUnit) {
+                unitText = product.unitType || '';
+                if (product.customUnit) unitText += ` (${product.customUnit})`;
+            }
+
+            body.innerHTML = `
+                <div class="modal-image-section">
+                    ${imgHtml}
+                </div>
+                <div class="modal-info-section">
+                    <div class="modal-badges">
+                        <span class="modal-badge category">📁 ${product.category || 'Без категории'}</span>
+                        <span class="modal-badge location">${locationIcon} ${product.location || '—'}</span>
+                        <span class="modal-badge ${condBadgeClass}">${condText}</span>
+                        ${product.storageAddress ? `<span class="modal-badge address">📍 ${product.storageAddress}</span>` : ''}
+                    </div>
+                    <h2 class="modal-title">${product.name}</h2>
+                    
+                    <div class="modal-info-list">
+                        <div class="modal-info-row">
+                            <span class="modal-info-label">💰 В наличии</span>
+                            <span class="modal-info-value ${stockClass}">${stockText}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="modal-info-label">📏 Единица измерения</span>
+                            <span class="modal-info-value">${unitText}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="modal-info-label">🔖 Артикул/Штрихкод</span>
+                            <span class="modal-info-value">${barcodeText}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="modal-info-label">🏢 Поставщик</span>
+                            <span class="modal-info-value">${product.supplier || '—'}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="modal-info-label">📅 Дата прихода</span>
+                            <span class="modal-info-value">${product.date || '—'}</span>
+                        </div>
+                        ${product.storageAddress ? `
+                        <div class="modal-info-row">
+                            <span class="modal-info-label">📍 Адрес хранения</span>
+                            <span class="modal-info-value">${product.storageAddress}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <button class="modal-add-btn ${btnClass}" 
+                            onclick="addToCartFromModal('${product.id}')" 
+                            ${disabled}>
+                        ${btnText}
+                    </button>
+                </div>
+            `;
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModalOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+            currentProductModalId = null;
+        }
+
+        // Добавление в корзину из модального окна с закрытием окна
+        function addToCartFromModal(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const currentQty = cart[productId] || 0;
+            if (currentQty >= product.qty) {
+                showToast('❌ Недостаточно товара на складе!', 'error');
+                return;
+            }
+
+            cart[productId] = (cart[productId] || 0) + 1;
+            updateCartBadge();
+            renderProducts();
+            renderCart();
+            showToast(`✅ ${product.name} добавлен в корзину`, 'success');
+            
+            // Закрываем модальное окно после добавления
+            closeProductModal();
+        }
+
+        // ============================================================
+        // 7. FILTERS
         // ============================================================
         function filterByCategory(category) {
             currentCategory = category;
@@ -1290,13 +1637,6 @@
         }
 
         function filterProducts() {
-            renderProducts();
-        }
-
-        function setView(view) {
-            currentView = view;
-            document.getElementById('gridViewBtn').classList.toggle('active', view === 'grid');
-            document.getElementById('listViewBtn').classList.toggle('active', view === 'list');
             renderProducts();
         }
 
@@ -1394,6 +1734,10 @@
                 updateCartBadge();
                 renderCart();
                 renderProducts();
+                if (currentProductModalId === productId) {
+                    const product = products.find(p => p.id === productId);
+                    if (product) updateProductModalContent(product);
+                }
             }
         }
 
@@ -1455,7 +1799,6 @@
             document.getElementById('orderSuccess').innerHTML = '';
             orderSuccessShown = false;
 
-            // Показываем крестики для полей с текстом
             document.querySelectorAll('.order-form .input-wrapper input, .order-form .input-wrapper textarea')
                 .forEach(el => toggleClearBtn(el));
         }
@@ -1657,7 +2000,6 @@
                 document.getElementById('orderComment').value = '';
                 document.getElementById('orderPickup').value = 'через 1 час';
 
-                // Скрываем крестики после очистки
                 document.querySelectorAll('.order-form .input-wrapper .clear-input-btn').forEach(btn => {
                     btn.classList.remove('visible');
                 });
@@ -1683,16 +2025,24 @@
         console.log('🛒 Интернет-магазин запущен!');
         loadData();
 
-        // Инициализация: категории скрыты по умолчанию
         document.addEventListener('DOMContentLoaded', function() {
-            // Категории уже скрыты по умолчанию благодаря CSS
-            // Добавляем обработчики для полей ввода в корзине при открытии
             document.querySelectorAll('.order-form .input-wrapper input, .order-form .input-wrapper textarea')
                 .forEach(el => {
                     el.addEventListener('input', function() {
                         toggleClearBtn(this);
                     });
                 });
+
+            // Закрытие модального окна товара по ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('productModalOverlay').classList.contains('open')) {
+                        closeProductModal();
+                    } else if (document.getElementById('cartOverlay').classList.contains('open')) {
+                        closeCart();
+                    }
+                }
+            });
         });
     </script>
 
