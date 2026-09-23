@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -302,12 +303,20 @@
         .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
         .settings-btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .settings-btn-row button { padding: 6px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        /* Кнопка перехода к заказу из истории выдач */
         .order-link-btn { background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; cursor: pointer; margin-left: 6px; transition: 0.2s; white-space: nowrap; display: inline-block; vertical-align: middle; }
         .order-link-btn:hover { background: #2563eb; transform: translateY(-1px); }
         .order-link-missing { background: #f1f5f9; color: #94a3b8; border-radius: 4px; padding: 2px 8px; font-size: 10px; margin-left: 6px; display: inline-block; vertical-align: middle; }
         .object-cell { max-width: 220px; }
         .object-cell > span { display: inline-block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+        /* Статусы сервиса */
+        .service-status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+        .service-status-badge.arrived { background: #dbeafe; color: #2563eb; }
+        .service-status-badge.in-repair { background: #fef3c7; color: #d97706; }
+        .service-status-badge.returned { background: #d1fae5; color: #059669; }
+        .service-status-badge.ready { background: #22c55e; color: white; }
+        .service-status-badge.problem { background: #fee2e2; color: #dc2626; }
+        .service-status-badge.waiting { background: #f1f5f9; color: #64748b; }
+        .service-purposes-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; background: #ede9fe; color: #7c3aed; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -329,6 +338,9 @@
                 </button>
                 <button data-view="incomes" id="btnIncomes" style="background:#3b82f6;color:white;text-align:center;font-weight:bold;margin-top:6px;">
                     📥 ПРИХОД
+                </button>
+                <button data-view="service" id="btnService" style="background:#f97316;color:white;text-align:center;font-weight:bold;margin-top:6px;">
+                    🔧 СЕРВИС
                 </button>
             </div>
             <div class="sidebar-section" id="categorySection">
@@ -528,6 +540,28 @@
                     <div id="incomesList" class="orders-list"></div>
                 </div>
             </div>
+
+            <div class="view-container" id="viewService">
+                <div style="padding:0;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                        <h3 style="font-size:16px;">🔧 Товары на сервисе</h3>
+                        <button class="btn" onclick="openServiceModal()" style="background:#f97316;color:white;">➕ Добавить на сервис</button>
+                    </div>
+                    <div style="margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;">
+                        <div class="view-toggle">
+                            <button id="serviceGridViewBtn" class="active" onclick="setServiceView('grid')" title="Сетка">▦</button>
+                            <button id="serviceListViewBtn" onclick="setServiceView('list')" title="Список">☰</button>
+                        </div>
+                        <div class="export-buttons">
+                            <button class="btn-csv" onclick="exportService('csv')">CSV</button>
+                            <button class="btn-excel" onclick="exportService('excel')">Excel</button>
+                            <button class="btn-json" onclick="exportService('json')">JSON</button>
+                            <button class="btn-pdf" onclick="exportService('pdf')">PDF</button>
+                        </div>
+                    </div>
+                    <div id="serviceList"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -572,7 +606,7 @@
                 </div>
                 <div id="imagePreview" style="margin-top:4px;display:none;"><img id="previewImg" src="" alt="Предпросмотр" style="max-width:100%;max-height:100px;border-radius:6px;border:1px solid #e2e8f0;" /></div>
                 <label>Кому выдал (при выдаче)</label><input type="text" id="fIssuedTo" placeholder="ФИО или подразделение" />
-				 <label>🏗️ Объект (куда едет)</label><input type="text" id="fObject" placeholder="Бетонный проезд 5А/6" />
+                <label>🏗️ Объект (куда едет)</label><input type="text" id="fObject" placeholder="Бетонный проезд 5А/6" />
                 <label>Примечание</label><textarea id="fNote" placeholder="Дополнительная информация"></textarea>
                 <input type="hidden" id="fProductId" value="" />
                 <input type="hidden" id="fAction" value="add" />
@@ -676,7 +710,7 @@
                     <div><label>Дата</label><input type="date" id="heDate" /></div>
                 </div>
                 <label>Кому выдал</label><input type="text" id="heIssuedTo" placeholder="ФИО или подразделение" />
-				<label>🏗️ Объект (куда едет)</label><input type="text" id="heObject" placeholder="Бетонный проезд 5А/6" />
+                <label>🏗️ Объект (куда едет)</label><input type="text" id="heObject" placeholder="Бетонный проезд 5А/6" />
                 <label>Примечание</label><textarea id="heNote" placeholder="Дополнительная информация"></textarea>
                 <input type="hidden" id="heHistoryId" value="" />
                 <input type="hidden" id="heProductId" value="" />
@@ -685,6 +719,67 @@
                     <button type="button" class="btn-secondary" onclick="closeHistoryEditModal()">Отмена</button>
                     <button type="submit" class="btn-primary" id="historyEditSubmit">Сохранить изменения</button>
                     <button type="button" class="btn-danger" onclick="deleteHistoryRecord()">🗑️ Удалить запись</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="serviceModalOverlay">
+        <div class="modal" id="serviceModalContent">
+            <h2 id="serviceModalTitle">🔧 Добавить на сервис</h2>
+            <form id="serviceForm">
+                <div class="row-2col">
+                    <div><label>Марка и модель *</label><input type="text" id="svModel" placeholder="Makita HP1630K" required /></div>
+                    <div><label>Предназначение *</label>
+                        <select id="svPurpose" required>
+                            <option value="">Выберите</option>
+                            <option value="Болгарка">🔧 Болгарка</option>
+                            <option value="Шуруповерт">🔩 Шуруповерт</option>
+                            <option value="Отбойник">⚡ Отбойник</option>
+                            <option value="Генератор">🔌 Генератор</option>
+                            <option value="Дрель">🪛 Дрель</option>
+                            <option value="Перфоратор">🔨 Перфоратор</option>
+                            <option value="Св.аппарат">⚙️ Св.аппарат</option>
+                            <option value="Триммер">🌿 Триммер</option>
+                            <option value="Другое">📦 Другое</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row-2col">
+                    <div><label>Кто отдал на ремонт *</label><input type="text" id="svGivenBy" placeholder="Иванов И.И." required /></div>
+                    <div><label>Объект *</label><input type="text" id="svObject" placeholder="Бетонный проезд 5А/6" required /></div>
+                </div>
+                <label>Что сломалось *</label>
+                <textarea id="svBroken" placeholder="Не включается, искрит и т.д." required></textarea>
+                <div class="row-3col">
+                    <div><label>Артикул по ремонту</label><input type="text" id="svRepairArticle" placeholder="АРТ-12345" /></div>
+                    <div><label>Количество *</label><input type="number" id="svQty" required min="1" value="1" /></div>
+                    <div><label>Статус *</label>
+                        <select id="svStatus" required>
+                            <option value="Приехал на склад в ремонт">📥 Приехал на склад в ремонт</option>
+                            <option value="В ремонте на СЦ">🔧 В ремонте на СЦ</option>
+                            <option value="Приехал на склад после ремонта">📦 Приехал на склад после ремонта</option>
+                            <option value="Готов к выдаче">✅ Готов к выдаче</option>
+                            <option value="Проблема">⚠️ Проблема</option>
+                            <option value="Ожидание">⏳ Ожидание</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row-2col">
+                    <div><label>Дата приезда на склад *</label><input type="date" id="svDateArrival" required /></div>
+                    <div><label>Дата увоза на СЦ</label><input type="date" id="svDateToSC" /></div>
+                </div>
+                <label>Фото (URL)</label>
+                <input type="url" id="svImage" placeholder="https://example.com/photo.jpg" />
+                <div id="svImagePreview" style="margin-top:4px;display:none;"><img id="svPreviewImg" src="" style="max-width:100%;max-height:100px;border-radius:6px;border:1px solid #e2e8f0;" /></div>
+                <label>Примечание</label>
+                <textarea id="svNote" placeholder="Доп. информация"></textarea>
+                <input type="hidden" id="svId" value="" />
+                <input type="hidden" id="svAction" value="add" />
+                <div class="btn-row">
+                    <button type="button" class="btn-secondary" onclick="closeServiceModal()">Отмена</button>
+                    <button type="submit" class="btn-primary" id="svSubmit">Сохранить</button>
+                    <button type="button" class="btn-danger" id="svDeleteBtn" style="display:none;">🗑️ Удалить</button>
                 </div>
             </form>
         </div>
@@ -721,6 +816,7 @@
         let history = [];
         let orders = [];
         let incomes = [];
+        let serviceItems = [];
         let selectedProductId = null;
         let currentView = 'map';
         let debugLogs = [];
@@ -734,6 +830,7 @@
         let buildingPositions = {};
         let isSidebarOpen = window.innerWidth > 768;
         let productView = 'grid';
+        let serviceView = 'grid';
         let searchQuery = '';
         let unreadOrders = 0;
         let currentOrderId = null;
@@ -817,7 +914,6 @@
         // 5. TOAST
         // ============================================================
         function showToast(message, type = 'success') {
-            debugLog(`Toast: ${message} (${type})`);
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.textContent = message;
@@ -1550,7 +1646,6 @@
             viewOrderDetails(orderId);
         }
 
-        // ОБНОВЛЕНО: объект гарантированно отображается
         function viewOrderDetails(orderId) {
             const order = orders.find(o => o.id === orderId);
             if (!order) { showToast('Заказ не найден', 'error'); return; }
@@ -1724,7 +1819,6 @@
                         const newQty = (product.qty || 0) - (item.qty || 0);
                         updates[`${SKLAD_REF}/products/${product.id}/qty`] = Math.max(0, newQty);
                         const historyRef = db.ref(`${SKLAD_REF}/history`).push();
-                        // ОБНОВЛЕНО: добавляем object в историю
                         const historyData = {
                             productId: product.id,
                             productName: product.name,
@@ -1791,57 +1885,49 @@
         // 13. РЕДАКТИРОВАНИЕ ИСТОРИИ
         // ============================================================
         function openHistoryEdit(historyId) {
-    const record = history.find(h => h.id === historyId);
-    if (!record) { showToast('Не найдена', 'error'); return; }
-    document.getElementById('heHistoryId').value = record.id;
-    document.getElementById('heProductId').value = record.productId;
-    document.getElementById('heOldQty').value = record.qty;
-    document.getElementById('heProductName').value = record.productName || '';
-    document.getElementById('heCategory').value = record.category || '';
-    document.getElementById('heLocation').value = record.location || '';
-    document.getElementById('heQty').value = record.qty || 1;
-    document.getElementById('heDate').value = record.date || '';
-    document.getElementById('heIssuedTo').value = record.issuedTo || '';
-    document.getElementById('heNote').value = record.note || '';
-    // Поле "Объект" в форме редактирования истории (добавьте его в HTML, см. пункт 5)
-    const heObjectEl = document.getElementById('heObject');
-    if (heObjectEl) heObjectEl.value = record.object || '';
-    document.getElementById('historyEditModal').classList.add('open');
-}
+            const record = history.find(h => h.id === historyId);
+            if (!record) { showToast('Не найдена', 'error'); return; }
+            document.getElementById('heHistoryId').value = record.id;
+            document.getElementById('heProductId').value = record.productId;
+            document.getElementById('heOldQty').value = record.qty;
+            document.getElementById('heProductName').value = record.productName || '';
+            document.getElementById('heCategory').value = record.category || '';
+            document.getElementById('heLocation').value = record.location || '';
+            document.getElementById('heQty').value = record.qty || 1;
+            document.getElementById('heDate').value = record.date || '';
+            document.getElementById('heIssuedTo').value = record.issuedTo || '';
+            document.getElementById('heNote').value = record.note || '';
+            const heObjectEl = document.getElementById('heObject');
+            if (heObjectEl) heObjectEl.value = record.object || '';
+            document.getElementById('historyEditModal').classList.add('open');
+        }
 
         function closeHistoryEditModal() { document.getElementById('historyEditModal').classList.remove('open'); }
 
         document.getElementById('historyEditForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('heHistoryId').value;
-    const productId = document.getElementById('heProductId').value;
-    const oldQty = parseInt(document.getElementById('heOldQty').value) || 0;
-    const newQty = parseInt(document.getElementById('heQty').value) || 0;
-    const date = document.getElementById('heDate').value;
-    const issuedTo = document.getElementById('heIssuedTo').value.trim();
-    const note = document.getElementById('heNote').value.trim();
-    const heObjectEl = document.getElementById('heObject');
-    const objectValue = heObjectEl ? heObjectEl.value.trim() : '';
-
-    if (newQty <= 0) { showToast('Кол-во > 0', 'error'); return; }
-    try {
-        await db.ref(`${SKLAD_REF}/history/${id}`).update({
-            qty: newQty,
-            date,
-            issuedTo,
-            object: objectValue,      // <-- сохраняем объект
-            note
+            e.preventDefault();
+            const id = document.getElementById('heHistoryId').value;
+            const productId = document.getElementById('heProductId').value;
+            const oldQty = parseInt(document.getElementById('heOldQty').value) || 0;
+            const newQty = parseInt(document.getElementById('heQty').value) || 0;
+            const date = document.getElementById('heDate').value;
+            const issuedTo = document.getElementById('heIssuedTo').value.trim();
+            const note = document.getElementById('heNote').value.trim();
+            const heObjectEl = document.getElementById('heObject');
+            const objectValue = heObjectEl ? heObjectEl.value.trim() : '';
+            if (newQty <= 0) { showToast('Кол-во > 0', 'error'); return; }
+            try {
+                await db.ref(`${SKLAD_REF}/history/${id}`).update({ qty: newQty, date, issuedTo, object: objectValue, note });
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    const diff = newQty - oldQty;
+                    await db.ref(`${SKLAD_REF}/products/${productId}/qty`).set(Math.max(0, product.qty + diff));
+                }
+                showToast('✅ Обновлено!', 'success');
+                closeHistoryEditModal();
+                loadReports();
+            } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
         });
-        const product = products.find(p => p.id === productId);
-        if (product) {
-            const diff = newQty - oldQty;
-            await db.ref(`${SKLAD_REF}/products/${productId}/qty`).set(Math.max(0, product.qty + diff));
-        }
-        showToast('✅ Обновлено!', 'success');
-        closeHistoryEditModal();
-        loadReports();
-    } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
-});
 
         function deleteHistoryRecord() {
             const id = document.getElementById('heHistoryId').value;
@@ -1865,6 +1951,7 @@
             loadOrders();
             loadStorageAddresses();
             loadIncomes();
+            loadService();
 
             db.ref(`${SKLAD_REF}/categories`).on('value', snap => {
                 const data = snap.val();
@@ -2108,7 +2195,7 @@
         }
 
         // ============================================================
-        // 18. REPORTS — ОБНОВЛЕНО
+        // 18. REPORTS
         // ============================================================
         function loadReports() { renderReports(); }
 
@@ -2130,10 +2217,8 @@
                     (h.note || '').toLowerCase().includes(search)
                 );
             }
-            
             const filteredIds = new Set(filtered.map(h => h.id));
             selectedHistoryIds.forEach(id => { if (!filteredIds.has(id)) selectedHistoryIds.delete(id); });
-            
             if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:30px;">Нет записей</td></tr>';
                 updatePrintMoveButton();
@@ -2146,7 +2231,6 @@
                 const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
                 const isSelected = selectedHistoryIds.has(h.id);
 
-                // Определяем объект
                 let objectText = h.object || '';
                 let orderLinkHtml = '';
                 if (h.orderId) {
@@ -2154,7 +2238,6 @@
                     if (linkedOrder && linkedOrder.object) objectText = linkedOrder.object;
                     orderLinkHtml = `<button class="order-link-btn" onclick="event.stopPropagation(); openLinkedOrder('${h.orderId}')" title="Открыть заказ">📦 Заказ</button>`;
                 }
-                // Проверяем примечание
                 const noteMatch = (h.note || '').match(/заказ[уа]?\s+(Z\d+)/i);
                 if (noteMatch && !h.orderId) {
                     const orderNumber = noteMatch[1];
@@ -2227,7 +2310,6 @@
             if (selectAllCheckbox && checkboxes.length > 0) selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
         }
 
-        // ИСПРАВЛЕНО: надёжный показ кнопки печати
         function updatePrintMoveButton() {
             const btn = document.getElementById('printMoveBtn');
             if (!btn) return;
@@ -2303,7 +2385,6 @@
                         td, th { border: 1px solid #000; padding: 1px 3px; vertical-align: top; line-height: 1.15; }
                         .no-border, .no-border td { border: none !important; }
                         .center { text-align: center; }
-                        .right { text-align: right; }
                         .bold { font-weight: bold; }
                         .small { font-size: 6.5pt; }
                         .header-table td { border: none; padding: 0; }
@@ -2429,14 +2510,6 @@
                                 <th class="center" style="width:40px; font-size:7pt;">Кол-во</th>
                                 <th class="center" style="width:45px; font-size:7pt;">Цена</th>
                                 <th class="center" style="width:50px; font-size:7pt;">Сумма</th>
-                            </tr>
-                            <tr style="background:#f1f5f9;">
-                                <th class="center small">1</th>
-                                <th class="center small">2</th>
-                                <th class="center small">3</th>
-                                <th class="center small">4</th>
-                                <th class="center small">5</th>
-                                <th class="center small">6</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2692,121 +2765,112 @@
         }
 
         function _openModal(action, product = null) {
-    fAction.value = action;
-    modalDelete.style.display = (action === 'edit' || action === 'issue') ? 'inline-block' : 'none';
-    updateModalCategories();
-
-    if (action === 'add') {
-        modalTitle.textContent = '➕ Добавить товар';
-        fName.value = ''; fCategory.value = ''; fLocation.value = ''; fStorageAddress.value = '';
-        fQty.value = ''; fUnitType.value = 'шт'; fCustomUnit.value = ''; fCondition.value = 'Новый';
-        fBarcode.value = ''; fSupplier.value = ''; fDate.value = new Date().toISOString().split('T')[0];
-        fImage.value = ''; fIssuedTo.value = ''; fNote.value = ''; fProductId.value = '';
-        const fObjectEl = document.getElementById('fObject');
-        if (fObjectEl) fObjectEl.value = '';
-        imagePreview.style.display = 'none';
-        document.getElementById('modalSubmit').textContent = 'Сохранить';
-    } else if (action === 'edit' && product) {
-        modalTitle.textContent = '✏️ Редактировать товар';
-        fName.value = product.name || ''; fCategory.value = product.category || '';
-        fLocation.value = product.location || ''; fStorageAddress.value = product.storageAddress || '';
-        fQty.value = product.qty || 0; fUnitType.value = product.unitType || 'шт';
-        fCustomUnit.value = product.customUnit || ''; fCondition.value = product.condition || 'Новый';
-        fBarcode.value = product.barcode || ''; fSupplier.value = product.supplier || '';
-        fDate.value = product.date || ''; fImage.value = product.image || '';
-        fIssuedTo.value = product.issuedTo || ''; fNote.value = product.note || '';
-        const fObjectEl = document.getElementById('fObject');
-        if (fObjectEl) fObjectEl.value = product.object || '';
-        fProductId.value = product.id;
-        if (product.image) { previewImg.src = product.image; imagePreview.style.display = 'block'; }
-        else imagePreview.style.display = 'none';
-        document.getElementById('modalSubmit').textContent = 'Обновить';
-    } else if (action === 'issue' && product) {
-        modalTitle.textContent = '📤 Выдать товар';
-        fName.value = product.name || ''; fCategory.value = product.category || '';
-        fLocation.value = product.location || ''; fStorageAddress.value = product.storageAddress || '';
-        fQty.value = 1; fUnitType.value = product.unitType || 'шт';
-        fCustomUnit.value = product.customUnit || ''; fCondition.value = product.condition || 'Новый';
-        fBarcode.value = product.barcode || ''; fSupplier.value = product.supplier || '';
-        fDate.value = new Date().toISOString().split('T')[0]; fImage.value = product.image || '';
-        fIssuedTo.value = ''; fNote.value = `Выдано 1 шт. Остаток: ${product.qty - 1}`;
-        const fObjectEl = document.getElementById('fObject');
-        if (fObjectEl) fObjectEl.value = '';
-        fProductId.value = product.id;
-        imagePreview.style.display = 'none';
-        document.getElementById('modalSubmit').textContent = 'Выдать';
-    }
-    modalOverlay.classList.add('open');
-}
+            fAction.value = action;
+            modalDelete.style.display = (action === 'edit' || action === 'issue') ? 'inline-block' : 'none';
+            updateModalCategories();
+            const fObjectEl = document.getElementById('fObject');
+            if (action === 'add') {
+                modalTitle.textContent = '➕ Добавить товар';
+                fName.value = ''; fCategory.value = ''; fLocation.value = ''; fStorageAddress.value = '';
+                fQty.value = ''; fUnitType.value = 'шт'; fCustomUnit.value = ''; fCondition.value = 'Новый';
+                fBarcode.value = ''; fSupplier.value = ''; fDate.value = new Date().toISOString().split('T')[0];
+                fImage.value = ''; fIssuedTo.value = ''; fNote.value = ''; fProductId.value = '';
+                if (fObjectEl) fObjectEl.value = '';
+                imagePreview.style.display = 'none';
+                document.getElementById('modalSubmit').textContent = 'Сохранить';
+            } else if (action === 'edit' && product) {
+                modalTitle.textContent = '✏️ Редактировать товар';
+                fName.value = product.name || ''; fCategory.value = product.category || '';
+                fLocation.value = product.location || ''; fStorageAddress.value = product.storageAddress || '';
+                fQty.value = product.qty || 0; fUnitType.value = product.unitType || 'шт';
+                fCustomUnit.value = product.customUnit || ''; fCondition.value = product.condition || 'Новый';
+                fBarcode.value = product.barcode || ''; fSupplier.value = product.supplier || '';
+                fDate.value = product.date || ''; fImage.value = product.image || '';
+                fIssuedTo.value = product.issuedTo || ''; fNote.value = product.note || '';
+                if (fObjectEl) fObjectEl.value = product.object || '';
+                fProductId.value = product.id;
+                if (product.image) { previewImg.src = product.image; imagePreview.style.display = 'block'; }
+                else imagePreview.style.display = 'none';
+                document.getElementById('modalSubmit').textContent = 'Обновить';
+            } else if (action === 'issue' && product) {
+                modalTitle.textContent = '📤 Выдать товар';
+                fName.value = product.name || ''; fCategory.value = product.category || '';
+                fLocation.value = product.location || ''; fStorageAddress.value = product.storageAddress || '';
+                fQty.value = 1; fUnitType.value = product.unitType || 'шт';
+                fCustomUnit.value = product.customUnit || ''; fCondition.value = product.condition || 'Новый';
+                fBarcode.value = product.barcode || ''; fSupplier.value = product.supplier || '';
+                fDate.value = new Date().toISOString().split('T')[0]; fImage.value = product.image || '';
+                fIssuedTo.value = ''; fNote.value = `Выдано 1 шт. Остаток: ${product.qty - 1}`;
+                if (fObjectEl) fObjectEl.value = '';
+                fProductId.value = product.id;
+                imagePreview.style.display = 'none';
+                document.getElementById('modalSubmit').textContent = 'Выдать';
+            }
+            modalOverlay.classList.add('open');
+        }
 
         function closeModal() { modalOverlay.classList.remove('open'); }
         document.getElementById('modalClose').addEventListener('click', closeModal);
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
         productForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const action = fAction.value;
-    const id = fProductId.value;
-    const name = fName.value.trim();
-    const category = fCategory.value;
-    const location = fLocation.value;
-    const storageAddress = fStorageAddress.value.trim();
-    const qty = parseInt(fQty.value) || 0;
-    const unitType = fUnitType.value;
-    const customUnit = fCustomUnit.value.trim();
-    const condition = fCondition.value;
-    const barcode = fBarcode.value.trim();
-    const supplier = fSupplier.value.trim();
-    const date = fDate.value;
-    const image = fImage.value.trim();
-    const issuedTo = fIssuedTo.value.trim();
-    const note = fNote.value.trim();
-    const fObjectEl = document.getElementById('fObject');
-    const objectValue = fObjectEl ? fObjectEl.value.trim() : '';
+            e.preventDefault();
+            const action = fAction.value;
+            const id = fProductId.value;
+            const name = fName.value.trim();
+            const category = fCategory.value;
+            const location = fLocation.value;
+            const storageAddress = fStorageAddress.value.trim();
+            const qty = parseInt(fQty.value) || 0;
+            const unitType = fUnitType.value;
+            const customUnit = fCustomUnit.value.trim();
+            const condition = fCondition.value;
+            const barcode = fBarcode.value.trim();
+            const supplier = fSupplier.value.trim();
+            const date = fDate.value;
+            const image = fImage.value.trim();
+            const issuedTo = fIssuedTo.value.trim();
+            const note = fNote.value.trim();
+            const fObjectEl = document.getElementById('fObject');
+            const objectValue = fObjectEl ? fObjectEl.value.trim() : '';
 
-    if (!name || !category || !location) { showToast('Заполните поля!', 'error'); return; }
-    const duplicate = products.find(p => p.name.toLowerCase() === name.toLowerCase() && p.id !== id);
-    if (duplicate) { showToast(`Товар "${name}" уже существует!`, 'error'); return; }
+            if (!name || !category || !location) { showToast('Заполните поля!', 'error'); return; }
+            const duplicate = products.find(p => p.name.toLowerCase() === name.toLowerCase() && p.id !== id);
+            if (duplicate) { showToast(`Товар "${name}" уже существует!`, 'error'); return; }
 
-    try {
-        if (action === 'add') {
-            await saveProduct({ name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, x: null, y: null, createdAt: firebase.database.ServerValue.TIMESTAMP });
-            showToast('Товар добавлен!', 'success');
-            closeModal();
-        } else if (action === 'edit' && id) {
-            const existing = products.find(p => p.id === id);
-            if (existing) {
-                await saveProduct({ ...existing, name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note }, id);
-            }
-            showToast('Товар обновлен!', 'success');
-            closeModal();
-        } else if (action === 'issue' && id) {
-            const existing = products.find(p => p.id === id);
-            if (existing) {
-                const newQty = existing.qty - qty;
-                if (newQty < 0) { showToast('Недостаточно товара!', 'error'); return; }
-                const historyRef = db.ref(`${SKLAD_REF}/history`).push();
-                // ДОБАВЛЕНО: object сохраняется в историю
-                await historyRef.set({
-                    productId: id,
-                    productName: existing.name,
-                    category: existing.category,
-                    location: existing.location,
-                    qty,
-                    issuedTo: issuedTo || 'Не указан',
-                    object: objectValue,       // <-- объект (куда едет)
-                    supplier: existing.supplier || '—',
-                    date: date || new Date().toISOString().split('T')[0],
-                    note: note || 'Выдача со склада',
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-                await saveProduct({ ...existing, qty: newQty, issuedTo: issuedTo || existing.issuedTo, note: note || existing.note }, id);
-                showToast(`Выдано ${qty} шт.`, 'success');
-            }
-            closeModal();
-        }
-    } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
-});
+            try {
+                if (action === 'add') {
+                    await saveProduct({ name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, x: null, y: null, createdAt: firebase.database.ServerValue.TIMESTAMP });
+                    showToast('Товар добавлен!', 'success');
+                    closeModal();
+                } else if (action === 'edit' && id) {
+                    const existing = products.find(p => p.id === id);
+                    if (existing) {
+                        await saveProduct({ ...existing, name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note }, id);
+                    }
+                    showToast('Товар обновлен!', 'success');
+                    closeModal();
+                } else if (action === 'issue' && id) {
+                    const existing = products.find(p => p.id === id);
+                    if (existing) {
+                        const newQty = existing.qty - qty;
+                        if (newQty < 0) { showToast('Недостаточно товара!', 'error'); return; }
+                        const historyRef = db.ref(`${SKLAD_REF}/history`).push();
+                        await historyRef.set({
+                            productId: id, productName: existing.name, category: existing.category,
+                            location: existing.location, qty, issuedTo: issuedTo || 'Не указан',
+                            object: objectValue, supplier: existing.supplier || '—',
+                            date: date || new Date().toISOString().split('T')[0],
+                            note: note || 'Выдача со склада',
+                            timestamp: firebase.database.ServerValue.TIMESTAMP
+                        });
+                        await saveProduct({ ...existing, qty: newQty, issuedTo: issuedTo || existing.issuedTo, note: note || existing.note }, id);
+                        showToast(`Выдано ${qty} шт.`, 'success');
+                    }
+                    closeModal();
+                }
+            } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+        });
 
         modalDelete.addEventListener('click', async () => {
             const id = fProductId.value;
@@ -2830,6 +2894,7 @@
             if (view === 'list') renderProductList();
             if (view === 'orders') renderOrders();
             if (view === 'incomes') renderIncomes();
+            if (view === 'service') renderService();
             if (view === 'map') setTimeout(resizeCanvas, 100);
             hideTooltip();
         }
@@ -3155,7 +3220,229 @@
         }
 
         // ============================================================
-        // 27. INIT
+        // 27. СЕРВИС
+        // ============================================================
+        function loadService() {
+            db.ref(`${SKLAD_REF}/service`).on('value', snap => {
+                const data = snap.val();
+                serviceItems = [];
+                if (data) {
+                    Object.keys(data).forEach(key => serviceItems.push({ id: key, ...data[key] }));
+                    serviceItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                }
+                if (currentView === 'service') renderService();
+            });
+        }
+
+        function setServiceView(view) {
+            serviceView = view;
+            document.getElementById('serviceGridViewBtn').classList.toggle('active', view === 'grid');
+            document.getElementById('serviceListViewBtn').classList.toggle('active', view === 'list');
+            renderService();
+        }
+
+        function getServiceStatusInfo(status) {
+            const map = {
+                'Приехал на склад в ремонт': { class: 'arrived', label: '📥 Приехал на склад' },
+                'В ремонте на СЦ': { class: 'in-repair', label: '🔧 В ремонте на СЦ' },
+                'Приехал на склад после ремонта': { class: 'returned', label: '📦 После ремонта' },
+                'Готов к выдаче': { class: 'ready', label: '✅ Готов к выдаче' },
+                'Проблема': { class: 'problem', label: '⚠️ Проблема' },
+                'Ожидание': { class: 'waiting', label: '⏳ Ожидание' }
+            };
+            return map[status] || { class: 'waiting', label: status || '—' };
+        }
+
+        function renderService() {
+            const container = document.getElementById('serviceList');
+            if (!container) return;
+            if (serviceItems.length === 0) {
+                container.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#94a3b8;">
+                    <div style="font-size:48px;margin-bottom:12px;">🔧</div>
+                    <h3 style="color:#64748b;">Нет товаров на сервисе</h3>
+                    <p style="font-size:14px;">Добавьте товар, который уехал на ремонт</p>
+                </div>`;
+                return;
+            }
+            const isGrid = serviceView === 'grid';
+            let html = `<div class="product-list-container ${isGrid ? 'grid-view' : 'list-view'}">`;
+            serviceItems.forEach(item => {
+                const statusInfo = getServiceStatusInfo(item.status);
+                const imageHtml = item.image
+                    ? `<img src="${item.image}" class="card-image" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="card-image-placeholder" style="display:none;">🔧</div>`
+                    : `<div class="card-image-placeholder">🔧</div>`;
+                html += `
+                    <div class="product-card" onclick="openServiceModal('${item.id}')">
+                        ${imageHtml}
+                        <div class="left">
+                            <div class="card-name">${item.model || '—'}</div>
+                            <div class="card-tags">
+                                <span class="service-purposes-badge">${item.purpose || '—'}</span>
+                                <span class="card-tag">👤 ${item.givenBy || '—'}</span>
+                                <span class="card-tag">🏗️ ${item.object || '—'}</span>
+                                ${item.repairArticle ? `<span class="card-tag">🏷️ ${item.repairArticle}</span>` : ''}
+                            </div>
+                            <div style="font-size:11px;color:#64748b;margin-top:4px;">
+                                <strong>Неисправность:</strong> ${(item.broken || '').slice(0, 60)}${item.broken && item.broken.length > 60 ? '…' : ''}
+                            </div>
+                            <div style="font-size:11px;color:#94a3b8;margin-top:2px;">
+                                📥 ${item.dateArrival || '—'} → 🚚 СЦ: ${item.dateToSC || '—'}
+                            </div>
+                            <div style="margin-top:6px;"><span class="service-status-badge ${statusInfo.class}">${statusInfo.label}</span></div>
+                        </div>
+                        <div class="card-bottom">
+                            <span class="qty-badge" style="background:#f97316;">${item.qty || 1}</span>
+                            <button class="edit-btn" onclick="event.stopPropagation();openServiceModal('${item.id}')" title="Редактировать">✏️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function openServiceModal(id = null) {
+            const modal = document.getElementById('serviceModalOverlay');
+            const form = document.getElementById('serviceForm');
+            form.reset();
+            const preview = document.getElementById('svImagePreview');
+            preview.style.display = 'none';
+            if (id) {
+                const item = serviceItems.find(s => s.id === id);
+                if (!item) { showToast('Запись не найдена', 'error'); return; }
+                document.getElementById('serviceModalTitle').textContent = '✏️ Редактировать';
+                document.getElementById('svId').value = id;
+                document.getElementById('svAction').value = 'edit';
+                document.getElementById('svSubmit').textContent = '💾 Обновить';
+                document.getElementById('svDeleteBtn').style.display = 'inline-block';
+                document.getElementById('svModel').value = item.model || '';
+                document.getElementById('svPurpose').value = item.purpose || '';
+                document.getElementById('svGivenBy').value = item.givenBy || '';
+                document.getElementById('svObject').value = item.object || '';
+                document.getElementById('svBroken').value = item.broken || '';
+                document.getElementById('svRepairArticle').value = item.repairArticle || '';
+                document.getElementById('svQty').value = item.qty || 1;
+                document.getElementById('svStatus').value = item.status || 'Приехал на склад в ремонт';
+                document.getElementById('svDateArrival').value = item.dateArrival || '';
+                document.getElementById('svDateToSC').value = item.dateToSC || '';
+                document.getElementById('svImage').value = item.image || '';
+                document.getElementById('svNote').value = item.note || '';
+                if (item.image) {
+                    document.getElementById('svPreviewImg').src = item.image;
+                    preview.style.display = 'block';
+                }
+            } else {
+                document.getElementById('serviceModalTitle').textContent = '🔧 Добавить на сервис';
+                document.getElementById('svId').value = '';
+                document.getElementById('svAction').value = 'add';
+                document.getElementById('svSubmit').textContent = 'Сохранить';
+                document.getElementById('svDeleteBtn').style.display = 'none';
+                document.getElementById('svDateArrival').value = new Date().toISOString().split('T')[0];
+            }
+            modal.classList.add('open');
+        }
+
+        function closeServiceModal() {
+            document.getElementById('serviceModalOverlay').classList.remove('open');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const svImage = document.getElementById('svImage');
+            if (svImage) {
+                svImage.addEventListener('input', function() {
+                    const url = this.value.trim();
+                    const preview = document.getElementById('svImagePreview');
+                    const img = document.getElementById('svPreviewImg');
+                    if (url) {
+                        img.src = url;
+                        preview.style.display = 'block';
+                        img.onerror = function() { preview.style.display = 'none'; };
+                    } else {
+                        preview.style.display = 'none';
+                    }
+                });
+            }
+
+            const serviceForm = document.getElementById('serviceForm');
+            if (serviceForm) {
+                serviceForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const id = document.getElementById('svId').value;
+                    const action = document.getElementById('svAction').value;
+                    const data = {
+                        model: document.getElementById('svModel').value.trim(),
+                        purpose: document.getElementById('svPurpose').value,
+                        givenBy: document.getElementById('svGivenBy').value.trim(),
+                        object: document.getElementById('svObject').value.trim(),
+                        broken: document.getElementById('svBroken').value.trim(),
+                        repairArticle: document.getElementById('svRepairArticle').value.trim(),
+                        qty: parseInt(document.getElementById('svQty').value) || 1,
+                        status: document.getElementById('svStatus').value,
+                        dateArrival: document.getElementById('svDateArrival').value,
+                        dateToSC: document.getElementById('svDateToSC').value,
+                        image: document.getElementById('svImage').value.trim(),
+                        note: document.getElementById('svNote').value.trim(),
+                        updatedAt: firebase.database.ServerValue.TIMESTAMP
+                    };
+                    if (!data.model || !data.purpose || !data.givenBy || !data.object || !data.broken || !data.dateArrival) {
+                        showToast('Заполните обязательные поля!', 'error');
+                        return;
+                    }
+                    try {
+                        if (action === 'edit' && id) {
+                            await db.ref(`${SKLAD_REF}/service/${id}`).update(data);
+                            showToast('✅ Обновлено!', 'success');
+                        } else {
+                            data.createdAt = firebase.database.ServerValue.TIMESTAMP;
+                            data.timestamp = firebase.database.ServerValue.TIMESTAMP;
+                            await db.ref(`${SKLAD_REF}/service`).push().set(data);
+                            showToast('✅ Добавлено на сервис!', 'success');
+                        }
+                        closeServiceModal();
+                    } catch (err) {
+                        showToast('Ошибка: ' + err.message, 'error');
+                    }
+                });
+            }
+
+            const svDeleteBtn = document.getElementById('svDeleteBtn');
+            if (svDeleteBtn) {
+                svDeleteBtn.addEventListener('click', async () => {
+                    const id = document.getElementById('svId').value;
+                    if (!id) return;
+                    if (!confirm('Удалить запись?')) return;
+                    try {
+                        await db.ref(`${SKLAD_REF}/service/${id}`).remove();
+                        showToast('🗑️ Удалено', 'success');
+                        closeServiceModal();
+                    } catch (err) {
+                        showToast('Ошибка: ' + err.message, 'error');
+                    }
+                });
+            }
+        });
+
+        function exportService(format) {
+            const data = serviceItems.map((s, i) => ({
+                '№': i + 1,
+                'Марка и модель': s.model || '',
+                'Предназначение': s.purpose || '',
+                'Кто отдал': s.givenBy || '',
+                'Объект': s.object || '',
+                'Что сломалось': s.broken || '',
+                'Артикул по ремонту': s.repairArticle || '',
+                'Количество': s.qty || 1,
+                'Статус': s.status || '',
+                'Дата приезда на склад': s.dateArrival || '',
+                'Дата увоза на СЦ': s.dateToSC || '',
+                'Примечание': s.note || ''
+            }));
+            if (data.length === 0) { showToast('Нет данных', 'error'); return; }
+            exportData(data, `Сервис_${new Date().toISOString().split('T')[0]}`, format);
+        }
+
+        // ============================================================
+        // 28. INIT
         // ============================================================
         const connectedRef = db.ref('.info/connected');
         connectedRef.on('value', (snap) => {
