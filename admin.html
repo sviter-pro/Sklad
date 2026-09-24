@@ -124,7 +124,7 @@
         .view-container { display: none; padding: 12px; height: 100%; overflow-y: auto; background: white; }
         .view-container.active { display: block; }
         .view-container.map-view { padding: 0; height: 100%; }
-        .product-tooltip { position: fixed; background: #1e293b; color: white; padding: 12px 16px; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); z-index: 100; max-width: 300px; pointer-events: none; display: none; animation: fadeIn 0.2s ease; }
+        .product-tooltip { position: fixed; background: #1e293b; color: white; padding: 12px 16px; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); z-index: 100; max-width: 320px; pointer-events: none; display: none; animation: fadeIn 0.2s ease; }
         .product-tooltip.show { display: block; }
         .product-tooltip .title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #60a5fa; }
         .product-tooltip .info-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -168,6 +168,7 @@
         .product-list-container.grid-view .product-card .card-tag.category-tag { background: #dbeafe; color: #2563eb; }
         .product-list-container.grid-view .product-card .card-tag.location-tag { background: #fef3c7; color: #d97706; }
         .product-list-container.grid-view .product-card .card-tag.condition-tag { background: #d1fae5; color: #059669; }
+        .product-list-container.grid-view .product-card .card-tag.reserve-tag { background: #fee2e2; color: #dc2626; }
         .product-list-container.grid-view .product-card .card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
         .product-list-container.grid-view .product-card .qty-badge { background: #3b82f6; color: white; padding: 2px 12px; border-radius: 12px; font-weight: 700; font-size: 16px; min-width: 30px; text-align: center; }
         .product-list-container.grid-view .product-card .edit-btn { background: #f1f5f9; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 14px; transition: 0.2s; color: #64748b; }
@@ -188,6 +189,7 @@
         .product-list-container.list-view .product-card .card-tag.category-tag { background: #dbeafe; color: #2563eb; }
         .product-list-container.list-view .product-card .card-tag.location-tag { background: #fef3c7; color: #d97706; }
         .product-list-container.list-view .product-card .card-tag.condition-tag { background: #d1fae5; color: #059669; }
+        .product-list-container.list-view .product-card .card-tag.reserve-tag { background: #fee2e2; color: #dc2626; }
         .product-list-container.list-view .product-card .card-bottom { display: flex; align-items: center; gap: 12px; margin-left: auto; }
         .product-list-container.list-view .product-card .qty-badge { background: #3b82f6; color: white; padding: 2px 12px; border-radius: 12px; font-weight: 700; font-size: 14px; min-width: 28px; text-align: center; }
         .product-card { background: white; border: 2px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
@@ -308,7 +310,6 @@
         .order-link-missing { background: #f1f5f9; color: #94a3b8; border-radius: 4px; padding: 2px 8px; font-size: 10px; margin-left: 6px; display: inline-block; vertical-align: middle; }
         .object-cell { max-width: 220px; }
         .object-cell > span { display: inline-block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
-        /* Статусы сервиса */
         .service-status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; white-space: nowrap; }
         .service-status-badge.arrived { background: #dbeafe; color: #2563eb; }
         .service-status-badge.in-repair { background: #fef3c7; color: #d97706; }
@@ -317,6 +318,9 @@
         .service-status-badge.problem { background: #fee2e2; color: #dc2626; }
         .service-status-badge.waiting { background: #f1f5f9; color: #64748b; }
         .service-purposes-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; background: #ede9fe; color: #7c3aed; font-weight: 600; }
+        .reserve-row { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 8px 10px; margin-top: 6px; }
+        .reserve-row .reserve-title { font-size: 12px; font-weight: 700; color: #c2410c; margin-bottom: 4px; }
+        .reserve-tag { background: #fee2e2; color: #dc2626; }
     </style>
 </head>
 <body>
@@ -391,7 +395,7 @@
                 <button id="btnSaveMap" class="btn-success" style="display:none;">💾 Сохранить</button>
                 <button id="btnDebug" style="background:#334155;margin-top:4px;">🐛 Debug</button>
             </div>
-            <div class="footer">Firebase Sync • v1.0</div>
+            <div class="footer">Firebase Sync • v1.1 (reserve)</div>
         </div>
 
         <div class="main-content">
@@ -422,6 +426,7 @@
                     <div class="item"><span class="label">Категория:</span><span class="value" id="selectedCategory">—</span></div>
                     <div class="item"><span class="label">Локация:</span><span class="value" id="selectedLocation">—</span></div>
                     <div class="item"><span class="label">Количество:</span><span class="value" id="selectedQty">—</span></div>
+                    <div class="item"><span class="label">🔒 Резерв:</span><span class="value" id="selectedReserved">—</span></div>
                     <div class="item"><span class="label">Поставщик:</span><span class="value" id="selectedSupplier">—</span></div>
                     <div class="item"><span class="label">Изобр.:</span><span class="value" id="selectedImage">—</span></div>
                 </div>
@@ -513,7 +518,7 @@
                         </div>
                         <div class="report-container">
                             <table class="stock-table">
-                                <thead><tr><th>№</th><th>Изобр.</th><th>Товар</th><th>Категория</th><th>Локация</th><th>Остаток</th><th>Поставщик</th><th>Дата</th><th>Статус</th></tr></thead>
+                                <thead><tr><th>№</th><th>Изобр.</th><th>Товар</th><th>Категория</th><th>Локация</th><th>Остаток</th><th>🔒 Резерв</th><th>Поставщик</th><th>Дата</th><th>Статус</th></tr></thead>
                                 <tbody id="stockBody"></tbody>
                             </table>
                         </div>
@@ -570,6 +575,7 @@
         <div class="info-row"><span class="label">Категория:</span><span class="value" id="tooltipCategory">—</span></div>
         <div class="info-row"><span class="label">Локация:</span><span class="value" id="tooltipLocation">—</span></div>
         <div class="info-row"><span class="label">Количество:</span><span class="value" id="tooltipQty">0</span></div>
+        <div class="info-row"><span class="label">🔒 Резерв:</span><span class="value" id="tooltipReserved">—</span></div>
         <div class="info-row"><span class="label">Поставщик:</span><span class="value" id="tooltipSupplier">—</span></div>
         <div class="info-row"><span class="label">Дата:</span><span class="value" id="tooltipDate">—</span></div>
         <div class="actions">
@@ -595,6 +601,12 @@
                     <div><label>Тип единицы</label><select id="fUnitType"><option value="шт">Штуки (шт)</option><option value="м">Метры (м)</option><option value="кг">Килограммы (кг)</option><option value="л">Литры (л)</option><option value="упак">Упаковки</option><option value="компл">Комплекты</option><option value="рулон">Рулоны</option><option value="лист">Листы</option><option value="бухта">Бухта</option><option value="катушка">Катушка</option><option value="пачка">Пачка</option></select></div>
                     <div><label>Ручной ввод</label><input type="text" id="fCustomUnit" placeholder="бухта 1шт=200м" /></div>
                     <div><label>Состояние</label><select id="fCondition"><option value="Новый">✅ Новый</option><option value="Б/у">🔄 Б/у</option><option value="Требует ремонта">🔧 Требует ремонта</option></select></div>
+                </div>
+                <!-- 🔒 РЕЗЕРВ -->
+                <div class="row-3col" style="margin-top:6px;">
+                    <div><label>🔒 Резерв (кол-во)</label><input type="number" id="fReserved" min="0" value="0" placeholder="0" /></div>
+                    <div><label>🔒 Зарезервировано для</label><input type="text" id="fReservedFor" placeholder="ФИО / объект / подразделение" /></div>
+                    <div></div>
                 </div>
                 <div class="row-2col">
                     <div><label>Штрихкод / Артикул</label><div style="display:flex;gap:6px;align-items:center;"><input type="text" id="fBarcode" placeholder="4601234567890" style="flex:1;" /><button type="button" class="print-label-btn" onclick="printLabel()" title="Печать этикетки">🏷️</button></div></div>
@@ -1001,7 +1013,7 @@
                 const snapshot = await db.ref(SKLAD_REF).once('value');
                 const data = snapshot.val();
                 if (!data) { showToast('База данных пуста', 'error'); return; }
-                const exportData = { exportDate: new Date().toISOString(), version: '1.0', data: data };
+                const exportData = { exportDate: new Date().toISOString(), version: '1.1', data: data };
                 const jsonStr = JSON.stringify(exportData, null, 2);
                 const blob = new Blob([jsonStr], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -1033,6 +1045,31 @@
                 setTimeout(() => window.location.reload(), 1500);
             } catch (err) { showToast('Ошибка импорта: ' + err.message, 'error'); }
             event.target.value = '';
+        }
+
+        // ============================================================
+        // 5.4. РЕЗЕРВ — ХЕЛПЕРЫ
+        // ============================================================
+        function getReservedQty(product) {
+            if (!product) return 0;
+            const r = parseInt(product.reserved);
+            return isNaN(r) || r < 0 ? 0 : r;
+        }
+
+        function getFreeQty(product) {
+            if (!product) return 0;
+            const qty = parseInt(product.qty) || 0;
+            return Math.max(0, qty - getReservedQty(product));
+        }
+
+        function getReserveInfo(product) {
+            const reserved = getReservedQty(product);
+            if (reserved <= 0) return null;
+            return {
+                reserved,
+                reservedFor: product.reservedFor || '—',
+                free: getFreeQty(product)
+            };
         }
 
         // ============================================================
@@ -1172,6 +1209,13 @@
                 else { ctx.shadowColor = isSelected ? 'rgba(59,130,246,0.8)' : 'rgba(0,0,0,0.3)'; ctx.shadowBlur = isSelected ? 25 : 10; }
                 ctx.fillStyle = isSelected ? '#3b82f6' : color;
                 ctx.fillRect(p.x - size/2, p.y - size/2, size, size);
+                // Индикатор резерва
+                if (getReservedQty(p) > 0) {
+                    ctx.fillStyle = '#dc2626';
+                    ctx.beginPath();
+                    ctx.arc(p.x + size/2 - 2, p.y - size/2 + 2, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 if (isSelected || isEditMode) {
                     ctx.shadowBlur = 0;
                     ctx.strokeStyle = isSelected ? 'white' : 'rgba(59,130,246,0.4)';
@@ -1207,9 +1251,13 @@
             document.getElementById('tooltipQty').textContent = product.qty || 0;
             document.getElementById('tooltipSupplier').textContent = product.supplier || '—';
             document.getElementById('tooltipDate').textContent = product.date || '—';
+            const res = getReserveInfo(product);
+            document.getElementById('tooltipReserved').textContent = res
+                ? `🔒 ${res.reserved} — ${res.reservedFor} (свободно: ${res.free})`
+                : 'нет';
             let left = mouseX + 15, top = mouseY - 20;
-            if (left + 300 > window.innerWidth) left = mouseX - 300 - 15;
-            if (top + 200 > window.innerHeight) top = window.innerHeight - 200 - 10;
+            if (left + 320 > window.innerWidth) left = mouseX - 320 - 15;
+            if (top + 220 > window.innerHeight) top = window.innerHeight - 220 - 10;
             if (top < 10) top = 10;
             tooltip.style.left = left + 'px';
             tooltip.style.top = top + 'px';
@@ -1227,7 +1275,12 @@
             if (tooltipProductId) {
                 const product = products.find(p => p.id === tooltipProductId);
                 if (product) {
-                    if (product.qty <= 0) { showToast('Товара нет на складе!', 'error'); return; }
+                    if (getFreeQty(product) <= 0) {
+                        const res = getReserveInfo(product);
+                        if (res) showToast(`🔒 Товар в резерве (${res.reserved} шт. — ${res.reservedFor}). Свободно: ${res.free}`, 'error');
+                        else showToast('Товара нет на складе!', 'error');
+                        return;
+                    }
                     hideTooltip();
                     openModal('issue', product);
                 }
@@ -1373,12 +1426,15 @@
             const unitText = product.unitType || 'шт';
             const customText = product.customUnit ? ` (${product.customUnit})` : '';
             const storageAddr = product.storageAddress || '';
+            const reserved = getReservedQty(product);
+            const reservedLine = reserved > 0 ? `<div style="color:#dc2626;"><strong>🔒 Резерв:</strong> ${reserved} шт. — ${product.reservedFor || '—'}</div>` : '';
             let contentHtml = `
                 <div><strong>${labelType}:</strong> ${product.barcode || 'не указан'}</div>
                 ${product.category ? `<div><strong>Категория:</strong> ${product.category}</div>` : ''}
                 ${storageAddr ? `<div><strong>Адрес:</strong> ${storageAddr}</div>` : ''}
                 ${product.location ? `<div><strong>Место:</strong> ${locEmojis[product.location] || ''} ${product.location}</div>` : ''}
                 <div><strong>Кол-во:</strong> ${qtyText} ${unitText}${customText}</div>
+                ${reservedLine}
                 ${product.condition ? `<div><strong>Состояние:</strong> ${product.condition}</div>` : ''}
                 ${product.supplier ? `<div><strong>Поставщик:</strong> ${product.supplier}</div>` : ''}
                 ${product.date ? `<div><strong>Дата:</strong> ${product.date}</div>` : ''}
@@ -1661,8 +1717,13 @@
             let itemsHtml = '';
             if (itemsArray.length > 0) {
                 itemsHtml = `<table class="items-table">
-                    <thead><tr><th>№</th><th>Товар</th><th>Категория</th><th>Локация</th><th>Адрес</th><th>Кол-во</th><th>Ед. изм.</th></tr></thead>
-                    <tbody>${itemsArray.map((item, i) => `<tr><td>${i+1}</td><td><strong>${item.name||'—'}</strong></td><td>${item.category||'—'}</td><td>${item.location||'—'}</td><td>${item.storageAddress||'—'}</td><td>${item.qty||0}</td><td>${item.unitType||item.customUnit||'шт'}</td></tr>`).join('')}</tbody>
+                    <thead><tr><th>№</th><th>Товар</th><th>Категория</th><th>Локация</th><th>Адрес</th><th>Кол-во</th><th>Ед. изм.</th><th>🔒 Резерв</th></tr></thead>
+                    <tbody>${itemsArray.map((item, i) => {
+                        const product = products.find(p => p.name === item.name);
+                        const res = product ? getReserveInfo(product) : null;
+                        const resCell = res ? `<span style="color:#dc2626;font-size:10px;">🔒 ${res.reserved} — ${res.reservedFor} (своб. ${res.free})</span>` : '—';
+                        return `<tr><td>${i+1}</td><td><strong>${item.name||'—'}</strong></td><td>${item.category||'—'}</td><td>${item.location||'—'}</td><td>${item.storageAddress||'—'}</td><td>${item.qty||0}</td><td>${item.unitType||item.customUnit||'шт'}</td><td>${resCell}</td></tr>`;
+                    }).join('')}</tbody>
                 </table>`;
             } else itemsHtml = '<p style="color:#94a3b8;">Нет товаров в заказе</p>';
 
@@ -1670,9 +1731,13 @@
             let issueMsg = '';
             itemsArray.forEach(item => {
                 const product = products.find(p => p.name === item.name);
-                if (!product || (product.qty || 0) < (item.qty || 0)) {
+                if (!product || getFreeQty(product) < (item.qty || 0)) {
                     canIssue = false;
-                    issueMsg = `Недостаточно "${item.name}" (нужно ${item.qty}, есть ${product ? product.qty : 0})`;
+                    if (product && getReservedQty(product) > 0) {
+                        issueMsg = `🔒 "${item.name}" в резерве (${getReservedQty(product)} шт. — ${product.reservedFor || '—'}). Свободно: ${getFreeQty(product)}, нужно: ${item.qty}`;
+                    } else {
+                        issueMsg = `Недостаточно "${item.name}" (нужно ${item.qty}, есть ${product ? product.qty : 0})`;
+                    }
                 }
             });
 
@@ -1806,7 +1871,15 @@
             for (let item of itemsArray) {
                 const product = products.find(p => p.name === item.name);
                 if (!product) { canIssue = false; errorMsg = `"${item.name}" не найден`; break; }
-                if ((product.qty || 0) < (item.qty || 0)) { canIssue = false; errorMsg = `Недостаточно "${item.name}" (нужно ${item.qty}, есть ${product.qty})`; break; }
+                if (getFreeQty(product) < (item.qty || 0)) {
+                    canIssue = false;
+                    if (getReservedQty(product) > 0) {
+                        errorMsg = `🔒 "${item.name}" в резерве (${getReservedQty(product)} шт. — ${product.reservedFor || '—'}). Свободно: ${getFreeQty(product)}, нужно: ${item.qty}`;
+                    } else {
+                        errorMsg = `Недостаточно "${item.name}" (нужно ${item.qty}, есть ${product.qty})`;
+                    }
+                    break;
+                }
             }
             if (!canIssue) { showToast('❌ ' + errorMsg, 'error'); return; }
             if (!confirm(`Списать товары по заказу ${order.orderNumber || order.id.slice(0, 8)}?`)) return;
@@ -1868,6 +1941,7 @@
                             customUnit: '', condition: 'Новый', barcode: '', supplier: order.customer || 'Возврат',
                             date: new Date().toISOString().split('T')[0], image: '', issuedTo: '',
                             note: `Возврат по заказу ${order.orderNumber || order.id.slice(0, 8)}`,
+                            reserved: 0, reservedFor: '',
                             x: null, y: null, createdAt: firebase.database.ServerValue.TIMESTAMP
                         };
                     }
@@ -2097,10 +2171,15 @@
                 document.getElementById('selectedLocation').textContent = p.location || '—';
                 document.getElementById('selectedQty').textContent = p.qty || 0;
                 document.getElementById('selectedSupplier').textContent = p.supplier || '—';
+                const res = getReserveInfo(p);
+                document.getElementById('selectedReserved').textContent = res
+                    ? `🔒 ${res.reserved} — ${res.reservedFor} (своб. ${res.free})`
+                    : 'нет';
                 const imageHtml = p.image ? `<img src="${p.image}" class="product-image-preview" onerror="this.style.display='none'" />` : '—';
                 document.getElementById('selectedImage').innerHTML = imageHtml;
             } else {
                 ['selectedName', 'selectedCategory', 'selectedLocation', 'selectedQty', 'selectedSupplier'].forEach(id => document.getElementById(id).textContent = '—');
+                document.getElementById('selectedReserved').textContent = '—';
                 document.getElementById('selectedImage').textContent = '—';
             }
         }
@@ -2136,6 +2215,8 @@
             filtered.forEach(p => {
                 const isSelected = p.id === selectedProductId;
                 const qty = p.qty || 0;
+                const reserved = getReservedQty(p);
+                const freeQty = getFreeQty(p);
                 let stockClass = 'good', stockText = `✅ ${qty}`;
                 if (qty === 0) { stockClass = 'zero'; stockText = '❌ 0'; }
                 else if (qty < 5) { stockClass = 'low'; stockText = `⚠️ ${qty}`; }
@@ -2143,6 +2224,9 @@
                 const unitDisplay = p.unitType ? `📏 ${p.unitType}` : '';
                 const customDisplay = p.customUnit ? `✏️ ${p.customUnit}` : '';
                 const storageDisplay = p.storageAddress ? `📍 ${p.storageAddress}` : '';
+                const reserveTag = reserved > 0
+                    ? `<span class="card-tag reserve-tag">🔒 Резерв: ${reserved} — ${p.reservedFor || '—'} (своб. ${freeQty})</span>`
+                    : '';
                 html += `
                     <div class="product-card ${isSelected ? 'selected' : ''}" onclick="selectProduct('${p.id}')">
                         ${imageHtml}
@@ -2152,13 +2236,14 @@
                                 <span class="card-tag category-tag">📁 ${p.category || '—'}</span>
                                 <span class="card-tag location-tag">${locEmojis[p.location] || '📍'} ${p.location || '—'}</span>
                                 ${storageDisplay ? `<span class="card-tag">${storageDisplay}</span>` : ''}
+                                ${reserveTag}
                                 ${p.condition ? `<span class="card-tag condition-tag">${p.condition}</span>` : ''}
                                 ${unitDisplay ? `<span class="card-tag">${unitDisplay}</span>` : ''}
                                 ${customDisplay ? `<span class="card-tag">${customDisplay}</span>` : ''}
                                 ${p.barcode ? `<span class="card-tag">🔢 ${p.barcode}</span>` : ''}
                             </div>
                             <div class="card-supplier">🏢 ${p.supplier || '—'} • ${p.date || '—'}</div>
-                            <div class="card-stock ${stockClass}">${stockText}</div>
+                            <div class="card-stock ${stockClass}">${stockText}${reserved > 0 ? ` • свободно: ${freeQty}` : ''}</div>
                         </div>
                         <div class="card-bottom">
                             <span class="qty-badge">${qty}</span>
@@ -2189,6 +2274,7 @@
                 '№': i + 1, 'Название': p.name || '', 'Категория': p.category || '', 'Локация': p.location || '',
                 'Адрес хранения': p.storageAddress || '', 'Количество': p.qty || 0, 'Ед. измерения': p.unitType || 'шт',
                 'Ручной ввод': p.customUnit || '', 'Состояние': p.condition || '', 'Штрихкод/Артикул': p.barcode || '',
+                '🔒 Резерв': getReservedQty(p), '🔒 Зарезервировано для': p.reservedFor || '', 'Свободный остаток': getFreeQty(p),
                 'Поставщик': p.supplier || '', 'Дата прихода': p.date || ''
             }));
             exportData(data, `Номенклатура_${new Date().toISOString().split('T')[0]}`, format);
@@ -2593,19 +2679,24 @@
             if (category !== 'all') filtered = filtered.filter(p => p.category === category);
             if (location !== 'all') filtered = filtered.filter(p => p.location === location);
             filtered.sort((a, b) => (b.qty || 0) - (a.qty || 0));
-            if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:30px;">Нет товаров</td></tr>'; return; }
+            if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:30px;">Нет товаров</td></tr>'; return; }
             let html = '';
             filtered.forEach((p, index) => {
                 const qty = p.qty || 0;
+                const reserved = getReservedQty(p);
+                const freeQty = getFreeQty(p);
                 let statusClass = 'qty-good', statusText = '✅ В наличии';
                 if (qty === 0) { statusClass = 'qty-zero'; statusText = '❌ Нет в наличии'; }
                 else if (qty < 5) { statusClass = 'qty-low'; statusText = '⚠️ Заканчивается'; }
                 const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
                 const imageHtml = p.image ? `<img src="${p.image}" class="product-image-preview-sm" onerror="this.style.display='none'" style="border-radius:4px;max-width:30px;max-height:30px;object-fit:cover;" />` : '—';
+                const reserveCell = reserved > 0
+                    ? `<span style="color:#dc2626;font-weight:600;">🔒 ${reserved}<br><span style="font-size:9px;color:#64748b;">${p.reservedFor || '—'}<br>своб. ${freeQty}</span></span>`
+                    : '<span style="color:#94a3b8;">—</span>';
                 html += `<tr class="clickable-row" onclick="selectProduct('${p.id}')">
                     <td>${index+1}</td><td>${imageHtml}</td><td><strong>${p.name||'—'}</strong></td>
                     <td>${p.category||'—'}</td><td>${locEmojis[p.location]||''} ${p.location||'—'}</td>
-                    <td class="${statusClass}">${qty}</td><td>${p.supplier||'—'}</td><td>${p.date||'—'}</td>
+                    <td class="${statusClass}">${qty}</td><td>${reserveCell}</td><td>${p.supplier||'—'}</td><td>${p.date||'—'}</td>
                     <td><span class="${statusClass}">${statusText}</span></td>
                 </tr>`;
             });
@@ -2620,8 +2711,9 @@
                 if (cols.length > 0) data.push({
                     '№': i + 1, 'Товар': cols[2]?.textContent.trim() || '', 'Категория': cols[3]?.textContent.trim() || '',
                     'Локация': cols[4]?.textContent.trim() || '', 'Остаток': cols[5]?.textContent.trim() || '',
-                    'Поставщик': cols[6]?.textContent.trim() || '', 'Дата прихода': cols[7]?.textContent.trim() || '',
-                    'Статус': cols[8]?.textContent.trim() || ''
+                    'Резерв': cols[6]?.textContent.trim() || '',
+                    'Поставщик': cols[7]?.textContent.trim() || '', 'Дата прихода': cols[8]?.textContent.trim() || '',
+                    'Статус': cols[9]?.textContent.trim() || ''
                 });
             });
             return data;
@@ -2736,6 +2828,8 @@
         const fNote = document.getElementById('fNote');
         const fProductId = document.getElementById('fProductId');
         const fAction = document.getElementById('fAction');
+        const fReserved = document.getElementById('fReserved');
+        const fReservedFor = document.getElementById('fReservedFor');
         const modalDelete = document.getElementById('modalDelete');
         const imagePreview = document.getElementById('imagePreview');
         const previewImg = document.getElementById('previewImg');
@@ -2752,7 +2846,8 @@
                 const product = products.find(p => p.id === productId);
                 if (product) {
                     const qty = parseInt(this.value) || 0;
-                    document.getElementById('fNote').value = `Выдано ${qty} шт. Остаток: ${product.qty - qty}`;
+                    const free = getFreeQty(product);
+                    document.getElementById('fNote').value = `Выдано ${qty} шт. Свободный остаток: ${free - qty}`;
                 }
             }
         });
@@ -2775,6 +2870,7 @@
                 fQty.value = ''; fUnitType.value = 'шт'; fCustomUnit.value = ''; fCondition.value = 'Новый';
                 fBarcode.value = ''; fSupplier.value = ''; fDate.value = new Date().toISOString().split('T')[0];
                 fImage.value = ''; fIssuedTo.value = ''; fNote.value = ''; fProductId.value = '';
+                fReserved.value = 0; fReservedFor.value = '';
                 if (fObjectEl) fObjectEl.value = '';
                 imagePreview.style.display = 'none';
                 document.getElementById('modalSubmit').textContent = 'Сохранить';
@@ -2787,6 +2883,8 @@
                 fBarcode.value = product.barcode || ''; fSupplier.value = product.supplier || '';
                 fDate.value = product.date || ''; fImage.value = product.image || '';
                 fIssuedTo.value = product.issuedTo || ''; fNote.value = product.note || '';
+                fReserved.value = getReservedQty(product);
+                fReservedFor.value = product.reservedFor || '';
                 if (fObjectEl) fObjectEl.value = product.object || '';
                 fProductId.value = product.id;
                 if (product.image) { previewImg.src = product.image; imagePreview.style.display = 'block'; }
@@ -2800,7 +2898,14 @@
                 fCustomUnit.value = product.customUnit || ''; fCondition.value = product.condition || 'Новый';
                 fBarcode.value = product.barcode || ''; fSupplier.value = product.supplier || '';
                 fDate.value = new Date().toISOString().split('T')[0]; fImage.value = product.image || '';
-                fIssuedTo.value = ''; fNote.value = `Выдано 1 шт. Остаток: ${product.qty - 1}`;
+                fIssuedTo.value = '';
+                const res = getReserveInfo(product);
+                const free = getFreeQty(product);
+                fNote.value = res
+                    ? `Выдано 1 шт. 🔒 Резерв: ${res.reserved} — ${res.reservedFor}. Свободно: ${free - 1}`
+                    : `Выдано 1 шт. Свободный остаток: ${free - 1}`;
+                fReserved.value = getReservedQty(product);
+                fReservedFor.value = product.reservedFor || '';
                 if (fObjectEl) fObjectEl.value = '';
                 fProductId.value = product.id;
                 imagePreview.style.display = 'none';
@@ -2831,6 +2936,8 @@
             const image = fImage.value.trim();
             const issuedTo = fIssuedTo.value.trim();
             const note = fNote.value.trim();
+            const reserved = Math.max(0, parseInt(fReserved.value) || 0);
+            const reservedFor = fReservedFor.value.trim();
             const fObjectEl = document.getElementById('fObject');
             const objectValue = fObjectEl ? fObjectEl.value.trim() : '';
 
@@ -2838,23 +2945,43 @@
             const duplicate = products.find(p => p.name.toLowerCase() === name.toLowerCase() && p.id !== id);
             if (duplicate) { showToast(`Товар "${name}" уже существует!`, 'error'); return; }
 
+            // Проверки резерва (только для add/edit)
+            if (action === 'add' || action === 'edit') {
+                if (reserved > qty) {
+                    showToast('🔒 Резерв не может превышать общее количество!', 'error');
+                    return;
+                }
+                if (reserved > 0 && !reservedFor) {
+                    showToast('Укажите, на кого зарезервирован товар (поле «Зарезервировано для»)!', 'error');
+                    return;
+                }
+            }
+
             try {
                 if (action === 'add') {
-                    await saveProduct({ name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, x: null, y: null, createdAt: firebase.database.ServerValue.TIMESTAMP });
+                    await saveProduct({ name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, reserved, reservedFor, x: null, y: null, createdAt: firebase.database.ServerValue.TIMESTAMP });
                     showToast('Товар добавлен!', 'success');
                     closeModal();
                 } else if (action === 'edit' && id) {
                     const existing = products.find(p => p.id === id);
                     if (existing) {
-                        await saveProduct({ ...existing, name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note }, id);
+                        await saveProduct({ ...existing, name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, reserved, reservedFor }, id);
                     }
                     showToast('Товар обновлен!', 'success');
                     closeModal();
                 } else if (action === 'issue' && id) {
                     const existing = products.find(p => p.id === id);
                     if (existing) {
-                        const newQty = existing.qty - qty;
-                        if (newQty < 0) { showToast('Недостаточно товара!', 'error'); return; }
+                        const free = getFreeQty(existing);
+                        if (qty > free) {
+                            if (getReservedQty(existing) > 0) {
+                                showToast(`🔒 Товар в резерве (${getReservedQty(existing)} шт. — ${existing.reservedFor || '—'}). Свободно: ${free}`, 'error');
+                            } else {
+                                showToast('Недостаточно товара!', 'error');
+                            }
+                            return;
+                        }
+                        const newQty = (existing.qty || 0) - qty;
                         const historyRef = db.ref(`${SKLAD_REF}/history`).push();
                         await historyRef.set({
                             productId: id, productName: existing.name, category: existing.category,
@@ -2864,6 +2991,7 @@
                             note: note || 'Выдача со склада',
                             timestamp: firebase.database.ServerValue.TIMESTAMP
                         });
+                        // Если резерв был больше 0 и остаток падает ниже резерва — можно оставить как есть (резерв уже учтён в проверке)
                         await saveProduct({ ...existing, qty: newQty, issuedTo: issuedTo || existing.issuedTo, note: note || existing.note }, id);
                         showToast(`Выдано ${qty} шт.`, 'success');
                     }
@@ -2954,7 +3082,12 @@
             if (!selectedProductId) { showToast('Выберите товар!', 'error'); return; }
             const product = products.find(p => p.id === selectedProductId);
             if (product) {
-                if (product.qty <= 0) { showToast('Нет на складе!', 'error'); return; }
+                if (getFreeQty(product) <= 0) {
+                    const res = getReserveInfo(product);
+                    if (res) showToast(`🔒 Товар в резерве (${res.reserved} шт. — ${res.reservedFor}). Свободно: ${res.free}`, 'error');
+                    else showToast('Нет на складе!', 'error');
+                    return;
+                }
                 openModal('issue', product);
             }
         });
@@ -3165,6 +3298,7 @@
                         condition: 'Новый', barcode: '', supplier: document.getElementById('fSupplierIncome').value.trim(),
                         date: document.getElementById('fInvoiceDate').value, image: item.image || '', issuedTo: '',
                         note: `Приход по накладной ${document.getElementById('fInvoiceNumber').value}`,
+                        reserved: 0, reservedFor: '',
                         x: null, y: null, createdAt: firebase.database.ServerValue.TIMESTAMP
                     };
                 }
@@ -3453,7 +3587,7 @@
         setTimeout(resizeCanvas, 300);
         window.addEventListener('resize', resizeCanvas);
 
-        console.log('🚀 Приложение запущено');
+        console.log('🚀 Приложение запущено (с резервом)');
     </script>
 
 </body>
