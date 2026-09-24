@@ -429,6 +429,20 @@
             stroke-linejoin: round;
             flex-shrink: 0;
         }
+        /* Бейдж резерва */
+        .product-card .reserve-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: #fee2e2;
+            color: #dc2626;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            word-break: break-word;
+        }
 
         /* ============================================================
            МОДАЛЬНОЕ ОКНО ТОВАРА (детальный просмотр)
@@ -470,8 +484,7 @@
             }
         }
 
-        /* Крупная красная кнопка закрытия */
-		.service-list-modal .modal-close-btn {
+        .service-list-modal .modal-close-btn {
             position: absolute;
             top: 12px;
             right: 12px;
@@ -500,8 +513,7 @@
         .service-list-modal .modal-close-btn:active {
             transform: rotate(90deg) scale(0.95);
         }
-		
-		
+
         .product-modal .modal-close-btn {
             position: absolute;
             top: 12px;
@@ -617,6 +629,10 @@
             background: #f1f5f9;
             color: #475569;
         }
+        .product-modal .modal-badge.reserve {
+            background: #fee2e2;
+            color: #dc2626;
+        }
 
         .product-modal .modal-info-list {
             display: flex;
@@ -657,6 +673,9 @@
             color: #f59e0b;
         }
         .product-modal .modal-info-value.stock-zero {
+            color: #dc2626;
+        }
+        .product-modal .modal-info-value.reserve-value {
             color: #dc2626;
         }
 
@@ -824,6 +843,17 @@
             display: inline-block;
             align-self: flex-start;
             font-weight: 500;
+        }
+        .cart-modal .cart-item .item-reserve {
+            font-size: 11px;
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 2px;
+            display: inline-block;
+            align-self: flex-start;
+            font-weight: 600;
         }
         .cart-modal .cart-item .item-qty {
             display: flex;
@@ -1027,6 +1057,9 @@
         .toast.info {
             background: #3b82f6;
         }
+        .toast.reserve {
+            background: #dc2626;
+        }
         @keyframes slideIn {
             from {
                 transform: translateX(100%);
@@ -1112,7 +1145,6 @@
             gap: 14px;
         }
 
-        /* Сервисная карточка */
         .service-card {
             background: #fff;
             border-radius: 14px;
@@ -1510,6 +1542,31 @@
         let currentServiceDetailId = null;
 
         // ============================================================
+        // 2.1. РЕЗЕРВ — ХЕЛПЕРЫ
+        // ============================================================
+        function getReservedQty(product) {
+            if (!product) return 0;
+            const r = parseInt(product.reserved);
+            return isNaN(r) || r < 0 ? 0 : r;
+        }
+
+        function getFreeQty(product) {
+            if (!product) return 0;
+            const qty = parseInt(product.qty) || 0;
+            return Math.max(0, qty - getReservedQty(product));
+        }
+
+        function getReserveInfo(product) {
+            const reserved = getReservedQty(product);
+            if (reserved <= 0) return null;
+            return {
+                reserved,
+                reservedFor: product.reservedFor || '—',
+                free: getFreeQty(product)
+            };
+        }
+
+        // ============================================================
         // 3. TOAST
         // ============================================================
         function showToast(message, type = 'success') {
@@ -1524,7 +1581,7 @@
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateX(100%)';
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, 3500);
         }
 
         // ============================================================
@@ -1568,9 +1625,12 @@
                         closeProductModal();
                     }
                 }
+                // Если корзина открыта — обновим
+                if (document.getElementById('cartOverlay').classList.contains('open')) {
+                    renderCart();
+                }
             });
 
-            // Загрузка сервисных товаров
             db.ref(`${SKLAD_REF}/service`).on('value', snap => {
                 const data = snap.val();
                 serviceItems = [];
@@ -1581,11 +1641,9 @@
                     serviceItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 }
                 updateServiceBadge();
-                // Если открыто модальное окно списка — обновляем
                 if (document.getElementById('serviceListOverlay').classList.contains('open')) {
                     renderServiceList();
                 }
-                // Если открыто модальное окно деталей — обновляем
                 if (currentServiceDetailId) {
                     const item = serviceItems.find(s => s.id === currentServiceDetailId);
                     if (item) updateServiceDetailContent(item);
@@ -1669,8 +1727,10 @@
             let html = '';
             filtered.forEach(p => {
                 const qty = p.qty || 0;
+                const freeQty = getFreeQty(p);
+                const reserved = getReservedQty(p);
                 const inCart = cart[p.id] || 0;
-                const isInStock = qty > 0;
+                const isInStock = freeQty > 0; // Свободный остаток
                 const isInCart = inCart > 0;
 
                 let stockClass = 'good';
@@ -1681,6 +1741,9 @@
                 } else if (qty < 5) {
                     stockClass = 'low';
                     stockText = `⚠️ Осталось ${qty} шт.`;
+                }
+                if (reserved > 0) {
+                    stockText += ` • своб. ${freeQty}`;
                 }
 
                 const locEmojis = {
@@ -1697,7 +1760,7 @@
                 let disabled = '';
                 if (!isInStock) {
                     btnClass = 'out-of-stock';
-                    btnText = '❌ Нет';
+                    btnText = reserved > 0 ? '🔒 Резерв' : '❌ Нет';
                     disabled = 'disabled';
                 } else if (isInCart) {
                     btnClass = 'in-cart';
@@ -1739,6 +1802,12 @@
                         `;
                 }
 
+                // 🔒 Бейдж резерва
+                let reserveBadge = '';
+                if (reserved > 0) {
+                    reserveBadge = `<div class="reserve-badge">🔒 Резерв: ${reserved} — ${p.reservedFor || '—'}</div>`;
+                }
+
                 html += `
                         <div class="product-card" onclick="openProductModal('${p.id}')">
                             ${imgHtml}
@@ -1747,6 +1816,7 @@
                             <div class="location">${locationIcon} ${p.location || '—'}</div>
                             <div class="status-badge ${statusClass}">${statusText}</div>
                             ${addressHtml}
+                            ${reserveBadge}
                             ${barcodeInfo}
                             ${unitInfo}
                             <div class="stock ${stockClass}">${stockText}</div>
@@ -1780,8 +1850,10 @@
         function updateProductModalContent(product) {
             const body = document.getElementById('productModalBody');
             const qty = product.qty || 0;
+            const freeQty = getFreeQty(product);
+            const reserved = getReservedQty(product);
             const inCart = cart[product.id] || 0;
-            const isInStock = qty > 0;
+            const isInStock = freeQty > 0;
             const isInCart = inCart > 0;
 
             let imgHtml = '';
@@ -1830,7 +1902,7 @@
             let disabled = '';
             if (!isInStock) {
                 btnClass = 'out-of-stock';
-                btnText = '❌ НЕТ В НАЛИЧИИ';
+                btnText = reserved > 0 ? '🔒 ТОВАР В РЕЗЕРВЕ' : '❌ НЕТ В НАЛИЧИИ';
                 disabled = 'disabled';
             } else if (isInCart) {
                 btnClass = 'in-cart';
@@ -1849,6 +1921,21 @@
                 if (product.customUnit) unitText += ` (${product.customUnit})`;
             }
 
+            // 🔒 Блок резерва в модальном окне
+            let reserveHtml = '';
+            if (reserved > 0) {
+                reserveHtml = `
+                    <div class="modal-info-row">
+                        <span class="modal-info-label">🔒 Резерв</span>
+                        <span class="modal-info-value reserve-value">${reserved} шт. — ${product.reservedFor || '—'}</span>
+                    </div>
+                    <div class="modal-info-row">
+                        <span class="modal-info-label">🟢 Свободно к заказу</span>
+                        <span class="modal-info-value ${freeQty > 0 ? 'stock-good' : 'stock-zero'}">${freeQty} шт.</span>
+                    </div>
+                `;
+            }
+
             body.innerHTML = `
                 <div class="modal-image-section">
                     ${imgHtml}
@@ -1859,6 +1946,7 @@
                         <span class="modal-badge location">${locationIcon} ${product.location || '—'}</span>
                         <span class="modal-badge ${condBadgeClass}">${condText}</span>
                         ${product.storageAddress ? `<span class="modal-badge address">📍 ${product.storageAddress}</span>` : ''}
+                        ${reserved > 0 ? `<span class="modal-badge reserve">🔒 Резерв: ${reserved}</span>` : ''}
                     </div>
                     <h2 class="modal-title">${product.name}</h2>
                     
@@ -1867,6 +1955,7 @@
                             <span class="modal-info-label">💰 В наличии</span>
                             <span class="modal-info-value ${stockClass}">${stockText}</span>
                         </div>
+                        ${reserveHtml}
                         <div class="modal-info-row">
                             <span class="modal-info-label">📏 Единица измерения</span>
                             <span class="modal-info-value">${unitText}</span>
@@ -1910,9 +1999,15 @@
             const product = products.find(p => p.id === productId);
             if (!product) return;
 
+            const freeQty = getFreeQty(product);
+            const reserved = getReservedQty(product);
             const currentQty = cart[productId] || 0;
-            if (currentQty >= product.qty) {
-                showToast('❌ Недостаточно товара на складе!', 'error');
+            if (currentQty >= freeQty) {
+                if (reserved > 0) {
+                    showToast(`🔒 Товар в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}`, 'error');
+                } else {
+                    showToast('❌ Недостаточно товара на складе!', 'error');
+                }
                 return;
             }
 
@@ -2173,9 +2268,15 @@
             const product = products.find(p => p.id === productId);
             if (!product) return;
 
+            const freeQty = getFreeQty(product);
+            const reserved = getReservedQty(product);
             const currentQty = cart[productId] || 0;
-            if (currentQty >= product.qty) {
-                showToast('❌ Недостаточно товара на складе!', 'error');
+            if (currentQty >= freeQty) {
+                if (reserved > 0) {
+                    showToast(`🔒 Товар в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}`, 'error');
+                } else {
+                    showToast('❌ Недостаточно товара на складе!', 'error');
+                }
                 return;
             }
 
@@ -2206,10 +2307,18 @@
             const product = products.find(p => p.id === productId);
             if (!product) return;
 
-            const maxQty = product.qty || 0;
+            const freeQty = getFreeQty(product);
+            const reserved = getReservedQty(product);
             let qty = parseInt(newQty) || 0;
             if (qty < 0) qty = 0;
-            if (qty > maxQty) qty = maxQty;
+            if (qty > freeQty) {
+                qty = freeQty;
+                if (reserved > 0) {
+                    showToast(`🔒 Максимум ${freeQty} (остальное в резерве: ${reserved} — ${product.reservedFor || '—'})`, 'error');
+                } else {
+                    showToast(`❌ Максимум ${freeQty} шт.`, 'error');
+                }
+            }
 
             if (qty === 0) {
                 delete cart[productId];
@@ -2293,6 +2402,9 @@
                 const qty = cart[id];
                 totalItems += qty;
 
+                const freeQty = getFreeQty(product);
+                const reserved = getReservedQty(product);
+
                 const locEmojis = {
                     'Въезд': '🚗',
                     'Здание': '🏢',
@@ -2321,7 +2433,11 @@
                     addressText = `📍 ${product.storageAddress}`;
                 }
 
-                const maxQty = product.qty || 0;
+                // 🔒 Строка резерва в корзине
+                let reserveText = '';
+                if (reserved > 0) {
+                    reserveText = `<span class="item-reserve">🔒 Резерв: ${reserved} — ${product.reservedFor || '—'} (своб. ${freeQty})</span>`;
+                }
 
                 html += `
                         <div class="cart-item">
@@ -2332,6 +2448,7 @@
                                     <span class="item-details">${product.category} ${locIcon} ${product.location || ''}</span>
                                     ${barcodeText ? `<span class="item-details">${barcodeText}</span>` : ''}
                                     ${addressText ? `<span class="item-address">${addressText}</span>` : ''}
+                                    ${reserveText}
                                 </div>
                             </div>
                             <div style="display:flex;align-items:center;">
@@ -2340,7 +2457,7 @@
                                     <input type="number" class="qty-input" 
                                            value="${qty}" 
                                            min="0" 
-                                           max="${maxQty}" 
+                                           max="${freeQty}" 
                                            onchange="updateCartItemQty('${id}', this.value)"
                                            onfocus="this.select()" />
                                     <button onclick="addToCart('${id}')">+</button>
@@ -2382,6 +2499,23 @@
                 return;
             }
 
+            // 🔒 Проверка резерва перед оформлением
+            for (let id in cart) {
+                const product = products.find(p => p.id === id);
+                if (!product) continue;
+                const qty = cart[id];
+                const freeQty = getFreeQty(product);
+                const reserved = getReservedQty(product);
+                if (qty > freeQty) {
+                    if (reserved > 0) {
+                        showToast(`🔒 "${product.name}" в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}, в корзине: ${qty}`, 'error');
+                    } else {
+                        showToast(`❌ Недостаточно "${product.name}" (доступно: ${freeQty})`, 'error');
+                    }
+                    return;
+                }
+            }
+
             const total = getCartTotal();
 
             const timestamp = Date.now();
@@ -2416,7 +2550,9 @@
                         unitType: product.unitType || '',
                         customUnit: product.customUnit || '',
                         condition: product.condition || 'Новый',
-                        storageAddress: product.storageAddress || ''
+                        storageAddress: product.storageAddress || '',
+                        reserved: getReservedQty(product),
+                        reservedFor: product.reservedFor || ''
                     };
                 }
             }
@@ -2483,7 +2619,7 @@
         // ============================================================
         // 15. INIT
         // ============================================================
-        console.log('🛒 Интернет-магазин запущен!');
+        console.log('🛒 Интернет-магазин запущен (с резервом)!');
         loadData();
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -2494,7 +2630,6 @@
                     });
                 });
 
-            // Закрытие модальных окон по ESC
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     if (document.getElementById('serviceDetailOverlay').classList.contains('open')) {
