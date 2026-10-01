@@ -1071,6 +1071,53 @@
                 free: getFreeQty(product)
             };
         }
+		
+		function getUnitLabel(product) {
+    if (!product) return '';
+
+    // Явно указанный тип единицы
+    const ut = (product.unitType || '').trim();
+    if (ut) {
+        // Сделаем «человеческие» подписи
+        const map = {
+            'шт': 'шт',
+            'м': 'м',
+            'км': 'км',
+            'см': 'см',
+            'мм': 'мм',
+            'кг': 'кг',
+            'г': 'г',
+            'т': 'т',
+            'л': 'л',
+            'мл': 'мл',
+            'уп': 'уп',
+            'упак': 'уп',
+            'компл': 'компл',
+            'рулон': 'рул',
+            'лист': 'лст',
+            'бухта': 'бух',
+            'катушка': 'кат',
+            'пачка': 'пач'
+        };
+        return map[ut] || ut;
+    }
+
+    // Пытаемся вытащить из customUnit — ищем последний "= 200м" или просто единицу
+    const cu = (product.customUnit || '').trim();
+    if (cu) {
+        // Примеры: "бухта 1шт=200м", "скрутка 1шт=100м", "1 уп = 10 л"
+        const m = cu.match(/=\s*[\d.,]+\s*([a-zA-Zа-яА-Я]+)/);
+        if (m && m[1]) {
+            const u = m[1].toLowerCase();
+            const map2 = { 'м': 'м', 'км': 'км', 'см': 'см', 'мм': 'мм', 'кг': 'кг', 'г': 'г', 'т': 'т', 'л': 'л', 'мл': 'мл' };
+            return map2[u] || u;
+        }
+        // "бухта", "скрутка" — оставим как есть
+        return cu.split(' ')[0] || '';
+    }
+
+    return '';
+}
 
         // ============================================================
         // 6. CANVAS MAP
@@ -2686,7 +2733,7 @@ if (itemsArray.length > 0) {
         // ============================================================
         // 19. STOCK
         // ============================================================
-        function renderStock() {
+function renderStock() {
     const tbody = document.getElementById('stockBody');
     const category = document.getElementById('stockFilterCategory').value;
     const location = document.getElementById('stockFilterLocation').value;
@@ -2719,10 +2766,20 @@ if (itemsArray.length > 0) {
                </a>`
             : '—';
 
-        // Ручной ввод: "бухта 1шт=200м" и т.п.
-        const customUnitText = p.customUnit
-            ? `<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;white-space:nowrap;">✏️ ${p.customUnit}</span>`
-            : '<span style="color:#94a3b8;">—</span>';
+        // Единица измерения + ручной ввод
+        const unitLabel = getUnitLabel(p);
+        const hasCustom = !!(p.customUnit && p.customUnit.trim());
+        let unitCell = '';
+        if (unitLabel && hasCustom) {
+            unitCell = `<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;white-space:nowrap;">✏️ ${p.customUnit} ${unitLabel}</span>
+                        <div style="font-size:10px;color:#64748b;margin-top:2px;"><strong></strong></div>`;
+        } else if (unitLabel) {
+            unitCell = `<span style="background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">${unitLabel}</span>`;
+        } else if (hasCustom) {
+            unitCell = `<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;white-space:nowrap;">✏️ ${p.customUnit}</span>`;
+        } else {
+            unitCell = '<span style="color:#94a3b8;">—</span>';
+        }
 
         const reserveCell = reserved > 0
             ? `<span style="color:#dc2626;font-weight:600;">🔒 ${reserved}<br><span style="font-size:9px;color:#64748b;">${p.reservedFor || '—'}<br>своб. ${freeQty}</span></span>`
@@ -2735,7 +2792,7 @@ if (itemsArray.length > 0) {
             <td>${p.category||'—'}</td>
             <td>${locEmojis[p.location]||''} ${p.location||'—'}</td>
             <td class="${statusClass}">${qty}</td>
-            <td>${customUnitText}</td>
+            <td>${unitCell}</td>
             <td>${reserveCell}</td>
             <td>${p.supplier||'—'}</td>
             <td>${p.date||'—'}</td>
@@ -2745,7 +2802,7 @@ if (itemsArray.length > 0) {
     tbody.innerHTML = html;
 }
 
-        function getStockData() {
+function getStockData() {
     const category = document.getElementById('stockFilterCategory').value;
     const location = document.getElementById('stockFilterLocation').value;
     let filtered = [...products];
@@ -2761,7 +2818,8 @@ if (itemsArray.length > 0) {
         'Локация': p.location || '',
         'Адрес хранения': p.storageAddress || '',
         'Остаток': p.qty || 0,
-        'Сколько': p.customUnit || '',   // <-- новая колонка
+        'Ед. изм.': p.unitType || getUnitLabel(p) || '',   // <-- м, уп, км, л и т.д.
+        'Ручной ввод': p.customUnit || '',                  // <-- "бухта 1шт=200м"
         'Резерв': getReservedQty(p),
         'Резерв для': p.reservedFor || '',
         'Свободный остаток': getFreeQty(p),
