@@ -518,7 +518,7 @@
                         </div>
                         <div class="report-container">
                             <table class="stock-table">
-                                <thead><tr><th>№</th><th>Изобр.</th><th>Товар</th><th>Категория</th><th>Локация</th><th>Остаток</th><th>🔒 Резерв</th><th>Поставщик</th><th>Дата</th><th>Статус</th></tr></thead>
+                                <thead><tr><th>№</th><th>Изобр.</th><th>Товар</th><th>Категория</th><th>Локация</th><th>Остаток</th><th>Сколько</th><th>🔒 Резерв</th><th>Поставщик</th><th>Дата</th><th>Статус</th></tr></thead>
                                 <tbody id="stockBody"></tbody>
                             </table>
                         </div>
@@ -2687,52 +2687,90 @@ if (itemsArray.length > 0) {
         // 19. STOCK
         // ============================================================
         function renderStock() {
-            const tbody = document.getElementById('stockBody');
-            const category = document.getElementById('stockFilterCategory').value;
-            const location = document.getElementById('stockFilterLocation').value;
-            let filtered = [...products];
-            if (category !== 'all') filtered = filtered.filter(p => p.category === category);
-            if (location !== 'all') filtered = filtered.filter(p => p.location === location);
-            filtered.sort((a, b) => (b.qty || 0) - (a.qty || 0));
-            if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:30px;">Нет товаров</td></tr>'; return; }
-            let html = '';
-            filtered.forEach((p, index) => {
-                const qty = p.qty || 0;
-                const reserved = getReservedQty(p);
-                const freeQty = getFreeQty(p);
-                let statusClass = 'qty-good', statusText = '✅ В наличии';
-                if (qty === 0) { statusClass = 'qty-zero'; statusText = '❌ Нет в наличии'; }
-                else if (qty < 5) { statusClass = 'qty-low'; statusText = '⚠️ Заканчивается'; }
-                const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
-                const imageHtml = p.image ? `<img src="${p.image}" class="product-image-preview-sm" onerror="this.style.display='none'" style="border-radius:4px;max-width:30px;max-height:30px;object-fit:cover;" />` : '—';
-                const reserveCell = reserved > 0
-                    ? `<span style="color:#dc2626;font-weight:600;">🔒 ${reserved}<br><span style="font-size:9px;color:#64748b;">${p.reservedFor || '—'}<br>своб. ${freeQty}</span></span>`
-                    : '<span style="color:#94a3b8;">—</span>';
-                html += `<tr class="clickable-row" onclick="selectProduct('${p.id}')">
-                    <td>${index+1}</td><td>${imageHtml}</td><td><strong>${p.name||'—'}</strong></td>
-                    <td>${p.category||'—'}</td><td>${locEmojis[p.location]||''} ${p.location||'—'}</td>
-                    <td class="${statusClass}">${qty}</td><td>${reserveCell}</td><td>${p.supplier||'—'}</td><td>${p.date||'—'}</td>
-                    <td><span class="${statusClass}">${statusText}</span></td>
-                </tr>`;
-            });
-            tbody.innerHTML = html;
-        }
+    const tbody = document.getElementById('stockBody');
+    const category = document.getElementById('stockFilterCategory').value;
+    const location = document.getElementById('stockFilterLocation').value;
+    let filtered = [...products];
+    if (category !== 'all') filtered = filtered.filter(p => p.category === category);
+    if (location !== 'all') filtered = filtered.filter(p => p.location === location);
+    filtered.sort((a, b) => (b.qty || 0) - (a.qty || 0));
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#94a3b8;padding:30px;">Нет товаров</td></tr>';
+        return;
+    }
+    let html = '';
+    filtered.forEach((p, index) => {
+        const qty = p.qty || 0;
+        const reserved = getReservedQty(p);
+        const freeQty = getFreeQty(p);
+        let statusClass = 'qty-good', statusText = '✅ В наличии';
+        if (qty === 0) { statusClass = 'qty-zero'; statusText = '❌ Нет в наличии'; }
+        else if (qty < 5) { statusClass = 'qty-low'; statusText = '⚠️ Заканчивается'; }
+
+        const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
+
+        const imgUrl = p.image || '';
+        const imageHtml = imgUrl
+            ? `<a href="${imgUrl}" target="_blank" rel="noopener" title="Открыть изображение">
+                   <img src="${imgUrl}" class="product-image-preview-sm"
+                        style="border-radius:4px;max-width:36px;max-height:36px;object-fit:cover;cursor:zoom-in;"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                   <div style="display:none;width:36px;height:36px;align-items:center;justify-content:center;background:#f1f5f9;border-radius:4px;color:#cbd5e1;font-size:18px;">📦</div>
+               </a>`
+            : '—';
+
+        // Ручной ввод: "бухта 1шт=200м" и т.п.
+        const customUnitText = p.customUnit
+            ? `<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;white-space:nowrap;">✏️ ${p.customUnit}</span>`
+            : '<span style="color:#94a3b8;">—</span>';
+
+        const reserveCell = reserved > 0
+            ? `<span style="color:#dc2626;font-weight:600;">🔒 ${reserved}<br><span style="font-size:9px;color:#64748b;">${p.reservedFor || '—'}<br>своб. ${freeQty}</span></span>`
+            : '<span style="color:#94a3b8;">—</span>';
+
+        html += `<tr class="clickable-row" onclick="selectProduct('${p.id}')">
+            <td>${index+1}</td>
+            <td>${imageHtml}</td>
+            <td><strong>${p.name||'—'}</strong></td>
+            <td>${p.category||'—'}</td>
+            <td>${locEmojis[p.location]||''} ${p.location||'—'}</td>
+            <td class="${statusClass}">${qty}</td>
+            <td>${customUnitText}</td>
+            <td>${reserveCell}</td>
+            <td>${p.supplier||'—'}</td>
+            <td>${p.date||'—'}</td>
+            <td><span class="${statusClass}">${statusText}</span></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
 
         function getStockData() {
-            const rows = document.querySelectorAll('#stockBody tr');
-            const data = [];
-            rows.forEach((row, i) => {
-                const cols = row.querySelectorAll('td');
-                if (cols.length > 0) data.push({
-                    '№': i + 1, 'Товар': cols[2]?.textContent.trim() || '', 'Категория': cols[3]?.textContent.trim() || '',
-                    'Локация': cols[4]?.textContent.trim() || '', 'Остаток': cols[5]?.textContent.trim() || '',
-                    'Резерв': cols[6]?.textContent.trim() || '',
-                    'Поставщик': cols[7]?.textContent.trim() || '', 'Дата прихода': cols[8]?.textContent.trim() || '',
-                    'Статус': cols[9]?.textContent.trim() || ''
-                });
-            });
-            return data;
-        }
+    const category = document.getElementById('stockFilterCategory').value;
+    const location = document.getElementById('stockFilterLocation').value;
+    let filtered = [...products];
+    if (category !== 'all') filtered = filtered.filter(p => p.category === category);
+    if (location !== 'all') filtered = filtered.filter(p => p.location === location);
+    filtered.sort((a, b) => (b.qty || 0) - (a.qty || 0));
+
+    return filtered.map((p, i) => ({
+        '№': i + 1,
+        'Фото': p.image || '',
+        'Товар': p.name || '',
+        'Категория': p.category || '',
+        'Локация': p.location || '',
+        'Адрес хранения': p.storageAddress || '',
+        'Остаток': p.qty || 0,
+        'Сколько': p.customUnit || '',   // <-- новая колонка
+        'Резерв': getReservedQty(p),
+        'Резерв для': p.reservedFor || '',
+        'Свободный остаток': getFreeQty(p),
+        'Поставщик': p.supplier || '',
+        'Дата прихода': p.date || '',
+        'Статус': (p.qty || 0) === 0 ? '❌ Нет в наличии' :
+                  (p.qty || 0) < 5 ? '⚠️ Заканчивается' : '✅ В наличии'
+    }));
+}
 
         function exportStockData(format) {
             const data = getStockData();
