@@ -66,17 +66,11 @@
         .toolbar .btn:hover { background: #2563eb; }
         .toolbar .btn-success { background: #22c55e; }
         .toolbar .btn-success:hover { background: #16a34a; }
-        .toolbar .edit-mode-indicator { background: #fef08a; padding: 2px 8px; border-radius: 10px; font-weight: 600; font-size: 11px; color: #1e293b; display: none; }
-        .toolbar .edit-mode-indicator.active { display: inline-block; }
         .search-wrapper { position: relative; display: flex; align-items: center; }
         .search-wrapper input { padding-right: 32px !important; width: 220px; }
         .search-wrapper .clear-search-btn { position: absolute; right: 6px; background: none; border: none; font-size: 16px; color: #94a3b8; cursor: pointer; padding: 2px 6px; display: none; border-radius: 50%; transition: 0.2s; line-height: 1; }
         .search-wrapper .clear-search-btn:hover { color: #ef4444; background: #f1f5f9; }
         .search-wrapper .clear-search-btn.visible { display: block; }
-        .map-wrapper { flex: 1; position: relative; overflow: hidden; background: #eef2f6; padding: 8px; }
-        #mapCanvas { width: 100%; height: 100%; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; display: block; }
-        #mapCanvas.edit-mode { cursor: grab; }
-        #mapCanvas.edit-mode:active { cursor: grabbing; }
         .info-panel { background: white; border-top: 1px solid #e2e8f0; padding: 8px 16px; display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; max-height: 80px; overflow-y: auto; }
         .info-panel .item { display: flex; align-items: center; gap: 4px; }
         .info-panel .label { color: #64748b; font-weight: 500; }
@@ -122,20 +116,6 @@
         .report-container { overflow-y: auto; max-height: 495px; }
         .view-container { display: none; padding: 12px; height: 100%; overflow-y: auto; background: white; }
         .view-container.active { display: block; }
-        .view-container.map-view { padding: 0; height: 100%; }
-        .product-tooltip { position: fixed; background: #1e293b; color: white; padding: 12px 16px; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); z-index: 100; max-width: 320px; pointer-events: none; display: none; animation: fadeIn 0.2s ease; }
-        .product-tooltip.show { display: block; }
-        .product-tooltip .title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #60a5fa; }
-        .product-tooltip .info-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .product-tooltip .info-row:last-child { border-bottom: none; }
-        .product-tooltip .label { color: #94a3b8; }
-        .product-tooltip .value { color: #e2e8f0; font-weight: 500; }
-        .product-tooltip .actions { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 4px; pointer-events: auto; }
-        .product-tooltip .actions button { padding: 2px 8px; border: none; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; pointer-events: auto; transition: 0.2s; }
-        .product-tooltip .actions .btn-edit { background: #3b82f6; color: white; }
-        .product-tooltip .actions .btn-edit:hover { background: #2563eb; }
-        .product-tooltip .actions .btn-issue { background: #22c55e; color: white; }
-        .product-tooltip .actions .btn-issue:hover { background: #16a34a; }
         .stock-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 12px; }
         .stock-table th { background: #f1f5f9; padding: 6px 8px; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 5; }
         .stock-table td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; }
@@ -152,7 +132,6 @@
         .report-tab { display: none; }
         .report-tab.active { display: block; }
         .product-image-preview { max-width: 70px; max-height: 45px; border-radius: 4px; object-fit: cover; }
-        .product-image-preview-sm { max-width: 30px; max-height: 30px; border-radius: 4px; object-fit: cover; }
         .product-list-container { display: flex; flex-direction: column; gap: 6px; }
         .product-list-container.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
         .product-list-container.grid-view .product-card { flex-direction: column; align-items: stretch; padding: 10px 12px 12px; border-radius: 12px; background: white; border: 2px solid #e2e8f0; transition: all 0.3s; position: relative; overflow: hidden; }
@@ -170,8 +149,11 @@
         .product-list-container.grid-view .product-card .card-tag.reserve-tag { background: #fee2e2; color: #dc2626; }
         .product-list-container.grid-view .product-card .card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
         .product-list-container.grid-view .product-card .qty-badge { background: #3b82f6; color: white; padding: 2px 12px; border-radius: 12px; font-weight: 700; font-size: 16px; min-width: 30px; text-align: center; }
-        .product-list-container.grid-view .product-card .edit-btn { background: #f1f5f9; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 14px; transition: 0.2s; color: #64748b; }
+        .product-list-container.grid-view .product-card .edit-btn,
+        .product-list-container.grid-view .product-card .issue-btn { background: #f1f5f9; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 14px; transition: 0.2s; color: #64748b; }
         .product-list-container.grid-view .product-card .edit-btn:hover { background: #e2e8f0; color: #1e293b; }
+        .product-list-container.grid-view .product-card .issue-btn { background: #dcfce7; color: #16a34a; }
+        .product-list-container.grid-view .product-card .issue-btn:hover { background: #22c55e; color: white; }
         .product-list-container.grid-view .product-card .card-supplier { font-size: 10px; color: #94a3b8; margin-top: 2px; }
         .product-list-container.grid-view .product-card .card-stock { font-size: 11px; font-weight: 600; }
         .product-list-container.grid-view .product-card .card-stock.good { color: #16a34a; }
@@ -197,7 +179,8 @@
         .product-card .right { display: flex; align-items: center; gap: 8px; }
         .product-card .edit-btn { background: #f1f5f9; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 14px; transition: 0.2s; color: #64748b; }
         .product-card .edit-btn:hover { background: #e2e8f0; color: #1e293b; }
-        .product-card.highlight-match { border-color: #f59e0b; background: #fffbeb; box-shadow: 0 0 0 3px #fef08a; }
+        .product-card .issue-btn { background: #dcfce7; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 14px; transition: 0.2s; color: #16a34a; }
+        .product-card .issue-btn:hover { background: #22c55e; color: white; }
         .export-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
         .export-buttons button { padding: 3px 8px; border: none; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .export-buttons button:hover { opacity: 0.8; }
@@ -320,7 +303,6 @@
         .reserve-row .reserve-title { font-size: 12px; font-weight: 700; color: #c2410c; margin-bottom: 4px; }
         .reserve-tag { background: #fee2e2; color: #dc2626; }
 
-        /* Вкладки списка товаров */
         .product-tab {
             padding: 6px 14px; border: 2px solid #e2e8f0; border-radius: 20px; background: white;
             cursor: pointer; font-size: 12px; font-weight: 600; color: #64748b; transition: 0.2s;
@@ -335,7 +317,6 @@
         .product-tab[data-stockfilter="out-of-stock"].active { border-color: #dc2626; background: #fef2f2; color: #dc2626; }
         .product-tab[data-stockfilter="out-of-stock"].active .tab-count { background: #dc2626; color: white; }
 
-        /* Вкладки фильтра заказов */
         .order-tab {
             padding: 6px 14px; border: 2px solid #e2e8f0; border-radius: 20px; background: white;
             cursor: pointer; font-size: 12px; font-weight: 600; color: #64748b; transition: 0.2s;
@@ -352,7 +333,6 @@
         .order-tab[data-orderfilter="issued"].active { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
         .order-tab[data-orderfilter="issued"].active .tab-count { background: #22c55e; color: white; }
 
-        /* Подсветка карточек заказов по статусу */
         .order-item.status-new        { background: #f8fafc; border-color: #cbd5e1; }
         .order-item.status-collecting { background: #fffbeb; border-color: #fcd34d; }
         .order-item.status-ready      { background: #fffbeb; border-color: #f59e0b; }
@@ -376,7 +356,6 @@
             <h2>📦 <span>Склад</span></h2>
             <div class="sidebar-section">
                 <h3>📂 Справочники</h3>
-                <button data-view="map">🗺️ Карта</button>
                 <button class="active" data-view="list">📋 Список</button>
                 <button data-view="reports">📊 Отчетность</button>
                 <button data-view="orders" id="btnOrders">
@@ -434,11 +413,9 @@
                 <button id="btnAddProduct">➕ Добавить товар</button>
                 <button id="btnAddCategory">📁 Добавить категорию</button>
                 <button id="btnRefresh">🔄 Обновить</button>
-                <button id="btnEditMap" class="btn-warning">✏️ Редактировать</button>
-                <button id="btnSaveMap" class="btn-success" style="display:none;">💾 Сохранить</button>
                 <button id="btnDebug" style="background:#334155;margin-top:4px;">🐛 Debug</button>
             </div>
-            <div class="footer">Firebase Sync • v1.2</div>
+            <div class="footer">Firebase Sync • v1.3</div>
         </div>
 
         <div class="main-content">
@@ -458,21 +435,7 @@
                 </select>
                 <button class="btn" id="btnApplyFilter">Применить</button>
                 <button class="btn btn-success" id="btnIssueProduct">📤 Выдать</button>
-                <span class="edit-mode-indicator" id="editModeIndicator">✏️ Режим редактирования</span>
                 <span style="margin-left:auto;font-size:11px;color:#64748b;" id="totalCount">Всего: 0</span>
-            </div>
-
-            <div class="view-container map-view" id="viewMap">
-                <div class="map-wrapper"><canvas id="mapCanvas"></canvas></div>
-                <div class="info-panel" id="infoPanel">
-                    <div class="item"><span class="label">Выбран:</span><span class="value clickable" id="selectedName" onclick="editSelected()">—</span></div>
-                    <div class="item"><span class="label">Категория:</span><span class="value" id="selectedCategory">—</span></div>
-                    <div class="item"><span class="label">Локация:</span><span class="value" id="selectedLocation">—</span></div>
-                    <div class="item"><span class="label">Количество:</span><span class="value" id="selectedQty">—</span></div>
-                    <div class="item"><span class="label">🔒 Резерв:</span><span class="value" id="selectedReserved">—</span></div>
-                    <div class="item"><span class="label">Поставщик:</span><span class="value" id="selectedSupplier">—</span></div>
-                    <div class="item"><span class="label">Изобр.:</span><span class="value" id="selectedImage">—</span></div>
-                </div>
             </div>
 
             <div class="view-container active" id="viewList">
@@ -623,20 +586,6 @@
                     <div id="serviceList"></div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="product-tooltip" id="productTooltip">
-        <div class="title" id="tooltipTitle">Товар</div>
-        <div class="info-row"><span class="label">Категория:</span><span class="value" id="tooltipCategory">—</span></div>
-        <div class="info-row"><span class="label">Локация:</span><span class="value" id="tooltipLocation">—</span></div>
-        <div class="info-row"><span class="label">Количество:</span><span class="value" id="tooltipQty">0</span></div>
-        <div class="info-row"><span class="label">🔒 Резерв:</span><span class="value" id="tooltipReserved">—</span></div>
-        <div class="info-row"><span class="label">Поставщик:</span><span class="value" id="tooltipSupplier">—</span></div>
-        <div class="info-row"><span class="label">Дата:</span><span class="value" id="tooltipDate">—</span></div>
-        <div class="actions">
-            <button class="btn-edit" onclick="editFromTooltip()">✏️ Ред.</button>
-            <button class="btn-issue" onclick="issueFromTooltip()">📤 Выдать</button>
         </div>
     </div>
 
@@ -856,7 +805,7 @@
 
     <script>
         // ============================================================
-        // 1. FIREBASE INIT (защищённая инициализация)
+        // 1. FIREBASE INIT
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyDnNNNj1t9emqXhbjYz1Z-NxPaS83g0uzA",
@@ -871,7 +820,7 @@
         let db = null;
         try {
             if (typeof firebase === 'undefined') {
-                console.error('❌ Firebase SDK не загружен. Проверьте интернет/блокировщики.');
+                console.error('❌ Firebase SDK не загружен.');
             } else {
                 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 db = firebase.database();
@@ -893,10 +842,7 @@
         let selectedProductId = null;
         let currentView = 'list';
         let debugLogs = [];
-        let tooltipProductId = null;
         let currentReportTab = 'history';
-        let isEditMode = false;
-        let buildingPositions = {};
         let isSidebarOpen = window.innerWidth > 768;
         let productView = 'grid';
         let stockFilter = 'all';
@@ -906,16 +852,15 @@
         let currentOrderId = null;
         let categoryHierarchy = {};
         let storageAddresses = [];
-        let sectionStates = { category: true, storage: true, settings: true };
         let currentIncomeId = null;
         let selectedHistoryIds = new Set();
         let soundEnabled = true;
         let knownOrderIds = new Set();
         let isFirstOrderLoad = true;
-        let orderFilter = 'active'; // active | new | ready | issued | all
+        let orderFilter = 'active';
 
         // ============================================================
-        // 3. SIDEBAR TOGGLE
+        // 3. SIDEBAR
         // ============================================================
         function toggleSidebar() {
             isSidebarOpen = !isSidebarOpen;
@@ -926,21 +871,16 @@
                 overlay.classList.toggle('open', isSidebarOpen);
             }
         }
-
         function toggleSection(sectionId) {
             const content = document.getElementById(sectionId);
             const toggle = document.getElementById(sectionId.replace('Content', 'Toggle'));
             if (content) {
                 content.classList.toggle('collapsed');
                 if (toggle) toggle.classList.toggle('collapsed');
-                const key = sectionId.replace('Content', '');
-                sectionStates[key] = content.classList.contains('collapsed');
             }
         }
-
         document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
         document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
-
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
                 document.getElementById('sidebar').classList.remove('open');
@@ -949,10 +889,6 @@
             }
         });
 
-        // ============================================================
-        // 3.1 ЕДИНЫЙ ДЕЛЕГИРОВАННЫЙ ОБРАБОТЧИК КНОПОК САЙДБАРА
-        // Работает всегда, независимо от порядка инициализации скриптов.
-        // ============================================================
         document.addEventListener('click', (e) => {
             const viewBtn = e.target.closest('.sidebar button[data-view]');
             if (viewBtn) {
@@ -963,8 +899,7 @@
                 }
                 document.querySelectorAll('.sidebar button[data-view]').forEach(b => b.classList.remove('active'));
                 viewBtn.classList.add('active');
-                try { switchView(viewBtn.dataset.view); }
-                catch (err) { console.error('switchView error:', err); }
+                try { switchView(viewBtn.dataset.view); } catch (err) { console.error(err); }
                 return;
             }
             const anySidebarBtn = e.target.closest('.sidebar button');
@@ -976,7 +911,7 @@
         });
 
         // ============================================================
-        // 4. DEBUG
+        // 4. DEBUG / TOAST / SOUND
         // ============================================================
         const debugConsole = document.getElementById('debugConsole');
         function debugLog(message, data = null) {
@@ -995,9 +930,6 @@
             if (debugConsole.classList.contains('show')) debugConsole.innerHTML = debugLogs.join('\n');
         });
 
-        // ============================================================
-        // 5. TOAST
-        // ============================================================
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -1010,9 +942,6 @@
             }, 3000);
         }
 
-        // ============================================================
-        // 5.1. ЗВУК ICQ
-        // ============================================================
         function playICQSound() {
             if (!soundEnabled) return;
             try {
@@ -1039,14 +968,12 @@
                 }, 120);
             } catch (err) { debugLog('Ошибка звука: ' + err.message); }
         }
-
         function toggleSound(enabled) {
             soundEnabled = enabled;
             localStorage.setItem('sklad_sound_enabled', enabled ? '1' : '0');
             if (enabled) { showToast('🔔 Звук включен', 'success'); playICQSound(); }
             else showToast('🔕 Звук выключен', 'info');
         }
-
         const savedSound = localStorage.getItem('sklad_sound_enabled');
         if (savedSound !== null) soundEnabled = savedSound === '1';
         document.addEventListener('DOMContentLoaded', () => {
@@ -1055,7 +982,7 @@
         });
 
         // ============================================================
-        // 5.2. ПОИСК
+        // 5. ПОИСК
         // ============================================================
         function handleSearchInput() {
             const input = document.getElementById('searchInput');
@@ -1064,7 +991,6 @@
             else clearBtn.classList.remove('visible');
             renderProductList();
         }
-
         function clearSearch() {
             const input = document.getElementById('searchInput');
             input.value = '';
@@ -1074,7 +1000,7 @@
         }
 
         // ============================================================
-        // 5.3. ЭКСПОРТ/ИМПОРТ БД
+        // 6. ЭКСПОРТ/ИМПОРТ БД
         // ============================================================
         async function exportDatabase() {
             if (!db) { showToast('Нет подключения к Firebase', 'error'); return; }
@@ -1083,7 +1009,7 @@
                 const snapshot = await db.ref(SKLAD_REF).once('value');
                 const data = snapshot.val();
                 if (!data) { showToast('База данных пуста', 'error'); return; }
-                const exportData = { exportDate: new Date().toISOString(), version: '1.2', data: data };
+                const exportData = { exportDate: new Date().toISOString(), version: '1.3', data: data };
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -1096,7 +1022,6 @@
                 showToast('✅ БД экспортирована!', 'success');
             } catch (err) { showToast('Ошибка экспорта: ' + err.message, 'error'); }
         }
-
         async function importDatabase(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1116,7 +1041,7 @@
         }
 
         // ============================================================
-        // 5.4. РЕЗЕРВ — ХЕЛПЕРЫ
+        // 7. РЕЗЕРВ
         // ============================================================
         function getReservedQty(product) {
             if (!product) return 0;
@@ -1154,348 +1079,7 @@
         }
 
         // ============================================================
-        // 6. CANVAS MAP
-        // ============================================================
-        const canvas = document.getElementById('mapCanvas');
-        const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            if (!canvas || !canvas.parentElement) return;
-            const rect = canvas.parentElement.getBoundingClientRect();
-            canvas.width = Math.max(0, rect.width - 16);
-            canvas.height = Math.max(0, rect.height - 16);
-            drawMap();
-        }
-        window.addEventListener('resize', resizeCanvas);
-
-        const buildingConfig = {
-            'Улица': { icon: '', color: '#7aaa5a', borderColor: '#4a7a3a', width: 1225, height: 590 },
-            'Въезд': { icon: '🚗', color: '#8a9ba8', borderColor: '#5a6a78', width: 80, height: 80 },
-            'Здание': { icon: '🏢', color: '#7a8a98', borderColor: '#4a5a68', width: 360, height: 100 },
-            'Шатер': { icon: '⛺', color: '#9aaa7a', borderColor: '#6a7a4a', width: 360, height: 120 },
-            'КПП': { icon: '🛂', color: '#8a9ba8', borderColor: '#5a6a78', width: 110, height: 60 }
-        };
-
-        function loadBuildingPositions() {
-            if (!db) return;
-            db.ref(`${SKLAD_REF}/buildings`).on('value', snap => {
-                const data = snap.val();
-                if (data) buildingPositions = data;
-                drawMap();
-            });
-        }
-        function saveBuildingPositions() {
-            if (!db) return Promise.reject('no-db');
-            return db.ref(`${SKLAD_REF}/buildings`).set(buildingPositions);
-        }
-
-        function drawMap() {
-            if (!canvas || !ctx) return;
-            const w = canvas.width, h = canvas.height;
-            ctx.clearRect(0, 0, w, h);
-            const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w, h)/1.5);
-            grad.addColorStop(0, '#d4dce6'); grad.addColorStop(1, '#b8c4d0');
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 1;
-            for (let i = 0; i < w; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke(); }
-            for (let i = 0; i < h; i += 40) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke(); }
-
-            const buildingNames = ['Улица', 'Въезд', 'Здание', 'Шатер', 'КПП'];
-            const locs = [];
-            buildingNames.forEach(name => {
-                const config = buildingConfig[name];
-                let x, y;
-                if (buildingPositions[name]) { x = buildingPositions[name].x; y = buildingPositions[name].y; }
-                else {
-                    if (name === 'Въезд') { x = 30; y = h - config.height - 20; }
-                    else if (name === 'Здание') { x = w/2 - config.width/2; y = 60; }
-                    else if (name === 'Шатер') { x = w - config.width - 20; y = 40; }
-                    else if (name === 'КПП') { x = w - config.width - 30; y = h - config.height - 20; }
-                    else if (name === 'Улица') { x = 40; y = 40; }
-                    buildingPositions[name] = { x, y };
-                }
-                locs.push({ name, icon: config.icon, x, y, width: config.width, height: config.height, color: config.color, borderColor: config.borderColor });
-            });
-            locs.forEach(loc => {
-                ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 15; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 3;
-                const grad2 = ctx.createLinearGradient(loc.x, loc.y, loc.x + loc.width, loc.y + loc.height);
-                grad2.addColorStop(0, loc.color); grad2.addColorStop(1, loc.borderColor);
-                ctx.fillStyle = grad2;
-                ctx.fillRect(loc.x, loc.y, loc.width, loc.height);
-                ctx.shadowBlur = 0;
-                ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(loc.x, loc.y, loc.width, loc.height);
-                if (isEditMode) {
-                    ctx.fillStyle = 'rgba(59,130,246,0.15)';
-                    ctx.fillRect(loc.x + 5, loc.y + 5, loc.width - 10, 20);
-                    ctx.strokeStyle = 'rgba(59,130,246,0.4)';
-                    ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
-                    ctx.strokeRect(loc.x - 5, loc.y - 5, loc.width + 10, loc.height + 10);
-                    ctx.setLineDash([]);
-                }
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = 'white';
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.font = `${Math.min(loc.width, loc.height)/2.5}px sans-serif`;
-                ctx.fillText(loc.icon, loc.x + loc.width/2, loc.y + loc.height/2 - 10);
-                ctx.font = `bold ${Math.min(loc.width, loc.height)/5}px sans-serif`;
-                ctx.fillText(loc.name, loc.x + loc.width/2, loc.y + loc.height/2 + 30);
-            });
-            ctx.shadowBlur = 0;
-
-            const zones = {};
-            buildingNames.forEach(name => {
-                const pos = buildingPositions[name];
-                if (pos) zones[name] = { x: pos.x + buildingConfig[name].width/2, y: pos.y + buildingConfig[name].height/2, range: Math.min(buildingConfig[name].width, buildingConfig[name].height) * 0.4 };
-            });
-            products.forEach(p => {
-                if (p.x === undefined || p.x === null || p.y === undefined || p.y === null) {
-                    const zone = zones[p.location];
-                    if (zone) {
-                        const angle = Math.random() * Math.PI * 2;
-                        const dist = Math.random() * zone.range * 0.7;
-                        p.x = zone.x + Math.cos(angle) * dist;
-                        p.y = zone.y + Math.sin(angle) * dist;
-                    } else {
-                        p.x = 50 + Math.random() * (canvas.width - 100);
-                        p.y = 50 + Math.random() * (canvas.height - 100);
-                    }
-                    if (db) db.ref(`${SKLAD_REF}/products/${p.id}`).update({ x: p.x, y: p.y });
-                }
-            });
-            const sortedProducts = [...products].sort((a, b) => {
-                if (a.id === selectedProductId) return 1;
-                if (b.id === selectedProductId) return -1;
-                return 0;
-            });
-            sortedProducts.forEach(p => {
-                const size = 22;
-                const isSelected = (p.id === selectedProductId);
-                let color = '#4a5a68';
-                const categoryColors = { 'Кабель': '#1e40af', 'Спецодежда': '#16a34a', 'Инструмент': '#b45309', 'Расходники': '#7c3aed', 'Стройматериалы': '#dc2626' };
-                color = categoryColors[p.category] || '#4a5a68';
-                if (isEditMode) { ctx.shadowColor = 'rgba(59,130,246,0.3)'; ctx.shadowBlur = 15; }
-                else { ctx.shadowColor = isSelected ? 'rgba(59,130,246,0.8)' : 'rgba(0,0,0,0.3)'; ctx.shadowBlur = isSelected ? 25 : 10; }
-                ctx.fillStyle = isSelected ? '#3b82f6' : color;
-                ctx.fillRect(p.x - size/2, p.y - size/2, size, size);
-                if (getReservedQty(p) > 0) {
-                    ctx.fillStyle = '#dc2626';
-                    ctx.beginPath(); ctx.arc(p.x + size/2 - 2, p.y - size/2 + 2, 5, 0, Math.PI * 2); ctx.fill();
-                }
-                if (isSelected || isEditMode) {
-                    ctx.shadowBlur = 0;
-                    ctx.strokeStyle = isSelected ? 'white' : 'rgba(59,130,246,0.4)';
-                    ctx.lineWidth = isSelected ? 3 : 1;
-                    ctx.setLineDash(isSelected ? [] : [3, 3]);
-                    ctx.strokeRect(p.x - size/2 - 3, p.y - size/2 - 3, size + 6, size + 6);
-                    ctx.setLineDash([]);
-                }
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 8px sans-serif';
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                const shortName = (p.name || '').length > 8 ? p.name.slice(0, 8) + '..' : p.name;
-                ctx.fillText(shortName, p.x, p.y - 2);
-                ctx.fillStyle = '#1e293b';
-                ctx.font = 'bold 9px sans-serif';
-                ctx.fillText(p.qty || 0, p.x, p.y + size/2 + 14);
-            });
-        }
-
-        // ============================================================
-        // 7. TOOLTIP
-        // ============================================================
-        const tooltip = document.getElementById('productTooltip');
-
-        function showTooltip(product, mouseX, mouseY) {
-            if (!product || !tooltip) { if (tooltip) tooltip.classList.remove('show'); return; }
-            tooltipProductId = product.id;
-            document.getElementById('tooltipTitle').textContent = product.name || 'Без названия';
-            document.getElementById('tooltipCategory').textContent = product.category || '—';
-            document.getElementById('tooltipLocation').textContent = product.location || '—';
-            document.getElementById('tooltipQty').textContent = product.qty || 0;
-            document.getElementById('tooltipSupplier').textContent = product.supplier || '—';
-            document.getElementById('tooltipDate').textContent = product.date || '—';
-            const res = getReserveInfo(product);
-            document.getElementById('tooltipReserved').textContent = res ? `🔒 ${res.reserved} — ${res.reservedFor} (свободно: ${res.free})` : 'нет';
-            let left = mouseX + 15, top = mouseY - 20;
-            if (left + 320 > window.innerWidth) left = mouseX - 320 - 15;
-            if (top + 220 > window.innerHeight) top = window.innerHeight - 220 - 10;
-            if (top < 10) top = 10;
-            tooltip.style.left = left + 'px'; tooltip.style.top = top + 'px';
-            tooltip.classList.add('show');
-        }
-        function hideTooltip() { if (tooltip) tooltip.classList.remove('show'); tooltipProductId = null; }
-        function editFromTooltip() {
-            if (tooltipProductId) {
-                const product = products.find(p => p.id === tooltipProductId);
-                if (product) { hideTooltip(); openModal('edit', product); }
-            }
-        }
-        function issueFromTooltip() {
-            if (tooltipProductId) {
-                const product = products.find(p => p.id === tooltipProductId);
-                if (product) {
-                    if (getFreeQty(product) <= 0) {
-                        const res = getReserveInfo(product);
-                        if (res) showToast(`🔒 Товар в резерве (${res.reserved} шт. — ${res.reservedFor}). Свободно: ${res.free}`, 'error');
-                        else showToast('Товара нет на складе!', 'error');
-                        return;
-                    }
-                    hideTooltip();
-                    openModal('issue', product);
-                }
-            }
-        }
-
-        // ============================================================
-        // 8. MOUSE EVENTS
-        // ============================================================
-        function getMousePos(e) {
-            const rect = canvas.getBoundingClientRect();
-            return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height), clientX: e.clientX, clientY: e.clientY };
-        }
-        function isPointInProduct(mx, my) {
-            for (let p of products) {
-                if (p.x === undefined || p.x === null) continue;
-                if (Math.abs(p.x - mx) < 27 && Math.abs(p.y - my) < 27) return p;
-            }
-            return null;
-        }
-        let hoverTimeout = null;
-        canvas.addEventListener('mousemove', (e) => {
-            const pos = getMousePos(e);
-            const product = isPointInProduct(pos.x, pos.y);
-            if (product) {
-                canvas.style.cursor = 'pointer';
-                if (hoverTimeout) clearTimeout(hoverTimeout);
-                hoverTimeout = setTimeout(() => { showTooltip(product, pos.clientX, pos.clientY); }, 300);
-            } else {
-                canvas.style.cursor = 'default';
-                if (hoverTimeout) clearTimeout(hoverTimeout);
-                hideTooltip();
-            }
-        });
-        canvas.addEventListener('mouseleave', () => { if (hoverTimeout) clearTimeout(hoverTimeout); hideTooltip(); });
-        canvas.addEventListener('click', (e) => {
-            const pos = getMousePos(e);
-            const product = isPointInProduct(pos.x, pos.y);
-            if (product) {
-                selectedProductId = product.id;
-                updateInfoPanel(); drawMap(); renderProductList();
-                showToast(`Выбран: ${product.name}`, 'info');
-            } else {
-                selectedProductId = null;
-                updateInfoPanel(); drawMap();
-            }
-        });
-        canvas.addEventListener('dblclick', (e) => {
-            const pos = getMousePos(e);
-            const product = isPointInProduct(pos.x, pos.y);
-            if (product) openModal('edit', product);
-        });
-
-        // ============================================================
-        // 9. ПЕЧАТЬ ЭТИКЕТКИ
-        // ============================================================
-        function printLabel() {
-            const id = fProductId.value;
-            const product = products.find(p => p.id === id);
-            if (!product) { showToast('Сначала сохраните товар!', 'error'); return; }
-            showLabelDialog(product);
-        }
-        function printLabelFromId(id) {
-            const product = products.find(p => p.id === id);
-            if (!product) { showToast('Товар не найден!', 'error'); return; }
-            showLabelDialog(product);
-        }
-        function showLabelDialog(product) {
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;';
-            const dialog = document.createElement('div');
-            dialog.style.cssText = 'background:white;padding:30px;border-radius:16px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
-            const isBarcode = product.barcode && (/^[0-9]{13}$/.test(product.barcode) || product.barcode.startsWith('460'));
-            const labelType = isBarcode ? 'Штрихкод' : 'Артикул';
-            dialog.innerHTML = `
-                <h3 style="margin-bottom:16px;color:#0f172a;">🏷️ Печать этикетки</h3>
-                <p style="color:#64748b;margin-bottom:6px;font-size:14px;">Товар: <strong>${product.name}</strong></p>
-                <p style="color:#94a3b8;margin-bottom:20px;font-size:13px;">Тип: <strong>${labelType}</strong>: ${product.barcode || 'не указан'}</p>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-                    <button onclick="generateLabelWord('${product.id}','save')" style="padding:10px 24px;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">💾 WORD</button>
-                    <button onclick="generateLabelWord('${product.id}','print')" style="padding:10px 24px;background:#22c55e;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">🖨️ Печать</button>
-                    <button onclick="this.closest('div[style]').parentElement.remove()" style="padding:10px 24px;background:#e2e8f0;color:#1e293b;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">Отмена</button>
-                </div>
-            `;
-            overlay.appendChild(dialog);
-            document.body.appendChild(overlay);
-            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-        }
-        function generateLabelWord(productId, action) {
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-            const labelHtml = generateLabelHTML(product);
-            if (action === 'print') {
-                const printWindow = window.open('', '_blank', 'width=400,height=350');
-                if (printWindow) {
-                    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Этикетка</title>
-                        <style>body{margin:0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f2f5;}@media print{body{background:white;padding:0;}.no-print{display:none;}}.print-btn{padding:10px 24px;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;margin-bottom:20px;}</style>
-                        </head><body><div style="display:flex;flex-direction:column;align-items:center;"><button class="print-btn no-print" onclick="window.print()">🖨️ Печать</button>${labelHtml}<button class="print-btn no-print" onclick="window.close()" style="background:#e2e8f0;color:#1e293b;margin-top:20px;">✕ Закрыть</button></div></body></html>`);
-                    printWindow.document.close();
-                }
-                showToast('🖨️ Этикетка открыта', 'success');
-            } else {
-                const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Этикетка</title></head><body>${labelHtml}</body></html>`;
-                const blob = new Blob([fullHtml], { type: 'application/msword;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Этикетка_${product.name || 'товар'}.doc`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-                showToast('💾 Этикетка сохранена', 'success');
-            }
-            document.querySelectorAll('div[style*="position:fixed"][style*="z-index:2000"]').forEach(el => el.remove());
-        }
-        function generateLabelHTML(product) {
-            const isBarcode = product.barcode && (/^[0-9]{13}$/.test(product.barcode) || product.barcode.startsWith('460'));
-            const labelType = isBarcode ? 'Штрихкод' : 'Артикул';
-            let barcodeHtml = '';
-            if (isBarcode && product.barcode.length >= 8) {
-                const bars = product.barcode.split('').map(Number);
-                const barWidth = 92 / bars.length;
-                let barsSvg = '';
-                bars.forEach((digit, i) => {
-                    const thickness = digit > 4 ? 2.5 : 1.2;
-                    const xPos = 4 + i * barWidth;
-                    if (digit > 0) barsSvg += `<rect x="${xPos}" y="24" width="${thickness}" height="10" fill="#1e293b" />`;
-                });
-                barcodeHtml = `<svg width="100" height="18" style="margin:2px 0;">${barsSvg}<text x="4" y="37" font-family="monospace" font-size="5" fill="#64748b">${product.barcode}</text></svg>`;
-            }
-            const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
-            const qtyText = product.qty || 0;
-            const unitText = product.unitType || 'шт';
-            const customText = product.customUnit ? ` (${product.customUnit})` : '';
-            const storageAddr = product.storageAddress || '';
-            const reserved = getReservedQty(product);
-            const reservedLine = reserved > 0 ? `<div style="color:#dc2626;"><strong>🔒 Резерв:</strong> ${reserved} шт. — ${product.reservedFor || '—'}</div>` : '';
-            const contentHtml = `
-                <div><strong>${labelType}:</strong> ${product.barcode || 'не указан'}</div>
-                ${product.category ? `<div><strong>Категория:</strong> ${product.category}</div>` : ''}
-                ${storageAddr ? `<div><strong>Адрес:</strong> ${storageAddr}</div>` : ''}
-                ${product.location ? `<div><strong>Место:</strong> ${locEmojis[product.location] || ''} ${product.location}</div>` : ''}
-                <div><strong>Кол-во:</strong> ${qtyText} ${unitText}${customText}</div>
-                ${reservedLine}
-                ${product.condition ? `<div><strong>Состояние:</strong> ${product.condition}</div>` : ''}
-                ${product.supplier ? `<div><strong>Поставщик:</strong> ${product.supplier}</div>` : ''}
-                ${product.date ? `<div><strong>Дата:</strong> ${product.date}</div>` : ''}
-            `;
-            return `<div style="width:100mm;height:50mm;border:0.5px solid #cbd5e1;padding:3mm 4mm;font-family:'Segoe UI',Arial,sans-serif;background:white;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;"><div><div style="font-size:14pt;font-weight:700;color:#0f172a;margin-bottom:1mm;line-height:1.2;">${product.name || 'Без названия'}</div><div style="font-size:8pt;color:#475569;line-height:1.5;">${contentHtml}</div></div>${isBarcode ? barcodeHtml : ''}</div>`;
-        }
-
-        // ============================================================
-        // 10. КАТЕГОРИИ
+        // 8. КАТЕГОРИИ
         // ============================================================
         function updateCategoryTree() {
             const container = document.getElementById('categoryTree');
@@ -1548,7 +1132,7 @@
         }
 
         // ============================================================
-        // 11. АДРЕСНОЕ ХРАНЕНИЕ
+        // 9. АДРЕСНОЕ ХРАНЕНИЕ
         // ============================================================
         function loadStorageAddresses() {
             if (!db) return;
@@ -1600,7 +1184,7 @@
         document.getElementById('btnAddStorage').addEventListener('click', addStorageAddress);
 
         // ============================================================
-        // 12. ЗАКАЗЫ
+        // 10. ЗАКАЗЫ
         // ============================================================
         function loadOrders() {
             if (!db) return;
@@ -1633,7 +1217,6 @@
                 if (currentView === 'orders') renderOrders();
             });
         }
-
         function updateOrderBadge() {
             const unread = orders.filter(o => !o.isRead).length;
             unreadOrders = unread;
@@ -1649,7 +1232,6 @@
             renderOrders();
             showToast('✅ Отмечены прочитанными', 'success');
         }
-
         function setOrderFilter(filter) {
             orderFilter = filter;
             document.querySelectorAll('.order-tab').forEach(btn => {
@@ -1670,7 +1252,6 @@
             if (el('orderCountIssued')) el('orderCountIssued').textContent = issued;
             if (el('orderCountActive')) el('orderCountActive').textContent = active;
         }
-
         function renderOrders() {
             const container = document.getElementById('ordersList');
             const sorted = [...orders].sort((a, b) => {
@@ -1732,7 +1313,6 @@
             });
             container.innerHTML = html;
         }
-
         function formatOrderDate(order) {
             if (order.timestamp) {
                 const d = new Date(order.timestamp);
@@ -1987,7 +1567,7 @@
                             customUnit: '', condition: 'Новый', barcode: '', supplier: order.customer || 'Возврат',
                             date: new Date().toISOString().split('T')[0], image: '', issuedTo: '',
                             note: `Возврат по заказу ${order.orderNumber || order.id.slice(0, 8)}`,
-                            reserved: 0, reservedFor: '', x: null, y: null,
+                            reserved: 0, reservedFor: '',
                             createdAt: firebase.database.ServerValue.TIMESTAMP
                         };
                     }
@@ -2002,7 +1582,7 @@
         }
 
         // ============================================================
-        // 13. РЕДАКТИРОВАНИЕ ИСТОРИИ
+        // 11. РЕДАКТИРОВАНИЕ ИСТОРИИ
         // ============================================================
         function openHistoryEdit(historyId) {
             const record = history.find(h => h.id === historyId);
@@ -2062,11 +1642,10 @@
         }
 
         // ============================================================
-        // 14. ЗАГРУЗКА ДАННЫХ
+        // 12. ЗАГРУЗКА ДАННЫХ
         // ============================================================
         function loadData() {
             if (!db) { console.warn('loadData: Firebase не инициализирован'); return; }
-            loadBuildingPositions();
             loadOrders();
             loadStorageAddresses();
             loadIncomes();
@@ -2104,7 +1683,6 @@
                 if (currentView === 'reports' && currentReportTab === 'history') renderReports();
             });
         }
-
         function saveProduct(data, id = null) {
             if (!db) return Promise.reject('no-db');
             const ref = id ? db.ref(`${SKLAD_REF}/products/${id}`) : db.ref(`${SKLAD_REF}/products`).push();
@@ -2121,11 +1699,10 @@
         }
 
         // ============================================================
-        // 15. UI UPDATES
+        // 13. UI UPDATES
         // ============================================================
         function updateUI() {
             updateTotalCount();
-            drawMap();
             updateInfoPanel();
             renderProductList();
             updateProductTabCounts();
@@ -2196,28 +1773,10 @@
             document.querySelectorAll('#categoryTree .category-item').forEach(el => el.classList.remove('active'));
             const target = document.querySelector(`#categoryTree .category-item[data-cat="${cat}"]`);
             if (target) target.classList.add('active');
-            const filtered = cat === 'all' ? products : products.filter(p => p.category === cat);
-            if (filtered.length > 0) { selectedProductId = filtered[0].id; updateInfoPanel(); drawMap(); }
-            else { selectedProductId = null; updateInfoPanel(); drawMap(); if (cat !== 'all') showToast('Нет товаров', 'error'); }
             renderProductList(cat);
         }
         function updateInfoPanel() {
-            const p = products.find(pr => pr.id === selectedProductId);
-            if (p) {
-                document.getElementById('selectedName').textContent = p.name || '—';
-                document.getElementById('selectedCategory').textContent = p.category || '—';
-                document.getElementById('selectedLocation').textContent = p.location || '—';
-                document.getElementById('selectedQty').textContent = p.qty || 0;
-                document.getElementById('selectedSupplier').textContent = p.supplier || '—';
-                const res = getReserveInfo(p);
-                document.getElementById('selectedReserved').textContent = res ? `🔒 ${res.reserved} — ${res.reservedFor} (своб. ${res.free})` : 'нет';
-                const imageHtml = p.image ? `<img src="${p.image}" class="product-image-preview" onerror="this.style.display='none'" />` : '—';
-                document.getElementById('selectedImage').innerHTML = imageHtml;
-            } else {
-                ['selectedName','selectedCategory','selectedLocation','selectedQty','selectedSupplier'].forEach(id => document.getElementById(id).textContent = '—');
-                document.getElementById('selectedReserved').textContent = '—';
-                document.getElementById('selectedImage').textContent = '—';
-            }
+            // Инфо-панель удалена вместе с картой, оставлена пустая функция для совместимости
         }
         function editSelected() {
             if (selectedProductId) {
@@ -2227,7 +1786,7 @@
         }
 
         // ============================================================
-        // 16. PRODUCT LIST
+        // 14. PRODUCT LIST
         // ============================================================
         function setProductView(view) {
             productView = view;
@@ -2289,6 +1848,7 @@
                 const reserveTag = reserved > 0 ? `<span class="card-tag reserve-tag">🔒 Резерв: ${reserved} — ${p.reservedFor || '—'} (своб. ${freeQty})</span>` : '';
                 const fullyReserved = (qty > 0 && freeQty === 0 && reserved > 0);
                 const fullyReservedTag = fullyReserved ? `<span class="card-tag" style="background:#dc2626;color:white;">🔒 Весь товар в резерве</span>` : '';
+                const canIssue = freeQty > 0;
                 html += `
                     <div class="product-card ${isSelected ? 'selected' : ''}" onclick="selectProduct('${p.id}')">
                         ${imageHtml}
@@ -2311,6 +1871,7 @@
                         <div class="card-bottom">
                             <span class="qty-badge">${qty}</span>
                             <button class="edit-btn" onclick="event.stopPropagation();openModal('edit', '${p.id}')" title="Редактировать">✏️</button>
+                            ${canIssue ? `<button class="issue-btn" onclick="event.stopPropagation();issueProductById('${p.id}')" title="Выдать">📤</button>` : `<button class="issue-btn" disabled style="opacity:0.4;cursor:not-allowed;" title="Нет свободного остатка">📤</button>`}
                             ${p.barcode ? `<button class="print-label-btn" onclick="event.stopPropagation();printLabelFromId('${p.id}')" title="Печать этикетки">🏷️</button>` : ''}
                         </div>
                     </div>`;
@@ -2320,15 +1881,22 @@
         }
         function selectProduct(id) {
             selectedProductId = id;
-            updateInfoPanel();
-            drawMap();
             renderProductList();
-            switchView('map');
-            hideTooltip();
+        }
+        function issueProductById(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) { showToast('Товар не найден', 'error'); return; }
+            if (getFreeQty(product) <= 0) {
+                const res = getReserveInfo(product);
+                if (res) showToast(`🔒 Товар в резерве (${res.reserved} шт. — ${res.reservedFor}). Свободно: ${res.free}`, 'error');
+                else showToast('Нет на складе!', 'error');
+                return;
+            }
+            openModal('issue', product);
         }
 
         // ============================================================
-        // 17. ЭКСПОРТ НОМЕНКЛАТУРЫ
+        // 15. ЭКСПОРТ НОМЕНКЛАТУРЫ
         // ============================================================
         function exportNomenclature(format) {
             const data = products.map((p, i) => ({
@@ -2342,7 +1910,7 @@
         }
 
         // ============================================================
-        // 18. REPORTS
+        // 16. REPORTS
         // ============================================================
         function loadReports() { renderReports(); }
         function renderReports() {
@@ -2455,7 +2023,7 @@
         }
 
         // ============================================================
-        // 18.1. ПЕЧАТЬ ФОРМЫ С-13
+        // 16.1. ПЕЧАТЬ С-13
         // ============================================================
         function printMovement() {
             if (selectedHistoryIds.size === 0) { showToast('Выберите позиции', 'error'); return; }
@@ -2566,7 +2134,7 @@
         }
 
         // ============================================================
-        // 19. STOCK
+        // 17. STOCK
         // ============================================================
         function renderStock() {
             const tbody = document.getElementById('stockBody');
@@ -2629,7 +2197,7 @@
         }
 
         // ============================================================
-        // 20. УНИВЕРСАЛЬНЫЙ ЭКСПОРТ
+        // 18. УНИВЕРСАЛЬНЫЙ ЭКСПОРТ
         // ============================================================
         function exportData(data, fileName, format) {
             if (!data || data.length === 0) { showToast('Нет данных', 'error'); return; }
@@ -2726,7 +2294,7 @@
         }
 
         // ============================================================
-        // 21. SWITCH REPORT TAB
+        // 19. SWITCH REPORT TAB
         // ============================================================
         function switchReportTab(tab) {
             currentReportTab = tab;
@@ -2741,7 +2309,7 @@
         }
 
         // ============================================================
-        // 22. MODAL
+        // 20. MODAL
         // ============================================================
         const modalOverlay = document.getElementById('modalOverlay');
         const modalTitle = document.getElementById('modalTitle');
@@ -2878,7 +2446,7 @@
             }
             try {
                 if (action === 'add') {
-                    await saveProduct({ name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, reserved, reservedFor, x: null, y: null, createdAt: firebase.database.ServerValue.TIMESTAMP });
+                    await saveProduct({ name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, reserved, reservedFor, createdAt: firebase.database.ServerValue.TIMESTAMP });
                     showToast('Товар добавлен!', 'success'); closeModal();
                 } else if (action === 'edit' && id) {
                     const existing = products.find(p => p.id === id);
@@ -2918,7 +2486,7 @@
         });
 
         // ============================================================
-        // 23. VIEW SWITCHING
+        // 21. VIEW SWITCHING
         // ============================================================
         function switchView(view) {
             currentView = view;
@@ -2933,37 +2501,10 @@
             if (view === 'orders') renderOrders();
             if (view === 'incomes') renderIncomes();
             if (view === 'service') renderService();
-            if (view === 'map') setTimeout(resizeCanvas, 100);
-            hideTooltip();
         }
 
         // ============================================================
-        // 24. EDIT MODE
-        // ============================================================
-        document.getElementById('btnEditMap').addEventListener('click', () => {
-            isEditMode = !isEditMode;
-            if (isEditMode) {
-                showToast('✏️ Режим редактирования', 'success');
-                document.getElementById('btnEditMap').textContent = '🔒 Закончить';
-                document.getElementById('btnSaveMap').style.display = 'block';
-                document.getElementById('editModeIndicator').classList.add('active');
-                canvas.classList.add('edit-mode');
-                hideTooltip();
-            } else {
-                document.getElementById('btnEditMap').textContent = '✏️ Редактировать';
-                document.getElementById('btnSaveMap').style.display = 'none';
-                document.getElementById('editModeIndicator').classList.remove('active');
-                canvas.classList.remove('edit-mode');
-            }
-            drawMap();
-        });
-        document.getElementById('btnSaveMap').addEventListener('click', async () => {
-            try { await saveBuildingPositions(); showToast('💾 Раскладка сохранена!', 'success'); }
-            catch (err) { showToast('Ошибка', 'error'); }
-        });
-
-        // ============================================================
-        // 25. BUTTONS
+        // 22. BUTTONS
         // ============================================================
         document.getElementById('btnAddProduct').addEventListener('click', () => {
             if (categories.length === 0) { showToast('Сначала создайте категорию!', 'error'); return; }
@@ -2993,13 +2534,13 @@
             let filtered = products;
             if (cat !== 'all') filtered = filtered.filter(p => p.category === cat);
             if (loc !== 'all') filtered = filtered.filter(p => p.location === loc);
-            if (filtered.length > 0) { selectedProductId = filtered[0].id; updateInfoPanel(); drawMap(); renderProductList(cat); }
-            else { selectedProductId = null; updateInfoPanel(); drawMap(); showToast('Нет товаров', 'error'); }
+            if (filtered.length > 0) { selectedProductId = filtered[0].id; renderProductList(cat); }
+            else { selectedProductId = null; renderProductList(cat); showToast('Нет товаров', 'error'); }
         });
         document.getElementById('searchInput').addEventListener('input', handleSearchInput);
 
         // ============================================================
-        // 26. ПРИХОД
+        // 23. ПРИХОД
         // ============================================================
         function loadIncomes() {
             if (!db) return;
@@ -3045,6 +2586,7 @@
             const form = document.getElementById('incomeForm');
             form.reset();
             updateIncomeCategorySelects();
+            modal.querySelectorAll('input, select').forEach(input => { input.readOnly = false; input.disabled = false; });
             if (incomeId) {
                 const income = incomes.find(i => i.id === incomeId);
                 if (!income) { showToast('Не найден', 'error'); return; }
@@ -3183,7 +2725,7 @@
                         condition: 'Новый', barcode: '', supplier: document.getElementById('fSupplierIncome').value.trim(),
                         date: document.getElementById('fInvoiceDate').value, image: item.image || '', issuedTo: '',
                         note: `Приход по накладной ${document.getElementById('fInvoiceNumber').value}`,
-                        reserved: 0, reservedFor: '', x: null, y: null,
+                        reserved: 0, reservedFor: '',
                         createdAt: firebase.database.ServerValue.TIMESTAMP
                     };
                 }
@@ -3234,7 +2776,7 @@
         }
 
         // ============================================================
-        // 27. СЕРВИС
+        // 24. СЕРВИС
         // ============================================================
         function loadService() {
             if (!db) return;
@@ -3413,7 +2955,104 @@
         }
 
         // ============================================================
-        // 28. INIT
+        // 25. ПЕЧАТЬ ЭТИКЕТКИ
+        // ============================================================
+        function printLabel() {
+            const id = fProductId.value;
+            const product = products.find(p => p.id === id);
+            if (!product) { showToast('Сначала сохраните товар!', 'error'); return; }
+            showLabelDialog(product);
+        }
+        function printLabelFromId(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) { showToast('Товар не найден!', 'error'); return; }
+            showLabelDialog(product);
+        }
+        function showLabelDialog(product) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;';
+            const dialog = document.createElement('div');
+            dialog.style.cssText = 'background:white;padding:30px;border-radius:16px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+            const isBarcode = product.barcode && (/^[0-9]{13}$/.test(product.barcode) || product.barcode.startsWith('460'));
+            const labelType = isBarcode ? 'Штрихкод' : 'Артикул';
+            dialog.innerHTML = `
+                <h3 style="margin-bottom:16px;color:#0f172a;">🏷️ Печать этикетки</h3>
+                <p style="color:#64748b;margin-bottom:6px;font-size:14px;">Товар: <strong>${product.name}</strong></p>
+                <p style="color:#94a3b8;margin-bottom:20px;font-size:13px;">Тип: <strong>${labelType}</strong>: ${product.barcode || 'не указан'}</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+                    <button onclick="generateLabelWord('${product.id}','save')" style="padding:10px 24px;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">💾 WORD</button>
+                    <button onclick="generateLabelWord('${product.id}','print')" style="padding:10px 24px;background:#22c55e;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">🖨️ Печать</button>
+                    <button onclick="this.closest('div[style]').parentElement.remove()" style="padding:10px 24px;background:#e2e8f0;color:#1e293b;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">Отмена</button>
+                </div>
+            `;
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        }
+        function generateLabelWord(productId, action) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            const labelHtml = generateLabelHTML(product);
+            if (action === 'print') {
+                const printWindow = window.open('', '_blank', 'width=400,height=350');
+                if (printWindow) {
+                    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Этикетка</title>
+                        <style>body{margin:0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f2f5;}@media print{body{background:white;padding:0;}.no-print{display:none;}}.print-btn{padding:10px 24px;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;margin-bottom:20px;}</style>
+                        </head><body><div style="display:flex;flex-direction:column;align-items:center;"><button class="print-btn no-print" onclick="window.print()">🖨️ Печать</button>${labelHtml}<button class="print-btn no-print" onclick="window.close()" style="background:#e2e8f0;color:#1e293b;margin-top:20px;">✕ Закрыть</button></div></body></html>`);
+                    printWindow.document.close();
+                }
+                showToast('🖨️ Этикетка открыта', 'success');
+            } else {
+                const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Этикетка</title></head><body>${labelHtml}</body></html>`;
+                const blob = new Blob([fullHtml], { type: 'application/msword;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Этикетка_${product.name || 'товар'}.doc`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast('💾 Этикетка сохранена', 'success');
+            }
+            document.querySelectorAll('div[style*="position:fixed"][style*="z-index:2000"]').forEach(el => el.remove());
+        }
+        function generateLabelHTML(product) {
+            const isBarcode = product.barcode && (/^[0-9]{13}$/.test(product.barcode) || product.barcode.startsWith('460'));
+            const labelType = isBarcode ? 'Штрихкод' : 'Артикул';
+            let barcodeHtml = '';
+            if (isBarcode && product.barcode.length >= 8) {
+                const bars = product.barcode.split('').map(Number);
+                const barWidth = 92 / bars.length;
+                let barsSvg = '';
+                bars.forEach((digit, i) => {
+                    const thickness = digit > 4 ? 2.5 : 1.2;
+                    const xPos = 4 + i * barWidth;
+                    if (digit > 0) barsSvg += `<rect x="${xPos}" y="24" width="${thickness}" height="10" fill="#1e293b" />`;
+                });
+                barcodeHtml = `<svg width="100" height="18" style="margin:2px 0;">${barsSvg}<text x="4" y="37" font-family="monospace" font-size="5" fill="#64748b">${product.barcode}</text></svg>`;
+            }
+            const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
+            const qtyText = product.qty || 0;
+            const unitText = product.unitType || 'шт';
+            const customText = product.customUnit ? ` (${product.customUnit})` : '';
+            const storageAddr = product.storageAddress || '';
+            const reserved = getReservedQty(product);
+            const reservedLine = reserved > 0 ? `<div style="color:#dc2626;"><strong>🔒 Резерв:</strong> ${reserved} шт. — ${product.reservedFor || '—'}</div>` : '';
+            const contentHtml = `
+                <div><strong>${labelType}:</strong> ${product.barcode || 'не указан'}</div>
+                ${product.category ? `<div><strong>Категория:</strong> ${product.category}</div>` : ''}
+                ${storageAddr ? `<div><strong>Адрес:</strong> ${storageAddr}</div>` : ''}
+                ${product.location ? `<div><strong>Место:</strong> ${locEmojis[product.location] || ''} ${product.location}</div>` : ''}
+                <div><strong>Кол-во:</strong> ${qtyText} ${unitText}${customText}</div>
+                ${reservedLine}
+                ${product.condition ? `<div><strong>Состояние:</strong> ${product.condition}</div>` : ''}
+                ${product.supplier ? `<div><strong>Поставщик:</strong> ${product.supplier}</div>` : ''}
+                ${product.date ? `<div><strong>Дата:</strong> ${product.date}</div>` : ''}
+            `;
+            return `<div style="width:100mm;height:50mm;border:0.5px solid #cbd5e1;padding:3mm 4mm;font-family:'Segoe UI',Arial,sans-serif;background:white;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;"><div><div style="font-size:14pt;font-weight:700;color:#0f172a;margin-bottom:1mm;line-height:1.2;">${product.name || 'Без названия'}</div><div style="font-size:8pt;color:#475569;line-height:1.5;">${contentHtml}</div></div>${isBarcode ? barcodeHtml : ''}</div>`;
+        }
+
+        // ============================================================
+        // 26. INIT
         // ============================================================
         try {
             if (db) {
@@ -3432,9 +3071,7 @@
             console.error('Ошибка loadData:', err);
             showToast('Ошибка загрузки данных: ' + err.message, 'error');
         }
-        setTimeout(resizeCanvas, 300);
-        window.addEventListener('resize', resizeCanvas);
-        console.log('🚀 Приложение запущено. Стартовый экран: Список');
+        console.log('🚀 Приложение запущено. Карта удалена. Версия 1.3');
     </script>
 
 </body>
