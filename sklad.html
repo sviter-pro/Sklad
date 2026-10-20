@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -19,6 +18,61 @@
             min-height: 100vh;
         }
 
+        /* ============================================================
+           БАННЕР СОСТОЯНИЯ СЕТИ
+           ============================================================ */
+        .net-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 3000;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            transform: translateY(-100%);
+            transition: transform 0.3s ease, background 0.3s ease;
+            text-align: center;
+            flex-wrap: wrap;
+        }
+        .net-banner.visible { transform: translateY(0); }
+        .net-banner.offline { background: #dc2626; }
+        .net-banner.slow { background: #f59e0b; }
+        .net-banner.cache { background: #6366f1; }
+        .net-banner button {
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .net-banner button:hover { background: rgba(255,255,255,0.4); }
+        body.has-banner .header { margin-top: 44px; }
+
+        .speed-indicator {
+            font-size: 11px;
+            color: #94a3b8;
+            padding: 2px 8px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+        .speed-indicator.slow { background: #fef3c7; color: #b45309; }
+        .speed-indicator.offline { background: #fee2e2; color: #dc2626; }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
         .header {
             background: white;
             padding: 12px 20px;
@@ -31,15 +85,14 @@
             z-index: 100;
             flex-wrap: wrap;
             gap: 10px;
+            transition: margin-top 0.3s ease;
         }
         .header .logo {
             font-size: 22px;
             font-weight: 700;
             color: #1e293b;
         }
-        .header .logo span {
-            color: #3b82f6;
-        }
+        .header .logo span { color: #3b82f6; }
         .header .header-actions {
             display: flex;
             align-items: center;
@@ -127,22 +180,14 @@
             user-select: none;
             transition: 0.2s;
         }
-        .categories-header:hover {
-            background: #f8fafc;
-        }
-        .categories-header h4 {
-            font-size: 14px;
-            color: #1e293b;
-            font-weight: 600;
-        }
+        .categories-header:hover { background: #f8fafc; }
+        .categories-header h4 { font-size: 14px; color: #1e293b; font-weight: 600; }
         .categories-header .toggle-icon {
             font-size: 14px;
             color: #94a3b8;
             transition: transform 0.3s ease;
         }
-        .categories-header .toggle-icon.open {
-            transform: rotate(180deg);
-        }
+        .categories-header .toggle-icon.open { transform: rotate(180deg); }
         .categories-body {
             max-height: 0;
             overflow: hidden;
@@ -170,10 +215,7 @@
             color: #64748b;
             white-space: nowrap;
         }
-        .categories button:hover {
-            border-color: #3b82f6;
-            color: #3b82f6;
-        }
+        .categories button:hover { border-color: #3b82f6; color: #3b82f6; }
         .categories button.active {
             border-color: #3b82f6;
             background: #eff6ff;
@@ -196,10 +238,7 @@
             transition: 0.2s;
             background: white;
         }
-        .search-wrapper input:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
+        .search-wrapper input:focus { outline: none; border-color: #3b82f6; }
         .search-wrapper .clear-btn {
             position: absolute;
             right: 10px;
@@ -214,13 +253,8 @@
             transition: 0.2s;
             line-height: 1;
         }
-        .search-wrapper .clear-btn:hover {
-            color: #ef4444;
-            background: #f1f5f9;
-        }
-        .search-wrapper .clear-btn.visible {
-            display: block;
-        }
+        .search-wrapper .clear-btn:hover { color: #ef4444; background: #f1f5f9; }
+        .search-wrapper .clear-btn.visible { display: block; }
 
         .search-bar {
             display: flex;
@@ -312,16 +346,8 @@
             min-height: 58px;
             word-break: break-word;
         }
-        .product-card .category {
-            font-size: 12px;
-            color: #94a3b8;
-            margin-bottom: 2px;
-        }
-        .product-card .location {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 2px;
-        }
+        .product-card .category { font-size: 12px; color: #94a3b8; margin-bottom: 2px; }
+        .product-card .location { font-size: 12px; color: #64748b; margin-bottom: 2px; }
         .product-card .barcode {
             font-size: 11px;
             color: #94a3b8;
@@ -332,30 +358,12 @@
             display: inline-block;
             align-self: flex-start;
         }
-        .product-card .unit-info {
-            font-size: 11px;
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-        .product-card .stock {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .product-card .stock.good {
-            color: #16a34a;
-        }
-        .product-card .stock.low {
-            color: #f59e0b;
-        }
-        .product-card .stock.zero {
-            color: #dc2626;
-        }
-        .product-card .supplier {
-            font-size: 11px;
-            color: #94a3b8;
-            margin-bottom: 8px;
-        }
+        .product-card .unit-info { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+        .product-card .stock { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+        .product-card .stock.good { color: #16a34a; }
+        .product-card .stock.low { color: #f59e0b; }
+        .product-card .stock.zero { color: #dc2626; }
+        .product-card .supplier { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
         .product-card .add-btn {
             padding: 8px;
             border: none;
@@ -367,28 +375,12 @@
             margin-top: auto;
             width: 100%;
         }
-        .product-card .add-btn.in-stock {
-            background: #3b82f6;
-            color: white;
-        }
-        .product-card .add-btn.in-stock:hover {
-            background: #2563eb;
-        }
-        .product-card .add-btn.in-stock:active {
-            transform: scale(0.96);
-        }
-        .product-card .add-btn.out-of-stock {
-            background: #e2e8f0;
-            color: #94a3b8;
-            cursor: not-allowed;
-        }
-        .product-card .add-btn.in-cart {
-            background: #22c55e;
-            color: white;
-        }
-        .product-card .add-btn.in-cart:hover {
-            background: #16a34a;
-        }
+        .product-card .add-btn.in-stock { background: #3b82f6; color: white; }
+        .product-card .add-btn.in-stock:hover { background: #2563eb; }
+        .product-card .add-btn.in-stock:active { transform: scale(0.96); }
+        .product-card .add-btn.out-of-stock { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+        .product-card .add-btn.in-cart { background: #22c55e; color: white; }
+        .product-card .add-btn.in-cart:hover { background: #16a34a; }
 
         .product-card .status-badge {
             font-size: 11px;
@@ -399,14 +391,8 @@
             margin-bottom: 4px;
             align-self: flex-start;
         }
-        .product-card .status-new {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-        .product-card .status-used {
-            background: #fef3c7;
-            color: #b45309;
-        }
+        .product-card .status-new { background: #dbeafe; color: #1d4ed8; }
+        .product-card .status-used { background: #fef3c7; color: #b45309; }
         .product-card .address-row {
             font-size: 12px;
             color: #475569;
@@ -429,7 +415,6 @@
             stroke-linejoin: round;
             flex-shrink: 0;
         }
-        /* Бейдж резерва */
         .product-card .reserve-badge {
             font-size: 11px;
             font-weight: 600;
@@ -445,7 +430,7 @@
         }
 
         /* ============================================================
-           МОДАЛЬНОЕ ОКНО ТОВАРА (детальный просмотр)
+           МОДАЛЬНОЕ ОКНО ТОВАРА
            ============================================================ */
         .product-modal-overlay {
             display: none;
@@ -459,9 +444,7 @@
             padding: 16px;
             overflow-y: auto;
         }
-        .product-modal-overlay.open {
-            display: flex;
-        }
+        .product-modal-overlay.open { display: flex; }
         .product-modal {
             background: white;
             border-radius: 20px;
@@ -474,46 +457,11 @@
             position: relative;
         }
         @keyframes modalFadeIn {
-            from {
-                transform: scale(0.94);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            from { transform: scale(0.94); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
-        .service-list-modal .modal-close-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            font-size: 22px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-            z-index: 10;
-            line-height: 1;
-        }
-        .service-list-modal .modal-close-btn:hover {
-            background: #dc2626;
-            transform: rotate(90deg) scale(1.08);
-            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.6);
-        }
-        .service-list-modal .modal-close-btn:active {
-            transform: rotate(90deg) scale(0.95);
-        }
-
+        .service-list-modal .modal-close-btn,
         .product-modal .modal-close-btn {
             position: absolute;
             top: 12px;
@@ -535,11 +483,18 @@
             z-index: 10;
             line-height: 1;
         }
+        .service-list-modal .modal-close-btn {
+            width: 34px;
+            height: 34px;
+            font-size: 18px;
+        }
+        .service-list-modal .modal-close-btn:hover,
         .product-modal .modal-close-btn:hover {
             background: #dc2626;
             transform: rotate(90deg) scale(1.08);
             box-shadow: 0 6px 16px rgba(239, 68, 68, 0.6);
         }
+        .service-list-modal .modal-close-btn:active,
         .product-modal .modal-close-btn:active {
             transform: rotate(90deg) scale(0.95);
         }
@@ -549,7 +504,6 @@
             grid-template-columns: 1fr 1fr;
             gap: 24px;
         }
-
         .product-modal .modal-image-section {
             display: flex;
             flex-direction: column;
@@ -579,10 +533,7 @@
             transform: scale(1.6);
             cursor: zoom-out;
         }
-        .product-modal .modal-image-placeholder {
-            font-size: 80px;
-            color: #cbd5e1;
-        }
+        .product-modal .modal-image-placeholder { font-size: 80px; color: #cbd5e1; }
 
         .product-modal .modal-info-section {
             display: flex;
@@ -609,30 +560,12 @@
             padding: 4px 12px;
             border-radius: 12px;
         }
-        .product-modal .modal-badge.category {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-        .product-modal .modal-badge.location {
-            background: #fef3c7;
-            color: #b45309;
-        }
-        .product-modal .modal-badge.condition-new {
-            background: #d1fae5;
-            color: #059669;
-        }
-        .product-modal .modal-badge.condition-used {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        .product-modal .modal-badge.address {
-            background: #f1f5f9;
-            color: #475569;
-        }
-        .product-modal .modal-badge.reserve {
-            background: #fee2e2;
-            color: #dc2626;
-        }
+        .product-modal .modal-badge.category { background: #dbeafe; color: #1d4ed8; }
+        .product-modal .modal-badge.location { background: #fef3c7; color: #b45309; }
+        .product-modal .modal-badge.condition-new { background: #d1fae5; color: #059669; }
+        .product-modal .modal-badge.condition-used { background: #fee2e2; color: #dc2626; }
+        .product-modal .modal-badge.address { background: #f1f5f9; color: #475569; }
+        .product-modal .modal-badge.reserve { background: #fee2e2; color: #dc2626; }
 
         .product-modal .modal-info-list {
             display: flex;
@@ -652,32 +585,18 @@
             font-size: 14px;
             gap: 12px;
         }
-        .product-modal .modal-info-row:last-child {
-            border-bottom: none;
-        }
-        .product-modal .modal-info-label {
-            color: #64748b;
-            font-weight: 500;
-            flex-shrink: 0;
-        }
+        .product-modal .modal-info-row:last-child { border-bottom: none; }
+        .product-modal .modal-info-label { color: #64748b; font-weight: 500; flex-shrink: 0; }
         .product-modal .modal-info-value {
             color: #0f172a;
             font-weight: 600;
             text-align: right;
             word-break: break-word;
         }
-        .product-modal .modal-info-value.stock-good {
-            color: #16a34a;
-        }
-        .product-modal .modal-info-value.stock-low {
-            color: #f59e0b;
-        }
-        .product-modal .modal-info-value.stock-zero {
-            color: #dc2626;
-        }
-        .product-modal .modal-info-value.reserve-value {
-            color: #dc2626;
-        }
+        .product-modal .modal-info-value.stock-good { color: #16a34a; }
+        .product-modal .modal-info-value.stock-low { color: #f59e0b; }
+        .product-modal .modal-info-value.stock-zero { color: #dc2626; }
+        .product-modal .modal-info-value.reserve-value { color: #dc2626; }
 
         .product-modal .modal-add-btn {
             margin-top: auto;
@@ -703,9 +622,6 @@
             background: #2563eb;
             box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
             transform: translateY(-2px);
-        }
-        .product-modal .modal-add-btn.in-stock:active {
-            transform: translateY(0) scale(0.98);
         }
         .product-modal .modal-add-btn.out-of-stock {
             background: #e2e8f0;
@@ -737,9 +653,7 @@
             align-items: center;
             padding: 16px;
         }
-        .cart-overlay.open {
-            display: flex;
-        }
+        .cart-overlay.open { display: flex; }
         .cart-modal {
             background: white;
             border-radius: 20px;
@@ -751,14 +665,8 @@
             overflow-y: auto;
         }
         @keyframes slideUp {
-            from {
-                transform: translateY(30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         .cart-modal .cart-header {
             display: flex;
@@ -768,10 +676,7 @@
             padding-bottom: 12px;
             border-bottom: 2px solid #e2e8f0;
         }
-        .cart-modal .cart-header h2 {
-            font-size: 20px;
-            color: #0f172a;
-        }
+        .cart-modal .cart-header h2 { font-size: 20px; color: #0f172a; }
         .cart-modal .cart-header .close-btn {
             background: none;
             border: none;
@@ -780,9 +685,7 @@
             color: #94a3b8;
             transition: 0.2s;
         }
-        .cart-modal .cart-header .close-btn:hover {
-            color: #ef4444;
-        }
+        .cart-modal .cart-header .close-btn:hover { color: #ef4444; }
         .cart-modal .cart-item {
             display: flex;
             justify-content: space-between;
@@ -872,9 +775,7 @@
             font-weight: 600;
             transition: 0.2s;
         }
-        .cart-modal .cart-item .item-qty button:hover {
-            background: #f1f5f9;
-        }
+        .cart-modal .cart-item .item-qty button:hover { background: #f1f5f9; }
         .cart-modal .cart-item .item-qty .qty-input {
             width: 44px;
             height: 28px;
@@ -900,14 +801,9 @@
             transition: 0.2s;
             flex-shrink: 0;
         }
-        .cart-modal .cart-item .item-remove:hover {
-            transform: scale(1.2);
-        }
+        .cart-modal .cart-item .item-remove:hover { transform: scale(1.2); }
 
-        .order-form .input-wrapper {
-            position: relative;
-            width: 100%;
-        }
+        .order-form .input-wrapper { position: relative; width: 100%; }
         .order-form .input-wrapper input,
         .order-form .input-wrapper textarea {
             width: 100%;
@@ -946,13 +842,8 @@
             color: #ef4444;
             background: #f1f5f9;
         }
-        .order-form .input-wrapper .clear-input-btn.visible {
-            display: block;
-        }
-        .order-form .input-wrapper textarea~.clear-input-btn {
-            top: 14px;
-            transform: none;
-        }
+        .order-form .input-wrapper .clear-input-btn.visible { display: block; }
+        .order-form .input-wrapper textarea~.clear-input-btn { top: 14px; transform: none; }
 
         .order-form {
             display: grid;
@@ -962,9 +853,7 @@
             padding-top: 12px;
             border-top: 2px solid #e2e8f0;
         }
-        .order-form .full-width {
-            grid-column: 1 / -1;
-        }
+        .order-form .full-width { grid-column: 1 / -1; }
         .order-form label {
             font-size: 12px;
             font-weight: 600;
@@ -1009,30 +898,13 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .cart-actions .btn-clear {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        .cart-actions .btn-clear:hover {
-            background: #fecaca;
-        }
-        .cart-actions .btn-checkout {
-            background: #3b82f6;
-            color: white;
-        }
-        .cart-actions .btn-checkout:hover {
-            background: #2563eb;
-        }
+        .cart-actions .btn-clear { background: #fee2e2; color: #dc2626; }
+        .cart-actions .btn-clear:hover { background: #fecaca; }
+        .cart-actions .btn-checkout { background: #3b82f6; color: white; }
+        .cart-actions .btn-checkout:hover { background: #2563eb; }
 
-        .cart-empty {
-            text-align: center;
-            padding: 30px 0;
-            color: #94a3b8;
-        }
-        .cart-empty .big-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
+        .cart-empty { text-align: center; padding: 30px 0; color: #94a3b8; }
+        .cart-empty .big-icon { font-size: 48px; margin-bottom: 12px; }
 
         .toast {
             position: fixed;
@@ -1048,27 +920,13 @@
             font-size: 14px;
             max-width: 90%;
         }
-        .toast.success {
-            background: #22c55e;
-        }
-        .toast.error {
-            background: #ef4444;
-        }
-        .toast.info {
-            background: #3b82f6;
-        }
-        .toast.reserve {
-            background: #dc2626;
-        }
+        .toast.success { background: #22c55e; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+        .toast.reserve { background: #dc2626; }
         @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .order-success {
@@ -1101,9 +959,7 @@
             padding: 16px;
             overflow-y: auto;
         }
-        .service-list-overlay.open {
-            display: flex;
-        }
+        .service-list-overlay.open { display: flex; }
         .service-list-modal {
             background: white;
             border-radius: 20px;
@@ -1144,7 +1000,6 @@
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 14px;
         }
-
         .service-card {
             background: #fff;
             border-radius: 14px;
@@ -1200,10 +1055,7 @@
             gap: 6px;
             word-break: break-word;
         }
-        .service-card .service-row strong {
-            color: #334155;
-            flex-shrink: 0;
-        }
+        .service-card .service-row strong { color: #334155; flex-shrink: 0; }
         .service-card .service-status-badge {
             display: inline-block;
             padding: 3px 10px;
@@ -1245,59 +1097,28 @@
         }
 
         @media (max-width: 768px) {
-            .header {
-                padding: 10px 14px;
-            }
-            .header .logo {
-                font-size: 18px;
-            }
+            .header { padding: 10px 14px; }
+            .header .logo { font-size: 18px; }
             .header .service-btn,
             .header .cart-btn {
                 padding: 6px 14px;
                 font-size: 13px;
             }
-            .container {
-                padding: 10px 12px;
-            }
+            .container { padding: 10px 12px; }
             .products-grid {
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
                 gap: 10px;
             }
-            .product-card {
-                min-height: 340px;
-            }
-            .product-card .product-img {
-                height: 100px;
-            }
-            .product-card .product-img-placeholder {
-                height: 100px;
-                font-size: 30px;
-            }
-            .product-card .name {
-                font-size: 13px;
-                min-height: 50px;
-                -webkit-line-clamp: 3;
-            }
-            .search-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .categories button {
-                font-size: 12px;
-                padding: 4px 12px;
-            }
-            .stats {
-                font-size: 10px;
-            }
-            .cart-modal {
-                padding: 16px;
-            }
-            .order-form {
-                grid-template-columns: 1fr;
-            }
-            .categories-body.open {
-                padding: 0 12px 12px 12px;
-            }
+            .product-card { min-height: 340px; }
+            .product-card .product-img { height: 100px; }
+            .product-card .product-img-placeholder { height: 100px; font-size: 30px; }
+            .product-card .name { font-size: 13px; min-height: 50px; -webkit-line-clamp: 3; }
+            .search-bar { flex-direction: column; align-items: stretch; }
+            .categories button { font-size: 12px; padding: 4px 12px; }
+            .stats { font-size: 10px; }
+            .cart-modal { padding: 16px; }
+            .order-form { grid-template-columns: 1fr; }
+            .categories-body.open { padding: 0 12px 12px 12px; }
             .product-modal {
                 padding: 16px;
                 border-radius: 16px;
@@ -1310,52 +1131,37 @@
                 top: 10px;
                 right: 10px;
             }
-            .product-modal .modal-body {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            .product-modal .modal-title {
-                font-size: 18px;
-                padding-right: 44px;
-            }
-            .product-modal .modal-image-container {
-                max-height: 280px;
-            }
-            .product-modal .modal-add-btn {
-                font-size: 15px;
-                padding: 12px 20px;
-            }
-            .service-list-modal {
-                padding: 16px;
-                border-radius: 16px;
-                max-height: 78vh;
-            }
-            .service-list-modal .service-list-header {
-                padding-right: 50px;
-            }
-            .service-list-modal .service-list-header h2 {
-                font-size: 17px;
-            }
+            .product-modal .modal-body { grid-template-columns: 1fr; gap: 16px; }
+            .product-modal .modal-title { font-size: 18px; padding-right: 44px; }
+            .product-modal .modal-image-container { max-height: 280px; }
+            .product-modal .modal-add-btn { font-size: 15px; padding: 12px 20px; }
+            .service-list-modal { padding: 16px; border-radius: 16px; max-height: 78vh; }
+            .service-list-modal .service-list-header { padding-right: 50px; }
+            .service-list-modal .service-list-header h2 { font-size: 17px; }
             .service-list-modal .service-grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
                 gap: 10px;
             }
-            .service-card {
-                min-height: 300px;
-                padding: 10px;
-            }
+            .service-card { min-height: 300px; padding: 10px; }
             .service-card .service-img,
-            .service-card .service-img-placeholder {
-                height: 100px;
-            }
+            .service-card .service-img-placeholder { height: 100px; }
+            .net-banner { font-size: 12px; padding: 8px 12px; }
         }
     </style>
 </head>
 <body>
 
+    <!-- ================= БАННЕР СОСТОЯНИЯ СЕТИ ================= -->
+    <div id="netBanner" class="net-banner" style="display:none;">
+        <span id="netBannerIcon">📡</span>
+        <span id="netBannerText">Проверка соединения...</span>
+        <button id="netBannerRetry" onclick="forceReconnect()" style="display:none;">Повторить</button>
+    </div>
+
     <header class="header">
         <div class="logo">🛒 <span>Склад</span></div>
         <div class="header-actions">
+            <span class="speed-indicator" id="speedIndicator">📶 —</span>
             <button class="service-btn" onclick="openServiceList()">
                 🔧 Сервис
                 <span class="service-badge" id="serviceBadge">0</span>
@@ -1406,7 +1212,7 @@
     </div>
 
     <!-- ============================================================
-         МОДАЛЬНОЕ ОКНО ТОВАРА (детальный просмотр)
+         МОДАЛЬНОЕ ОКНО ТОВАРА
          ============================================================ -->
     <div class="product-modal-overlay" id="productModalOverlay" onclick="if(event.target===this) closeProductModal()">
         <div class="product-modal">
@@ -1527,7 +1333,174 @@
         const SKLAD_REF = 'SKLAD';
 
         // ============================================================
-        // 2. STATE
+        // 2. СЕТЕВОЙ МОДУЛЬ
+        // ============================================================
+        const Net = {
+            online: navigator.onLine,
+            slow: false,
+            lastPingMs: null,
+            banner: null,
+            bannerText: null,
+            bannerIcon: null,
+            retryBtn: null,
+            indicator: null,
+            cacheUsed: false,
+            slowThresholdMs: 1500,
+            pingInterval: null,
+
+            init() {
+                this.banner = document.getElementById('netBanner');
+                this.bannerText = document.getElementById('netBannerText');
+                this.bannerIcon = document.getElementById('netBannerIcon');
+                this.retryBtn = document.getElementById('netBannerRetry');
+                this.indicator = document.getElementById('speedIndicator');
+
+                window.addEventListener('online', () => this.onOnline());
+                window.addEventListener('offline', () => this.onOffline());
+
+                this.check();
+                this.pingInterval = setInterval(() => this.check(), 15000);
+            },
+
+            async check() {
+                this.online = navigator.onLine;
+
+                if (!this.online) {
+                    this.setOffline();
+                    return;
+                }
+
+                try {
+                    const start = performance.now();
+                    const ctrl = new AbortController();
+                    const timer = setTimeout(() => ctrl.abort(), 4000);
+                    await fetch('https://dostavkarabota-3841a-default-rtdb.firebaseio.com/.json?shallow=true', {
+                        method: 'GET',
+                        signal: ctrl.signal,
+                        cache: 'no-store'
+                    });
+                    clearTimeout(timer);
+                    this.lastPingMs = Math.round(performance.now() - start);
+                } catch (e) {
+                    this.lastPingMs = 9999;
+                }
+
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                let connSlow = false;
+                if (conn) {
+                    if (conn.saveData) connSlow = true;
+                    const types = ['slow-2g', '2g'];
+                    if (types.includes(conn.effectiveType)) connSlow = true;
+                }
+
+                this.slow = connSlow || (this.lastPingMs !== null && this.lastPingMs > this.slowThresholdMs);
+
+                if (this.slow) {
+                    this.setSlow();
+                } else {
+                    this.setOnline();
+                }
+            },
+
+            setOffline() {
+                this.banner.style.display = 'flex';
+                this.banner.className = 'net-banner offline visible';
+                this.bannerText.textContent = '📴 Нет подключения к интернету. Работаем из кэша.';
+                this.retryBtn.style.display = 'inline-block';
+                document.body.classList.add('has-banner');
+                if (this.indicator) {
+                    this.indicator.textContent = '📴 офлайн';
+                    this.indicator.className = 'speed-indicator offline';
+                }
+            },
+
+            setSlow() {
+                this.banner.style.display = 'flex';
+                this.banner.className = 'net-banner slow visible';
+                const ping = this.lastPingMs ? ` (пинг: ${this.lastPingMs} мс)` : '';
+                this.bannerText.textContent = `🐢 Слабое соединение${ping}. Загрузка может быть медленной.`;
+                this.retryBtn.style.display = 'none';
+                document.body.classList.add('has-banner');
+                if (this.indicator) {
+                    this.indicator.textContent = `🐢 ${this.lastPingMs || '?'} мс`;
+                    this.indicator.className = 'speed-indicator slow';
+                }
+            },
+
+            setOnline() {
+                this.banner.classList.remove('visible');
+                document.body.classList.remove('has-banner');
+                if (this.indicator) {
+                    this.indicator.textContent = `📶 ${this.lastPingMs || '?'} мс`;
+                    this.indicator.className = 'speed-indicator';
+                }
+            },
+
+            setCache(message) {
+                this.cacheUsed = true;
+                this.banner.style.display = 'flex';
+                this.banner.className = 'net-banner cache visible';
+                this.bannerText.textContent = message || '💾 Загружено из кэша (нет связи с сервером)';
+                this.retryBtn.style.display = 'inline-block';
+                document.body.classList.add('has-banner');
+            },
+
+            onOnline() {
+                console.log('🟢 Соединение восстановлено');
+                showToast('🟢 Интернет восстановлен', 'success');
+                this.check();
+                if (this.cacheUsed) {
+                    this.cacheUsed = false;
+                    loadData();
+                }
+            },
+
+            onOffline() {
+                console.log('🔴 Соединение потеряно');
+                showToast('🔴 Нет интернета. Работаем из кэша.', 'error');
+                this.setOffline();
+            },
+
+            isOnline() {
+                return this.online && !this.cacheUsed;
+            }
+        };
+
+        // ============================================================
+        // 3. КЭШ
+        // ============================================================
+        const Cache = {
+            KEY_PREFIX: 'sklad_cache_',
+
+            set(key, data) {
+                try {
+                    localStorage.setItem(this.KEY_PREFIX + key, JSON.stringify({
+                        data: data,
+                        ts: Date.now()
+                    }));
+                } catch (e) {
+                    console.warn('localStorage переполнен', e);
+                }
+            },
+
+            get(key) {
+                try {
+                    const raw = localStorage.getItem(this.KEY_PREFIX + key);
+                    if (!raw) return null;
+                    const parsed = JSON.parse(raw);
+                    return parsed.data;
+                } catch (e) {
+                    return null;
+                }
+            },
+
+            has(key) {
+                return localStorage.getItem(this.KEY_PREFIX + key) !== null;
+            }
+        };
+
+        // ============================================================
+        // 4. STATE
         // ============================================================
         let products = [];
         let categories = [];
@@ -1542,7 +1515,7 @@
         let currentServiceDetailId = null;
 
         // ============================================================
-        // 2.1. РЕЗЕРВ — ХЕЛПЕРЫ
+        // 4.1. РЕЗЕРВ
         // ============================================================
         function getReservedQty(product) {
             if (!product) return 0;
@@ -1567,7 +1540,7 @@
         }
 
         // ============================================================
-        // 3. TOAST
+        // 5. TOAST
         // ============================================================
         function showToast(message, type = 'success') {
             const existing = document.querySelector('.toast');
@@ -1585,9 +1558,14 @@
         }
 
         // ============================================================
-        // 4. LOAD DATA
+        // 6. LOAD DATA
         // ============================================================
         function loadData() {
+            if (!navigator.onLine) {
+                loadFromCache();
+                return;
+            }
+
             db.ref(`${SKLAD_REF}/categories`).on('value', snap => {
                 const data = snap.val();
                 categories = [];
@@ -1596,11 +1574,13 @@
                         categories.push({ id: key, name: data[key].name });
                     });
                 }
+                Cache.set('categories', categories);
                 categoriesLoaded = true;
-                if (productsLoaded) {
-                    renderCategories();
-                }
+                if (productsLoaded) renderCategories();
                 updateStats();
+            }, err => {
+                console.warn('Ошибка загрузки категорий:', err);
+                if (!categories.length) loadCacheCategories();
             });
 
             db.ref(`${SKLAD_REF}/products`).on('value', snap => {
@@ -1611,24 +1591,22 @@
                         products.push({ id: key, ...data[key] });
                     });
                 }
+                Cache.set('products', products);
                 productsLoaded = true;
                 renderProducts();
-                if (categoriesLoaded) {
-                    renderCategories();
-                }
+                if (categoriesLoaded) renderCategories();
                 updateStats();
                 if (currentProductModalId) {
                     const product = products.find(p => p.id === currentProductModalId);
-                    if (product) {
-                        updateProductModalContent(product);
-                    } else {
-                        closeProductModal();
-                    }
+                    if (product) updateProductModalContent(product);
+                    else closeProductModal();
                 }
-                // Если корзина открыта — обновим
                 if (document.getElementById('cartOverlay').classList.contains('open')) {
                     renderCart();
                 }
+            }, err => {
+                console.warn('Ошибка загрузки товаров:', err);
+                if (!products.length) loadCacheProducts();
             });
 
             db.ref(`${SKLAD_REF}/service`).on('value', snap => {
@@ -1640,6 +1618,7 @@
                     });
                     serviceItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 }
+                Cache.set('service', serviceItems);
                 updateServiceBadge();
                 if (document.getElementById('serviceListOverlay').classList.contains('open')) {
                     renderServiceList();
@@ -1648,6 +1627,69 @@
                     const item = serviceItems.find(s => s.id === currentServiceDetailId);
                     if (item) updateServiceDetailContent(item);
                     else closeServiceDetail();
+                }
+            }, err => {
+                console.warn('Ошибка загрузки сервиса:', err);
+                const cached = Cache.get('service');
+                if (cached) serviceItems = cached;
+                updateServiceBadge();
+            });
+        }
+
+        function loadFromCache() {
+            console.log('💾 Загрузка из кэша...');
+            const cachedProducts = Cache.get('products');
+            const cachedCategories = Cache.get('categories');
+            const cachedService = Cache.get('service');
+
+            if (cachedProducts) {
+                products = cachedProducts;
+                productsLoaded = true;
+                renderProducts();
+            }
+            if (cachedCategories) {
+                categories = cachedCategories;
+                categoriesLoaded = true;
+                renderCategories();
+            }
+            if (cachedService) {
+                serviceItems = cachedService;
+                updateServiceBadge();
+            }
+            updateStats();
+
+            if (cachedProducts || cachedCategories) {
+                Net.setCache('💾 Нет интернета. Показаны данные из кэша.');
+            } else {
+                Net.setCache('💾 Нет интернета и нет кэша. Данные появятся после подключения.');
+            }
+        }
+
+        function loadCacheProducts() {
+            const cached = Cache.get('products');
+            if (cached) {
+                products = cached;
+                productsLoaded = true;
+                renderProducts();
+                Net.setCache('⚠️ Сервер недоступен. Показаны товары из кэша.');
+            }
+        }
+
+        function loadCacheCategories() {
+            const cached = Cache.get('categories');
+            if (cached) {
+                categories = cached;
+                categoriesLoaded = true;
+                renderCategories();
+            }
+        }
+
+        function forceReconnect() {
+            showToast('🔄 Проверяем соединение...', 'info');
+            Net.check().then(() => {
+                if (navigator.onLine) {
+                    Net.cacheUsed = false;
+                    loadData();
                 }
             });
         }
@@ -1663,7 +1705,7 @@
         }
 
         // ============================================================
-        // 5. RENDER CATEGORIES
+        // 7. RENDER CATEGORIES
         // ============================================================
         function renderCategories() {
             const container = document.getElementById('categoriesContainer');
@@ -1675,16 +1717,11 @@
                 categoryCount[cat] = (categoryCount[cat] || 0) + 1;
             });
 
-            let html =
-            `<button class="active" data-cat="all" onclick="filterByCategory('all')">📌 Все (${totalProducts})</button>`;
+            let html = `<button class="active" data-cat="all" onclick="filterByCategory('all')">📌 Все (${totalProducts})</button>`;
             const sortedCategories = [...categories].sort((a, b) => a.name.localeCompare(b.name));
             sortedCategories.forEach(c => {
                 const count = categoryCount[c.name] || 0;
-                html += `
-                        <button data-cat="${c.name}" onclick="filterByCategory('${c.name}')">
-                            📁 ${c.name} (${count})
-                        </button>
-                    `;
+                html += `<button data-cat="${c.name}" onclick="filterByCategory('${c.name}')">📁 ${c.name} (${count})</button>`;
             });
             container.innerHTML = html;
             document.querySelectorAll('.categories button').forEach(btn => {
@@ -1693,7 +1730,7 @@
         }
 
         // ============================================================
-        // 6. RENDER PRODUCTS
+        // 8. RENDER PRODUCTS
         // ============================================================
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
@@ -1701,24 +1738,17 @@
             const location = document.getElementById('locationFilter').value;
 
             let filtered = products;
-            if (currentCategory !== 'all') {
-                filtered = filtered.filter(p => p.category === currentCategory);
-            }
-            if (search) {
-                filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
-            }
-            if (location !== 'all') {
-                filtered = filtered.filter(p => p.location === location);
-            }
+            if (currentCategory !== 'all') filtered = filtered.filter(p => p.category === currentCategory);
+            if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
+            if (location !== 'all') filtered = filtered.filter(p => p.location === location);
 
             if (filtered.length === 0) {
                 grid.innerHTML = `
-                        <div style="grid-column:1/-1;text-align:center;padding:40px 16px;color:#94a3b8;">
-                            <div style="font-size:48px;margin-bottom:12px;">🔍</div>
-                            <h3 style="color:#64748b;font-size:18px;">Товары не найдены</h3>
-                            <p style="font-size:14px;">Попробуйте изменить параметры поиска</p>
-                        </div>
-                    `;
+                    <div style="grid-column:1/-1;text-align:center;padding:40px 16px;color:#94a3b8;">
+                        <div style="font-size:48px;margin-bottom:12px;">🔍</div>
+                        <h3 style="color:#64748b;font-size:18px;">Товары не найдены</h3>
+                        <p style="font-size:14px;">Попробуйте изменить параметры поиска</p>
+                    </div>`;
                 return;
             }
 
@@ -1730,29 +1760,16 @@
                 const freeQty = getFreeQty(p);
                 const reserved = getReservedQty(p);
                 const inCart = cart[p.id] || 0;
-                const isInStock = freeQty > 0; // Свободный остаток
+                const isInStock = freeQty > 0;
                 const isInCart = inCart > 0;
 
                 let stockClass = 'good';
                 let stockText = `✅ ${qty} шт.`;
-                if (qty === 0) {
-                    stockClass = 'zero';
-                    stockText = '❌ Нет в наличии';
-                } else if (qty < 5) {
-                    stockClass = 'low';
-                    stockText = `⚠️ Осталось ${qty} шт.`;
-                }
-                if (reserved > 0) {
-                    stockText += ` • своб. ${freeQty}`;
-                }
+                if (qty === 0) { stockClass = 'zero'; stockText = '❌ Нет в наличии'; }
+                else if (qty < 5) { stockClass = 'low'; stockText = `⚠️ Осталось ${qty} шт.`; }
+                if (reserved > 0) stockText += ` • своб. ${freeQty}`;
 
-                const locEmojis = {
-                    'Въезд': '🚗',
-                    'Здание': '🏢',
-                    'Шатер': '⛺',
-                    'КПП': '🛂',
-                    'Улица': '🌳'
-                };
+                const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
                 const locationIcon = locEmojis[p.location] || '📍';
 
                 let btnClass = 'in-stock';
@@ -1769,8 +1786,7 @@
 
                 let imgHtml = '';
                 if (p.image && p.image.trim() !== '') {
-                    imgHtml =
-                        `<img src="${p.image}" class="product-img" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="product-img-placeholder" style="display:none;">📦</div>`;
+                    imgHtml = `<img src="${p.image}" class="product-img" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="product-img-placeholder" style="display:none;">📦</div>`;
                 } else {
                     imgHtml = `<div class="product-img-placeholder">📦</div>`;
                 }
@@ -1794,38 +1810,29 @@
 
                 let addressHtml = '';
                 if (p.storageAddress && p.storageAddress.trim() !== '') {
-                    addressHtml = `
-                            <div class="address-row">
-                                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="3"/></svg>
-                                📍 ${p.storageAddress}
-                            </div>
-                        `;
+                    addressHtml = `<div class="address-row"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="3"/></svg>📍 ${p.storageAddress}</div>`;
                 }
 
-                // 🔒 Бейдж резерва
                 let reserveBadge = '';
                 if (reserved > 0) {
                     reserveBadge = `<div class="reserve-badge">🔒 Резерв: ${reserved} — ${p.reservedFor || '—'}</div>`;
                 }
 
                 html += `
-                        <div class="product-card" onclick="openProductModal('${p.id}')">
-                            ${imgHtml}
-                            <div class="name">${p.name}</div>
-                            <div class="category">📁 ${p.category || '—'}</div>
-                            <div class="location">${locationIcon} ${p.location || '—'}</div>
-                            <div class="status-badge ${statusClass}">${statusText}</div>
-                            ${addressHtml}
-                            ${reserveBadge}
-                            ${barcodeInfo}
-                            ${unitInfo}
-                            <div class="stock ${stockClass}">${stockText}</div>
-                            <div class="supplier">🏢 ${p.supplier || '—'}</div>
-                            <button class="add-btn ${btnClass}" onclick="event.stopPropagation(); addToCart('${p.id}')" ${disabled}>
-                                ${btnText}
-                            </button>
-                        </div>
-                    `;
+                    <div class="product-card" onclick="openProductModal('${p.id}')">
+                        ${imgHtml}
+                        <div class="name">${p.name}</div>
+                        <div class="category">📁 ${p.category || '—'}</div>
+                        <div class="location">${locationIcon} ${p.location || '—'}</div>
+                        <div class="status-badge ${statusClass}">${statusText}</div>
+                        ${addressHtml}
+                        ${reserveBadge}
+                        ${barcodeInfo}
+                        ${unitInfo}
+                        <div class="stock ${stockClass}">${stockText}</div>
+                        <div class="supplier">🏢 ${p.supplier || '—'}</div>
+                        <button class="add-btn ${btnClass}" onclick="event.stopPropagation(); addToCart('${p.id}')" ${disabled}>${btnText}</button>
+                    </div>`;
             });
 
             grid.innerHTML = html;
@@ -1833,14 +1840,11 @@
         }
 
         // ============================================================
-        // 6.1. МОДАЛЬНОЕ ОКНО ТОВАРА
+        // 9. МОДАЛЬНОЕ ОКНО ТОВАРА
         // ============================================================
         function openProductModal(productId) {
             const product = products.find(p => p.id === productId);
-            if (!product) {
-                showToast('Товар не найден', 'error');
-                return;
-            }
+            if (!product) { showToast('Товар не найден', 'error'); return; }
             currentProductModalId = productId;
             updateProductModalContent(product);
             document.getElementById('productModalOverlay').classList.add('open');
@@ -1858,44 +1862,22 @@
 
             let imgHtml = '';
             if (product.image && product.image.trim() !== '') {
-                imgHtml = `
-                    <div class="modal-image-container">
-                        <img src="${product.image}" alt="${product.name}" 
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" 
-                             onclick="this.classList.toggle('zoomed')" />
-                        <div class="modal-image-placeholder" style="display:none;">📦</div>
-                    </div>
-                `;
+                imgHtml = `<div class="modal-image-container"><img src="${product.image}" alt="${product.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" onclick="this.classList.toggle('zoomed')" /><div class="modal-image-placeholder" style="display:none;">📦</div></div>`;
             } else {
-                imgHtml = `
-                    <div class="modal-image-container">
-                        <div class="modal-image-placeholder">📦</div>
-                    </div>
-                `;
+                imgHtml = `<div class="modal-image-container"><div class="modal-image-placeholder">📦</div></div>`;
             }
 
             const isUsed = product.condition && (product.condition.toLowerCase() === 'used' || product.condition.toLowerCase() === 'б/у');
             const condBadgeClass = isUsed ? 'condition-used' : 'condition-new';
             const condText = isUsed ? '♻️ Б/у' : '🆕 Новый';
 
-            const locEmojis = {
-                'Въезд': '🚗',
-                'Здание': '🏢',
-                'Шатер': '⛺',
-                'КПП': '🛂',
-                'Улица': '🌳'
-            };
+            const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
             const locationIcon = locEmojis[product.location] || '📍';
 
             let stockClass = 'stock-good';
             let stockText = `${qty} шт. ✅`;
-            if (qty === 0) {
-                stockClass = 'stock-zero';
-                stockText = '❌ Нет в наличии';
-            } else if (qty < 5) {
-                stockClass = 'stock-low';
-                stockText = `${qty} шт. ⚠️`;
-            }
+            if (qty === 0) { stockClass = 'stock-zero'; stockText = '❌ Нет в наличии'; }
+            else if (qty < 5) { stockClass = 'stock-low'; stockText = `${qty} шт. ⚠️`; }
 
             let btnClass = 'in-stock';
             let btnText = '🛒 ДОБАВИТЬ В КОРЗИНУ';
@@ -1921,7 +1903,6 @@
                 if (product.customUnit) unitText += ` (${product.customUnit})`;
             }
 
-            // 🔒 Блок резерва в модальном окне
             let reserveHtml = '';
             if (reserved > 0) {
                 reserveHtml = `
@@ -1932,14 +1913,11 @@
                     <div class="modal-info-row">
                         <span class="modal-info-label">🟢 Свободно к заказу</span>
                         <span class="modal-info-value ${freeQty > 0 ? 'stock-good' : 'stock-zero'}">${freeQty} шт.</span>
-                    </div>
-                `;
+                    </div>`;
             }
 
             body.innerHTML = `
-                <div class="modal-image-section">
-                    ${imgHtml}
-                </div>
+                <div class="modal-image-section">${imgHtml}</div>
                 <div class="modal-info-section">
                     <div class="modal-badges">
                         <span class="modal-badge category">📁 ${product.category || 'Без категории'}</span>
@@ -1949,44 +1927,17 @@
                         ${reserved > 0 ? `<span class="modal-badge reserve">🔒 Резерв: ${reserved}</span>` : ''}
                     </div>
                     <h2 class="modal-title">${product.name}</h2>
-                    
                     <div class="modal-info-list">
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">💰 В наличии</span>
-                            <span class="modal-info-value ${stockClass}">${stockText}</span>
-                        </div>
+                        <div class="modal-info-row"><span class="modal-info-label">💰 В наличии</span><span class="modal-info-value ${stockClass}">${stockText}</span></div>
                         ${reserveHtml}
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">📏 Единица измерения</span>
-                            <span class="modal-info-value">${unitText}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">🔖 Артикул/Штрихкод</span>
-                            <span class="modal-info-value">${barcodeText}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">🏢 Поставщик</span>
-                            <span class="modal-info-value">${product.supplier || '—'}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">📅 Дата прихода</span>
-                            <span class="modal-info-value">${product.date || '—'}</span>
-                        </div>
-                        ${product.storageAddress ? `
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">📍 Адрес хранения</span>
-                            <span class="modal-info-value">${product.storageAddress}</span>
-                        </div>
-                        ` : ''}
+                        <div class="modal-info-row"><span class="modal-info-label">📏 Единица измерения</span><span class="modal-info-value">${unitText}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">🔖 Артикул/Штрихкод</span><span class="modal-info-value">${barcodeText}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">🏢 Поставщик</span><span class="modal-info-value">${product.supplier || '—'}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">📅 Дата прихода</span><span class="modal-info-value">${product.date || '—'}</span></div>
+                        ${product.storageAddress ? `<div class="modal-info-row"><span class="modal-info-label">📍 Адрес хранения</span><span class="modal-info-value">${product.storageAddress}</span></div>` : ''}
                     </div>
-
-                    <button class="modal-add-btn ${btnClass}" 
-                            onclick="addToCartFromModal('${product.id}')" 
-                            ${disabled}>
-                        ${btnText}
-                    </button>
-                </div>
-            `;
+                    <button class="modal-add-btn ${btnClass}" onclick="addToCartFromModal('${product.id}')" ${disabled}>${btnText}</button>
+                </div>`;
         }
 
         function closeProductModal() {
@@ -2003,11 +1954,8 @@
             const reserved = getReservedQty(product);
             const currentQty = cart[productId] || 0;
             if (currentQty >= freeQty) {
-                if (reserved > 0) {
-                    showToast(`🔒 Товар в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}`, 'error');
-                } else {
-                    showToast('❌ Недостаточно товара на складе!', 'error');
-                }
+                if (reserved > 0) showToast(`🔒 Товар в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}`, 'error');
+                else showToast('❌ Недостаточно товара на складе!', 'error');
                 return;
             }
 
@@ -2016,12 +1964,11 @@
             renderProducts();
             renderCart();
             showToast(`✅ ${product.name} добавлен в корзину`, 'success');
-            
             closeProductModal();
         }
 
         // ============================================================
-        // 6.2. СПИСОК СЕРВИСНЫХ ТОВАРОВ (МОДАЛЬНОЕ ОКНО)
+        // 10. СЕРВИСНЫЕ ТОВАРЫ
         // ============================================================
         function getServiceStatusInfo(status) {
             const map = {
@@ -2056,8 +2003,7 @@
                         <div class="big-icon">🔧</div>
                         <h3>Нет товаров на сервисе</h3>
                         <p style="font-size:14px;margin-top:6px;">Товары, которые уехали на ремонт, появятся здесь</p>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
@@ -2080,15 +2026,11 @@
                         <div class="service-row"><strong>📥 Приезд:</strong> ${item.dateArrival || '—'}</div>
                         ${item.dateToSC ? `<div class="service-row"><strong>🚚 На СЦ:</strong> ${item.dateToSC}</div>` : ''}
                         <span class="service-status-badge ${statusInfo.class}">${statusInfo.label}</span>
-                    </div>
-                `;
+                    </div>`;
             });
             grid.innerHTML = html;
         }
 
-        // ============================================================
-        // 6.3. ДЕТАЛИ СЕРВИСНОГО ТОВАРА (МОДАЛЬНОЕ ОКНО)
-        // ============================================================
         function openServiceDetail(id) {
             const item = serviceItems.find(s => s.id === id);
             if (!item) { showToast('Запись не найдена', 'error'); return; }
@@ -2110,79 +2052,35 @@
 
             let imgHtml = '';
             if (item.image && item.image.trim() !== '') {
-                imgHtml = `
-                    <div class="modal-image-container">
-                        <img src="${item.image}" alt="${item.model}" 
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" 
-                             onclick="this.classList.toggle('zoomed')" />
-                        <div class="modal-image-placeholder" style="display:none;">🔧</div>
-                    </div>
-                `;
+                imgHtml = `<div class="modal-image-container"><img src="${item.image}" alt="${item.model}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" onclick="this.classList.toggle('zoomed')" /><div class="modal-image-placeholder" style="display:none;">🔧</div></div>`;
             } else {
-                imgHtml = `
-                    <div class="modal-image-container">
-                        <div class="modal-image-placeholder">🔧</div>
-                    </div>
-                `;
+                imgHtml = `<div class="modal-image-container"><div class="modal-image-placeholder">🔧</div></div>`;
             }
 
             body.innerHTML = `
-                <div class="modal-image-section">
-                    ${imgHtml}
-                </div>
+                <div class="modal-image-section">${imgHtml}</div>
                 <div class="modal-info-section">
                     <div class="modal-badges">
                         <span class="modal-badge" style="background:#ede9fe;color:#7c3aed;">${item.purpose || '—'}</span>
                         <span class="modal-badge ${statusInfo.class === 'ready' ? 'condition-new' : statusInfo.class === 'problem' ? 'condition-used' : 'address'}">${statusInfo.label}</span>
                     </div>
                     <h2 class="modal-title">${item.model || '—'}</h2>
-                    
                     <div class="modal-info-list">
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">👤 Кто отдал на ремонт</span>
-                            <span class="modal-info-value">${item.givenBy || '—'}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">🏗️ Объект</span>
-                            <span class="modal-info-value">${item.object || '—'}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">🔧 Что сломалось</span>
-                            <span class="modal-info-value">${item.broken || '—'}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">🏷️ Артикул по ремонту</span>
-                            <span class="modal-info-value">${item.repairArticle || '—'}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">📦 Количество</span>
-                            <span class="modal-info-value">${item.qty || 1} шт.</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">📥 Дата приезда на склад</span>
-                            <span class="modal-info-value">${item.dateArrival || '—'}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">🚚 Дата увоза на СЦ</span>
-                            <span class="modal-info-value">${item.dateToSC || '—'}</span>
-                        </div>
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">📊 Статус</span>
-                            <span class="modal-info-value"><span class="service-status-badge ${statusInfo.class}">${statusInfo.label}</span></span>
-                        </div>
-                        ${item.note ? `
-                        <div class="modal-info-row">
-                            <span class="modal-info-label">📝 Примечание</span>
-                            <span class="modal-info-value">${item.note}</span>
-                        </div>
-                        ` : ''}
+                        <div class="modal-info-row"><span class="modal-info-label">👤 Кто отдал на ремонт</span><span class="modal-info-value">${item.givenBy || '—'}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">🏗️ Объект</span><span class="modal-info-value">${item.object || '—'}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">🔧 Что сломалось</span><span class="modal-info-value">${item.broken || '—'}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">🏷️ Артикул по ремонту</span><span class="modal-info-value">${item.repairArticle || '—'}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">📦 Количество</span><span class="modal-info-value">${item.qty || 1} шт.</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">📥 Дата приезда на склад</span><span class="modal-info-value">${item.dateArrival || '—'}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">🚚 Дата увоза на СЦ</span><span class="modal-info-value">${item.dateToSC || '—'}</span></div>
+                        <div class="modal-info-row"><span class="modal-info-label">📊 Статус</span><span class="modal-info-value"><span class="service-status-badge ${statusInfo.class}">${statusInfo.label}</span></span></div>
+                        ${item.note ? `<div class="modal-info-row"><span class="modal-info-label">📝 Примечание</span><span class="modal-info-value">${item.note}</span></div>` : ''}
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         // ============================================================
-        // 7. FILTERS
+        // 11. ФИЛЬТРЫ
         // ============================================================
         function filterByCategory(category) {
             currentCategory = category;
@@ -2192,21 +2090,13 @@
             renderProducts();
         }
 
-        function filterProducts() {
-            renderProducts();
-        }
+        function filterProducts() { renderProducts(); }
 
-        // ============================================================
-        // 8. ПОИСК С КРЕСТИКОМ
-        // ============================================================
         function handleSearchInput() {
             const input = document.getElementById('searchInput');
             const clearBtn = document.getElementById('searchClearBtn');
-            if (input.value.length > 0) {
-                clearBtn.classList.add('visible');
-            } else {
-                clearBtn.classList.remove('visible');
-            }
+            if (input.value.length > 0) clearBtn.classList.add('visible');
+            else clearBtn.classList.remove('visible');
             filterProducts();
         }
 
@@ -2218,35 +2108,21 @@
             input.focus();
         }
 
-        // ============================================================
-        // 9. СВОРАЧИВАНИЕ КАТЕГОРИЙ
-        // ============================================================
         function toggleCategories() {
             categoriesOpen = !categoriesOpen;
             const body = document.getElementById('categoriesBody');
             const icon = document.getElementById('categoriesToggleIcon');
-            if (categoriesOpen) {
-                body.classList.add('open');
-                icon.classList.add('open');
-            } else {
-                body.classList.remove('open');
-                icon.classList.remove('open');
-            }
+            if (categoriesOpen) { body.classList.add('open'); icon.classList.add('open'); }
+            else { body.classList.remove('open'); icon.classList.remove('open'); }
         }
 
-        // ============================================================
-        // 10. КРЕСТИКИ ДЛЯ ПОЛЕЙ ВВОДА В КОРЗИНЕ
-        // ============================================================
         function toggleClearBtn(input) {
             const wrapper = input.closest('.input-wrapper');
             if (!wrapper) return;
             const btn = wrapper.querySelector('.clear-input-btn');
             if (!btn) return;
-            if (input.value.length > 0) {
-                btn.classList.add('visible');
-            } else {
-                btn.classList.remove('visible');
-            }
+            if (input.value.length > 0) btn.classList.add('visible');
+            else btn.classList.remove('visible');
         }
 
         function clearInputField(id) {
@@ -2262,7 +2138,7 @@
         }
 
         // ============================================================
-        // 11. CART OPERATIONS
+        // 12. КОРЗИНА
         // ============================================================
         function addToCart(productId) {
             const product = products.find(p => p.id === productId);
@@ -2272,11 +2148,8 @@
             const reserved = getReservedQty(product);
             const currentQty = cart[productId] || 0;
             if (currentQty >= freeQty) {
-                if (reserved > 0) {
-                    showToast(`🔒 Товар в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}`, 'error');
-                } else {
-                    showToast('❌ Недостаточно товара на складе!', 'error');
-                }
+                if (reserved > 0) showToast(`🔒 Товар в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}`, 'error');
+                else showToast('❌ Недостаточно товара на складе!', 'error');
                 return;
             }
 
@@ -2290,9 +2163,7 @@
         function removeFromCart(productId) {
             if (cart[productId]) {
                 cart[productId]--;
-                if (cart[productId] <= 0) {
-                    delete cart[productId];
-                }
+                if (cart[productId] <= 0) delete cart[productId];
                 updateCartBadge();
                 renderCart();
                 renderProducts();
@@ -2313,18 +2184,12 @@
             if (qty < 0) qty = 0;
             if (qty > freeQty) {
                 qty = freeQty;
-                if (reserved > 0) {
-                    showToast(`🔒 Максимум ${freeQty} (остальное в резерве: ${reserved} — ${product.reservedFor || '—'})`, 'error');
-                } else {
-                    showToast(`❌ Максимум ${freeQty} шт.`, 'error');
-                }
+                if (reserved > 0) showToast(`🔒 Максимум ${freeQty} (остальное в резерве: ${reserved} — ${product.reservedFor || '—'})`, 'error');
+                else showToast(`❌ Максимум ${freeQty} шт.`, 'error');
             }
 
-            if (qty === 0) {
-                delete cart[productId];
-            } else {
-                cart[productId] = qty;
-            }
+            if (qty === 0) delete cart[productId];
+            else cart[productId] = qty;
 
             updateCartBadge();
             renderCart();
@@ -2347,9 +2212,7 @@
 
         function getCartTotal() {
             let total = 0;
-            for (let id in cart) {
-                total += cart[id];
-            }
+            for (let id in cart) total += cart[id];
             return total;
         }
 
@@ -2359,16 +2222,12 @@
             document.getElementById('cartCount').textContent = total;
         }
 
-        // ============================================================
-        // 12. CART MODAL
-        // ============================================================
         function openCart() {
             document.getElementById('cartOverlay').classList.add('open');
             renderCart();
             document.getElementById('orderSuccess').style.display = 'none';
             document.getElementById('orderSuccess').innerHTML = '';
             orderSuccessShown = false;
-
             document.querySelectorAll('.order-form .input-wrapper input, .order-form .input-wrapper textarea')
                 .forEach(el => toggleClearBtn(el));
         }
@@ -2383,12 +2242,11 @@
 
             if (Object.keys(cart).length === 0) {
                 container.innerHTML = `
-                        <div class="cart-empty">
-                            <div class="big-icon">🛒</div>
-                            <h3>Корзина пуста</h3>
-                            <p style="color:#94a3b8;">Добавьте товары из каталога</p>
-                        </div>
-                    `;
+                    <div class="cart-empty">
+                        <div class="big-icon">🛒</div>
+                        <h3>Корзина пуста</h3>
+                        <p style="color:#94a3b8;">Добавьте товары из каталога</p>
+                    </div>`;
                 document.getElementById('cartTotalQty').textContent = '0';
                 return;
             }
@@ -2405,19 +2263,12 @@
                 const freeQty = getFreeQty(product);
                 const reserved = getReservedQty(product);
 
-                const locEmojis = {
-                    'Въезд': '🚗',
-                    'Здание': '🏢',
-                    'Шатер': '⛺',
-                    'КПП': '🛂',
-                    'Улица': '🌳'
-                };
+                const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
                 const locIcon = locEmojis[product.location] || '';
 
                 let imgHtml = '';
                 if (product.image && product.image.trim() !== '') {
-                    imgHtml =
-                        `<img src="${product.image}" class="item-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="item-img-placeholder" style="display:none;">📦</div>`;
+                    imgHtml = `<img src="${product.image}" class="item-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="item-img-placeholder" style="display:none;">📦</div>`;
                 } else {
                     imgHtml = `<div class="item-img-placeholder">📦</div>`;
                 }
@@ -2433,39 +2284,32 @@
                     addressText = `📍 ${product.storageAddress}`;
                 }
 
-                // 🔒 Строка резерва в корзине
                 let reserveText = '';
                 if (reserved > 0) {
                     reserveText = `<span class="item-reserve">🔒 Резерв: ${reserved} — ${product.reservedFor || '—'} (своб. ${freeQty})</span>`;
                 }
 
                 html += `
-                        <div class="cart-item">
-                            <div class="item-left">
-                                ${imgHtml}
-                                <div class="item-info">
-                                    <span class="item-name">${product.name}</span>
-                                    <span class="item-details">${product.category} ${locIcon} ${product.location || ''}</span>
-                                    ${barcodeText ? `<span class="item-details">${barcodeText}</span>` : ''}
-                                    ${addressText ? `<span class="item-address">${addressText}</span>` : ''}
-                                    ${reserveText}
-                                </div>
-                            </div>
-                            <div style="display:flex;align-items:center;">
-                                <div class="item-qty">
-                                    <button onclick="removeFromCart('${id}')">−</button>
-                                    <input type="number" class="qty-input" 
-                                           value="${qty}" 
-                                           min="0" 
-                                           max="${freeQty}" 
-                                           onchange="updateCartItemQty('${id}', this.value)"
-                                           onfocus="this.select()" />
-                                    <button onclick="addToCart('${id}')">+</button>
-                                </div>
-                                <button class="item-remove" onclick="removeAllFromCart('${id}')">✕</button>
+                    <div class="cart-item">
+                        <div class="item-left">
+                            ${imgHtml}
+                            <div class="item-info">
+                                <span class="item-name">${product.name}</span>
+                                <span class="item-details">${product.category} ${locIcon} ${product.location || ''}</span>
+                                ${barcodeText ? `<span class="item-details">${barcodeText}</span>` : ''}
+                                ${addressText ? `<span class="item-address">${addressText}</span>` : ''}
+                                ${reserveText}
                             </div>
                         </div>
-                    `;
+                        <div style="display:flex;align-items:center;">
+                            <div class="item-qty">
+                                <button onclick="removeFromCart('${id}')">−</button>
+                                <input type="number" class="qty-input" value="${qty}" min="0" max="${freeQty}" onchange="updateCartItemQty('${id}', this.value)" onfocus="this.select()" />
+                                <button onclick="addToCart('${id}')">+</button>
+                            </div>
+                            <button class="item-remove" onclick="removeAllFromCart('${id}')">✕</button>
+                        </div>
+                    </div>`;
             }
 
             container.innerHTML = html;
@@ -2486,6 +2330,11 @@
         // 13. CHECKOUT
         // ============================================================
         function checkout() {
+            if (!Net.isOnline()) {
+                showToast('📴 Нет интернета. Заказ можно оформить только при подключении.', 'error');
+                return;
+            }
+
             if (Object.keys(cart).length === 0) {
                 showToast('❌ Корзина пуста!', 'error');
                 return;
@@ -2499,7 +2348,6 @@
                 return;
             }
 
-            // 🔒 Проверка резерва перед оформлением
             for (let id in cart) {
                 const product = products.find(p => p.id === id);
                 if (!product) continue;
@@ -2507,17 +2355,13 @@
                 const freeQty = getFreeQty(product);
                 const reserved = getReservedQty(product);
                 if (qty > freeQty) {
-                    if (reserved > 0) {
-                        showToast(`🔒 "${product.name}" в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}, в корзине: ${qty}`, 'error');
-                    } else {
-                        showToast(`❌ Недостаточно "${product.name}" (доступно: ${freeQty})`, 'error');
-                    }
+                    if (reserved > 0) showToast(`🔒 "${product.name}" в резерве (${reserved} шт. — ${product.reservedFor || '—'}). Свободно: ${freeQty}, в корзине: ${qty}`, 'error');
+                    else showToast(`❌ Недостаточно "${product.name}" (доступно: ${freeQty})`, 'error');
                     return;
                 }
             }
 
             const total = getCartTotal();
-
             const timestamp = Date.now();
             const random = Math.floor(Math.random() * 10000);
             const orderNumber = `Z${String(timestamp).slice(-6)}${String(random).padStart(4, '0')}`;
@@ -2561,27 +2405,16 @@
                 const successDiv = document.getElementById('orderSuccess');
                 successDiv.style.display = 'block';
                 successDiv.innerHTML = `
-                        <div class="order-success">
-                            <div style="font-size:48px;">✅</div>
-                            <h3 style="color:#16a34a;">Заказ оформлен!</h3>
-                            <div class="order-number">${orderNumber}</div>
-                            <p style="color:#64748b;font-size:14px;margin-top:4px;">
-                                Номер заказа: <strong style="color:#0f172a;">${orderNumber}</strong>
-                            </p>
-                            <p style="color:#64748b;font-size:13px;margin-top:8px;">
-                                📞 ${phone} • 👤 ${customer}
-                            </p>
-                            <p style="color:#64748b;font-size:13px;">
-                                ⏰ Заберете: ${document.getElementById('orderPickup').value}
-                            </p>
-                            <p style="color:#64748b;font-size:13px;">
-                                📦 Всего товаров: ${total}
-                            </p>
-                            <button onclick="closeCart();" style="margin-top:12px;padding:8px 24px;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">
-                                Закрыть
-                            </button>
-                        </div>
-                    `;
+                    <div class="order-success">
+                        <div style="font-size:48px;">✅</div>
+                        <h3 style="color:#16a34a;">Заказ оформлен!</h3>
+                        <div class="order-number">${orderNumber}</div>
+                        <p style="color:#64748b;font-size:14px;margin-top:4px;">Номер заказа: <strong style="color:#0f172a;">${orderNumber}</strong></p>
+                        <p style="color:#64748b;font-size:13px;margin-top:8px;">📞 ${phone} • 👤 ${customer}</p>
+                        <p style="color:#64748b;font-size:13px;">⏰ Заберете: ${document.getElementById('orderPickup').value}</p>
+                        <p style="color:#64748b;font-size:13px;">📦 Всего товаров: ${total}</p>
+                        <button onclick="closeCart();" style="margin-top:12px;padding:8px 24px;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Закрыть</button>
+                    </div>`;
 
                 showToast(`✅ Заказ №${orderNumber} оформлен!`, 'success');
 
@@ -2602,13 +2435,17 @@
                 });
 
             }).catch(err => {
-                showToast('❌ Ошибка при оформлении заказа', 'error');
                 console.error(err);
+                if (!navigator.onLine) {
+                    showToast('📴 Нет интернета. Не удалось отправить заказ. Попробуйте позже.', 'error');
+                } else {
+                    showToast('❌ Ошибка при оформлении заказа. Проверьте соединение.', 'error');
+                }
             });
         }
 
         // ============================================================
-        // 14. UPDATE STATS
+        // 14. STATS
         // ============================================================
         function updateStats() {
             document.getElementById('totalProducts').textContent = products.length;
@@ -2619,28 +2456,29 @@
         // ============================================================
         // 15. INIT
         // ============================================================
-        console.log('🛒 Интернет-магазин запущен (с резервом)!');
-        loadData();
+        console.log('🛒 Интернет-магазин запущен (с проверкой сети)!');
+
+        Net.init();
+
+        if (!navigator.onLine) {
+            loadFromCache();
+            loadData();
+        } else {
+            loadData();
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.order-form .input-wrapper input, .order-form .input-wrapper textarea')
                 .forEach(el => {
-                    el.addEventListener('input', function() {
-                        toggleClearBtn(this);
-                    });
+                    el.addEventListener('input', function() { toggleClearBtn(this); });
                 });
 
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    if (document.getElementById('serviceDetailOverlay').classList.contains('open')) {
-                        closeServiceDetail();
-                    } else if (document.getElementById('serviceListOverlay').classList.contains('open')) {
-                        closeServiceList();
-                    } else if (document.getElementById('productModalOverlay').classList.contains('open')) {
-                        closeProductModal();
-                    } else if (document.getElementById('cartOverlay').classList.contains('open')) {
-                        closeCart();
-                    }
+                    if (document.getElementById('serviceDetailOverlay').classList.contains('open')) closeServiceDetail();
+                    else if (document.getElementById('serviceListOverlay').classList.contains('open')) closeServiceList();
+                    else if (document.getElementById('productModalOverlay').classList.contains('open')) closeProductModal();
+                    else if (document.getElementById('cartOverlay').classList.contains('open')) closeCart();
                 }
             });
         });
