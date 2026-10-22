@@ -344,9 +344,84 @@
         .order-item.status-issued:hover     { background: #dcfce7; }
         .order-item.status-problem:hover    { background: #fee2e2; }
         .order-item.status-returned:hover   { background: #e0e7ff; }
+
+        /* ============================================================
+           БЛОКИРОВКА ДВОЙНЫХ ОПЕРАЦИЙ
+           ============================================================ */
+        button.btn-loading,
+        button:disabled.btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        button.btn-loading::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: btnSpin 0.7s linear infinite;
+        }
+        button.btn-loading[data-theme="light"]::after {
+            border-color: rgba(0,0,0,0.2);
+            border-top-color: #1e293b;
+        }
+        @keyframes btnSpin {
+            to { transform: rotate(360deg); }
+        }
+        .op-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.35);
+            backdrop-filter: blur(2px);
+            z-index: 1500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            pointer-events: all;
+        }
+        .op-overlay.active { display: flex; }
+        .op-overlay .op-box {
+            background: #1e293b;
+            color: white;
+            padding: 20px 28px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .op-overlay .op-box .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: btnSpin 0.7s linear infinite;
+        }
+        .op-overlay .op-box .op-text { font-size: 13px; }
+        .op-overlay .op-box .op-subtext { font-size: 11px; color: #94a3b8; }
     </style>
 </head>
 <body>
+
+    <!-- ГЛОБАЛЬНЫЙ ОВЕРЛЕЙ ДЛЯ БЛОКИРОВКИ ОПЕРАЦИЙ -->
+    <div class="op-overlay" id="opOverlay">
+        <div class="op-box">
+            <div class="spinner"></div>
+            <div class="op-text" id="opText">⏳ Выполняется операция...</div>
+            <div class="op-subtext" id="opSubtext">Пожалуйста, не закрывайте окно</div>
+        </div>
+    </div>
 
     <button class="sidebar-toggle" id="sidebarToggle">☰</button>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -406,6 +481,9 @@
                         <button style="background:#3b82f6;color:white;" onclick="document.getElementById('importFileInput').click()">📥 Импорт БД</button>
                         <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importDatabase(event)" />
                     </div>
+                    <div class="settings-btn-row" style="margin-top:8px;">
+                        <button style="background:#f59e0b;color:#1e293b;" onclick="resetOperationLocks()">🔓 Сброс блокировок</button>
+                    </div>
                 </div>
             </div>
             <div class="sidebar-section">
@@ -415,7 +493,7 @@
                 <button id="btnRefresh">🔄 Обновить</button>
                 <button id="btnDebug" style="background:#334155;margin-top:4px;">🐛 Debug</button>
             </div>
-            <div class="footer">Firebase Sync • v1.3</div>
+            <div class="footer">Firebase Sync • v1.4</div>
         </div>
 
         <div class="main-content">
@@ -669,7 +747,7 @@
                 <input type="hidden" id="oeOrderId" value="" />
                 <div class="btn-row">
                     <button type="button" class="btn-secondary" onclick="closeOrderEditModal()">Отмена</button>
-                    <button type="submit" class="btn-primary">💾 Сохранить изменения</button>
+                    <button type="submit" class="btn-primary" id="oeSubmit">💾 Сохранить изменения</button>
                 </div>
             </form>
         </div>
@@ -831,7 +909,139 @@
         const SKLAD_REF = 'SKLAD';
 
         // ============================================================
-        // 2. STATE
+        // 2. МЕНЕДЖЕР БЛОКИРОВОК (защита от двойных операций)
+        // ============================================================
+        const Locks = {
+            active: new Set(),
+            processed: new Set(),
+
+            acquire(key) {
+                if (this.active.has(key) || this.processed.has(key)) return false;
+                this.active.add(key);
+                return true;
+            },
+
+            markProcessed(key) {
+                this.processed.add(key);
+                this.active.delete(key);
+                if (this.processed.size > 500) {
+                    const arr = Array.from(this.processed);
+                    this.processed = new Set(arr.slice(-200));
+                }
+                try {
+                    localStorage.setItem('sklad_processed_ops',
+                        JSON.stringify(Array.from(this.processed).slice(-200)));
+                } catch (e) {}
+            },
+
+            release(key) { this.active.delete(key); },
+            isBusy(key) { return this.active.has(key); },
+
+            lockButton(button) {
+                if (!button) return () => {};
+                const originalHtml = button.innerHTML;
+                const originalDisabled = button.disabled;
+                button.disabled = true;
+                button.classList.add('btn-loading');
+                if (button.classList.contains('btn-secondary') ||
+                    button.classList.contains('btn-warning')) {
+                    button.dataset.theme = 'light';
+                }
+                return () => {
+                    button.disabled = originalDisabled;
+                    button.classList.remove('btn-loading');
+                    button.innerHTML = originalHtml;
+                    delete button.dataset.theme;
+                };
+            },
+
+            lockForm(form) {
+                if (!form) return () => {};
+                form.classList.add('is-locked');
+                const inputs = form.querySelectorAll('input, select, textarea, button');
+                const saved = [];
+                inputs.forEach(el => {
+                    saved.push({ el, disabled: el.disabled });
+                    el.disabled = true;
+                });
+                return () => {
+                    form.classList.remove('is-locked');
+                    saved.forEach(({ el, disabled }) => {
+                        el.disabled = disabled;
+                    });
+                };
+            },
+
+            token(prefix, data) {
+                const str = JSON.stringify(data);
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return `${prefix}:${Math.abs(hash).toString(36)}`;
+            }
+        };
+
+        // Восстановить processed из localStorage
+        try {
+            const saved = JSON.parse(localStorage.getItem('sklad_processed_ops') || '[]');
+            Locks.processed = new Set(saved);
+        } catch (e) {
+            Locks.processed = new Set();
+        }
+
+        // ============================================================
+        // 2.1. ГЛОБАЛЬНЫЙ ОВЕРЛЕЙ ДЛЯ ОПЕРАЦИЙ
+        // ============================================================
+        const OpOverlay = {
+            el: null,
+            textEl: null,
+            subtextEl: null,
+            timeout: null,
+
+            init() {
+                this.el = document.getElementById('opOverlay');
+                this.textEl = document.getElementById('opText');
+                this.subtextEl = document.getElementById('opSubtext');
+            },
+
+            show(text = '⏳ Выполняется операция...', subtext = 'Пожалуйста, не закрывайте окно') {
+                if (!this.el) return;
+                this.textEl.textContent = text;
+                this.subtextEl.textContent = subtext;
+                this.el.classList.add('active');
+                // Через 30 секунд предупреждаем о долгом соединении
+                this.timeout = setTimeout(() => {
+                    if (this.subtextEl) {
+                        this.subtextEl.textContent = '⏳ Соединение медленное. Подождите ещё...';
+                        this.subtextEl.style.color = '#f59e0b';
+                    }
+                }, 15000);
+            },
+
+            hide() {
+                if (!this.el) return;
+                this.el.classList.remove('active');
+                if (this.timeout) { clearTimeout(this.timeout); this.timeout = null; }
+                if (this.subtextEl) {
+                    this.subtextEl.textContent = 'Пожалуйста, не закрывайте окно';
+                    this.subtextEl.style.color = '';
+                }
+            }
+        };
+
+        function resetOperationLocks() {
+            if (!confirm('Сбросить все блокировки? Используйте только если уверены, что операция не выполнилась.')) return;
+            Locks.processed.clear();
+            Locks.active.clear();
+            try { localStorage.removeItem('sklad_processed_ops'); } catch (e) {}
+            showToast('🔓 Блокировки сброшены', 'success');
+        }
+
+        // ============================================================
+        // 3. STATE
         // ============================================================
         let products = [];
         let categories = [];
@@ -860,7 +1070,7 @@
         let orderFilter = 'active';
 
         // ============================================================
-        // 3. SIDEBAR
+        // 4. SIDEBAR
         // ============================================================
         function toggleSidebar() {
             isSidebarOpen = !isSidebarOpen;
@@ -911,7 +1121,7 @@
         });
 
         // ============================================================
-        // 4. DEBUG / TOAST / SOUND
+        // 5. DEBUG / TOAST / SOUND
         // ============================================================
         const debugConsole = document.getElementById('debugConsole');
         function debugLog(message, data = null) {
@@ -982,7 +1192,7 @@
         });
 
         // ============================================================
-        // 5. ПОИСК
+        // 6. ПОИСК
         // ============================================================
         function handleSearchInput() {
             const input = document.getElementById('searchInput');
@@ -1000,7 +1210,7 @@
         }
 
         // ============================================================
-        // 6. ЭКСПОРТ/ИМПОРТ БД
+        // 7. ЭКСПОРТ/ИМПОРТ БД
         // ============================================================
         async function exportDatabase() {
             if (!db) { showToast('Нет подключения к Firebase', 'error'); return; }
@@ -1009,7 +1219,7 @@
                 const snapshot = await db.ref(SKLAD_REF).once('value');
                 const data = snapshot.val();
                 if (!data) { showToast('База данных пуста', 'error'); return; }
-                const exportData = { exportDate: new Date().toISOString(), version: '1.3', data: data };
+                const exportData = { exportDate: new Date().toISOString(), version: '1.4', data: data };
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -1041,7 +1251,7 @@
         }
 
         // ============================================================
-        // 7. РЕЗЕРВ
+        // 8. РЕЗЕРВ
         // ============================================================
         function getReservedQty(product) {
             if (!product) return 0;
@@ -1079,7 +1289,7 @@
         }
 
         // ============================================================
-        // 8. КАТЕГОРИИ
+        // 9. КАТЕГОРИИ
         // ============================================================
         function updateCategoryTree() {
             const container = document.getElementById('categoryTree');
@@ -1132,7 +1342,7 @@
         }
 
         // ============================================================
-        // 9. АДРЕСНОЕ ХРАНЕНИЕ
+        // 10. АДРЕСНОЕ ХРАНЕНИЕ
         // ============================================================
         function loadStorageAddresses() {
             if (!db) return;
@@ -1184,7 +1394,7 @@
         document.getElementById('btnAddStorage').addEventListener('click', addStorageAddress);
 
         // ============================================================
-        // 10. ЗАКАЗЫ
+        // 11. ЗАКАЗЫ
         // ============================================================
         function loadOrders() {
             if (!db) return;
@@ -1486,75 +1696,145 @@
             if (!items) return;
             const total = Object.keys(items).length;
             if (!db) { showToast('Нет Firebase', 'error'); return; }
+
+            const opKey = Locks.token('edit-order', { orderId, customer, phone, object, pickup, comment, items });
+            if (!Locks.acquire(opKey)) {
+                showToast('⏳ Заказ уже обновляется, подождите...', 'info');
+                return;
+            }
+            const lockBtn = Locks.lockButton(document.getElementById('oeSubmit'));
+
             try {
+                OpOverlay.show('💾 Сохранение заказа...', 'Пожалуйста, не закрывайте окно');
                 await db.ref(`${SKLAD_REF}/orders/${orderId}`).update({ customer, phone, object, pickup, comment, items, total, updatedAt: firebase.database.ServerValue.TIMESTAMP });
+                Locks.markProcessed(opKey);
                 showToast('✅ Обновлено!', 'success');
                 closeOrderEditModal();
                 const order = orders.find(o => o.id === orderId);
                 if (order) Object.assign(order, { customer, phone, object, pickup, comment, items, total });
                 if (currentView === 'orders') renderOrders();
                 viewOrderDetails(orderId);
-            } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+            } catch (err) {
+                Locks.release(opKey);
+                showToast('Ошибка: ' + err.message, 'error');
+            } finally {
+                OpOverlay.hide();
+                lockBtn();
+            }
         });
 
         async function issueOrder() {
             const order = orders.find(o => o.id === currentOrderId);
             if (!order) return;
-            if (order.status === 'Выдан' || order.status === 'Возврат') { showToast('Уже выдан/возврат', 'error'); return; }
-            const items = order.items || {};
-            const itemsArray = Object.keys(items).map(key => ({ id: key, ...items[key] }));
-            let canIssue = true, errorMsg = '';
-            for (let item of itemsArray) {
-                const product = products.find(p => p.name === item.name);
-                if (!product) { canIssue = false; errorMsg = `"${item.name}" не найден`; break; }
-                if (getFreeQty(product) < (item.qty || 0)) {
-                    canIssue = false;
-                    if (getReservedQty(product) > 0) errorMsg = `🔒 "${item.name}" в резерве (${getReservedQty(product)} шт. — ${product.reservedFor || '—'}). Свободно: ${getFreeQty(product)}, нужно: ${item.qty}`;
-                    else errorMsg = `Недостаточно "${item.name}" (нужно ${item.qty}, есть ${product.qty})`;
-                    break;
-                }
+            if (order.status === 'Выдан' || order.status === 'Возврат') {
+                showToast('Уже выдан/возврат', 'error');
+                return;
             }
-            if (!canIssue) { showToast('❌ ' + errorMsg, 'error'); return; }
-            if (!confirm(`Списать товары по заказу ${order.orderNumber || order.id.slice(0, 8)}?`)) return;
-            if (!db) { showToast('Нет Firebase', 'error'); return; }
+
+            const lockKey = `issue-order:${order.id}`;
+            if (!Locks.acquire(lockKey)) {
+                showToast('⏳ Заказ уже обрабатывается, подождите...', 'info');
+                return;
+            }
+
             try {
-                const updates = {};
-                const historyRefs = [];
+                const items = order.items || {};
+                const itemsArray = Object.keys(items).map(key => ({ id: key, ...items[key] }));
+                let canIssue = true, errorMsg = '';
                 for (let item of itemsArray) {
                     const product = products.find(p => p.name === item.name);
-                    if (product) {
-                        const newQty = (product.qty || 0) - (item.qty || 0);
-                        updates[`${SKLAD_REF}/products/${product.id}/qty`] = Math.max(0, newQty);
-                        const historyRef = db.ref(`${SKLAD_REF}/history`).push();
-                        historyRefs.push(historyRef.set({
-                            productId: product.id, productName: product.name, category: product.category,
-                            location: product.location, qty: item.qty, issuedTo: order.customer || 'Заказ',
-                            object: order.object || '', supplier: product.supplier || '—',
-                            date: new Date().toISOString().split('T')[0],
-                            note: `Списание по заказу ${order.orderNumber || order.id.slice(0, 8)}`,
-                            timestamp: firebase.database.ServerValue.TIMESTAMP, orderId: order.id
-                        }));
+                    if (!product) { canIssue = false; errorMsg = `"${item.name}" не найден`; break; }
+                    if (getFreeQty(product) < (item.qty || 0)) {
+                        canIssue = false;
+                        if (getReservedQty(product) > 0) errorMsg = `🔒 "${item.name}" в резерве (${getReservedQty(product)} шт. — ${product.reservedFor || '—'}). Свободно: ${getFreeQty(product)}, нужно: ${item.qty}`;
+                        else errorMsg = `Недостаточно "${item.name}" (нужно ${item.qty}, есть ${product.qty})`;
+                        break;
                     }
                 }
-                updates[`${SKLAD_REF}/orders/${order.id}/status`] = 'Выдан';
-                await db.ref().update(updates);
-                await Promise.all(historyRefs);
-                order.status = 'Выдан';
-                showToast('✅ Товары списаны!', 'success');
-                if (currentView === 'orders') renderOrders();
-                viewOrderDetails(order.id);
-            } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+                if (!canIssue) { showToast('❌ ' + errorMsg, 'error'); Locks.release(lockKey); return; }
+                if (!confirm(`Списать товары по заказу ${order.orderNumber || order.id.slice(0, 8)}?`)) { Locks.release(lockKey); return; }
+                if (!db) { showToast('Нет Firebase', 'error'); Locks.release(lockKey); return; }
+
+                const lockBtn = Locks.lockButton(document.querySelector('#orderActions .btn-success'));
+                try {
+                    OpOverlay.show('📤 Списание товаров...', 'Пожалуйста, не закрывайте окно');
+                    const updates = {};
+                    const historyRefs = [];
+                    for (let item of itemsArray) {
+                        const product = products.find(p => p.name === item.name);
+                        if (product) {
+                            const newQty = (product.qty || 0) - (item.qty || 0);
+                            updates[`${SKLAD_REF}/products/${product.id}/qty`] = Math.max(0, newQty);
+                            const historyRef = db.ref(`${SKLAD_REF}/history`).push();
+                            historyRefs.push(historyRef.set({
+                                productId: product.id, productName: product.name, category: product.category,
+                                location: product.location, qty: item.qty, issuedTo: order.customer || 'Заказ',
+                                object: order.object || '', supplier: product.supplier || '—',
+                                date: new Date().toISOString().split('T')[0],
+                                note: `Списание по заказу ${order.orderNumber || order.id.slice(0, 8)}`,
+                                timestamp: firebase.database.ServerValue.TIMESTAMP, orderId: order.id,
+                                opToken: lockKey
+                            }));
+                        }
+                    }
+                    updates[`${SKLAD_REF}/orders/${order.id}/status`] = 'Выдан';
+                    await db.ref().update(updates);
+                    await Promise.all(historyRefs);
+
+                    Locks.markProcessed(lockKey);
+                    order.status = 'Выдан';
+                    showToast('✅ Товары списаны!', 'success');
+                    if (currentView === 'orders') renderOrders();
+                    viewOrderDetails(order.id);
+                } catch (err) {
+                    console.error(err);
+                    try {
+                        const snap = await db.ref(`${SKLAD_REF}/orders/${order.id}/status`).once('value');
+                        if (snap.val() === 'Выдан') {
+                            Locks.markProcessed(lockKey);
+                            order.status = 'Выдан';
+                            showToast('✅ Товары списаны!', 'success');
+                            if (currentView === 'orders') renderOrders();
+                            viewOrderDetails(order.id);
+                            return;
+                        }
+                    } catch (e) {}
+                    Locks.release(lockKey);
+                    if (!navigator.onLine) showToast('📴 Нет интернета. Списание не выполнено, попробуйте позже.', 'error');
+                    else showToast('❌ Ошибка: ' + err.message, 'error');
+                } finally {
+                    OpOverlay.hide();
+                    lockBtn();
+                }
+            } catch (outerErr) {
+                Locks.release(lockKey);
+                console.error(outerErr);
+            }
         }
 
         async function returnOrder() {
             const order = orders.find(o => o.id === currentOrderId);
             if (!order) return;
             if (order.status !== 'Выдан' && order.status !== 'Готов к выдаче') { showToast('Возврат только для выданных', 'error'); return; }
-            if (!confirm(`Вернуть товары по заказу ${order.orderNumber || order.id.slice(0, 8)}?`)) return;
-            const items = order.items || {};
-            const itemsArray = Object.keys(items).map(key => ({ id: key, ...items[key] }));
-            if (!db) { showToast('Нет Firebase', 'error'); return; }
+
+            const lockKey = `return-order:${order.id}`;
+            if (!Locks.acquire(lockKey)) {
+                showToast('⏳ Возврат уже выполняется, подождите...', 'info');
+                return;
+            }
+
+            if (!confirm(`Вернуть товары по заказу ${order.orderNumber || order.id.slice(0, 8)}?`)) {
+                Locks.release(lockKey);
+                return;
+            }
+
+            const lockBtn = Locks.lockButton(document.querySelector('#orderActions .btn-warning'));
             try {
+                OpOverlay.show('↩️ Возврат товаров...', 'Пожалуйста, не закрывайте окно');
+                const items = order.items || {};
+                const itemsArray = Object.keys(items).map(key => ({ id: key, ...items[key] }));
+                if (!db) { showToast('Нет Firebase', 'error'); Locks.release(lockKey); return; }
+
                 const updates = {};
                 for (let item of itemsArray) {
                     const product = products.find(p => p.name === item.name);
@@ -1574,15 +1854,22 @@
                 }
                 updates[`${SKLAD_REF}/orders/${order.id}/status`] = 'Возврат';
                 await db.ref().update(updates);
+                Locks.markProcessed(lockKey);
                 order.status = 'Возврат';
                 showToast('✅ Товары возвращены!', 'success');
                 if (currentView === 'orders') renderOrders();
                 viewOrderDetails(order.id);
-            } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+            } catch (err) {
+                Locks.release(lockKey);
+                showToast('Ошибка: ' + err.message, 'error');
+            } finally {
+                OpOverlay.hide();
+                lockBtn();
+            }
         }
 
         // ============================================================
-        // 11. РЕДАКТИРОВАНИЕ ИСТОРИИ
+        // 12. РЕДАКТИРОВАНИЕ ИСТОРИИ
         // ============================================================
         function openHistoryEdit(historyId) {
             const record = history.find(h => h.id === historyId);
@@ -1615,34 +1902,56 @@
             const objectValue = heObjectEl ? heObjectEl.value.trim() : '';
             if (newQty <= 0) { showToast('Кол-во > 0', 'error'); return; }
             if (!db) { showToast('Нет Firebase', 'error'); return; }
+
+            const opKey = Locks.token('edit-history', { id, productId, newQty, oldQty, date, issuedTo, note, objectValue });
+            if (!Locks.acquire(opKey)) {
+                showToast('⏳ Запись уже обновляется, подождите...', 'info');
+                return;
+            }
+
+            const lockBtn = Locks.lockButton(document.getElementById('historyEditSubmit'));
             try {
+                OpOverlay.show('💾 Сохранение записи...', 'Пожалуйста, не закрывайте окно');
                 await db.ref(`${SKLAD_REF}/history/${id}`).update({ qty: newQty, date, issuedTo, object: objectValue, note });
                 const product = products.find(p => p.id === productId);
                 if (product) {
                     const diff = newQty - oldQty;
                     await db.ref(`${SKLAD_REF}/products/${productId}/qty`).set(Math.max(0, product.qty + diff));
                 }
+                Locks.markProcessed(opKey);
                 showToast('✅ Обновлено!', 'success');
                 closeHistoryEditModal();
                 loadReports();
-            } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+            } catch (err) {
+                Locks.release(opKey);
+                showToast('Ошибка: ' + err.message, 'error');
+            } finally {
+                OpOverlay.hide();
+                lockBtn();
+            }
         });
         function deleteHistoryRecord() {
             const id = document.getElementById('heHistoryId').value;
             const productId = document.getElementById('heProductId').value;
             const qty = parseInt(document.getElementById('heOldQty').value) || 0;
             if (!confirm('Удалить запись? Остаток восстановится.') || !db) return;
+
+            const lockKey = `delete-history:${id}`;
+            if (!Locks.acquire(lockKey)) {
+                showToast('⏳ Удаление уже выполняется...', 'info');
+                return;
+            }
             db.ref(`${SKLAD_REF}/history/${id}`).remove()
                 .then(() => {
                     const product = products.find(p => p.id === productId);
                     if (product) return db.ref(`${SKLAD_REF}/products/${productId}/qty`).set(product.qty + qty);
                 })
-                .then(() => { showToast('Удалено, остаток восстановлен', 'success'); closeHistoryEditModal(); loadReports(); })
-                .catch(() => showToast('Ошибка', 'error'));
+                .then(() => { Locks.markProcessed(lockKey); showToast('Удалено, остаток восстановлен', 'success'); closeHistoryEditModal(); loadReports(); })
+                .catch(() => { Locks.release(lockKey); showToast('Ошибка', 'error'); });
         }
 
         // ============================================================
-        // 12. ЗАГРУЗКА ДАННЫХ
+        // 13. ЗАГРУЗКА ДАННЫХ
         // ============================================================
         function loadData() {
             if (!db) { console.warn('loadData: Firebase не инициализирован'); return; }
@@ -1699,11 +2008,10 @@
         }
 
         // ============================================================
-        // 13. UI UPDATES
+        // 14. UI UPDATES
         // ============================================================
         function updateUI() {
             updateTotalCount();
-            updateInfoPanel();
             renderProductList();
             updateProductTabCounts();
             updateCategoryTree();
@@ -1775,9 +2083,6 @@
             if (target) target.classList.add('active');
             renderProductList(cat);
         }
-        function updateInfoPanel() {
-            // Инфо-панель удалена вместе с картой, оставлена пустая функция для совместимости
-        }
         function editSelected() {
             if (selectedProductId) {
                 const product = products.find(p => p.id === selectedProductId);
@@ -1786,7 +2091,7 @@
         }
 
         // ============================================================
-        // 14. PRODUCT LIST
+        // 15. PRODUCT LIST
         // ============================================================
         function setProductView(view) {
             productView = view;
@@ -1896,7 +2201,7 @@
         }
 
         // ============================================================
-        // 15. ЭКСПОРТ НОМЕНКЛАТУРЫ
+        // 16. ЭКСПОРТ НОМЕНКЛАТУРЫ
         // ============================================================
         function exportNomenclature(format) {
             const data = products.map((p, i) => ({
@@ -1910,7 +2215,7 @@
         }
 
         // ============================================================
-        // 16. REPORTS
+        // 17. REPORTS
         // ============================================================
         function loadReports() { renderReports(); }
         function renderReports() {
@@ -2023,7 +2328,7 @@
         }
 
         // ============================================================
-        // 16.1. ПЕЧАТЬ С-13
+        // 17.1. ПЕЧАТЬ С-13
         // ============================================================
         function printMovement() {
             if (selectedHistoryIds.size === 0) { showToast('Выберите позиции', 'error'); return; }
@@ -2134,7 +2439,7 @@
         }
 
         // ============================================================
-        // 17. STOCK
+        // 18. STOCK
         // ============================================================
         function renderStock() {
             const tbody = document.getElementById('stockBody');
@@ -2197,7 +2502,7 @@
         }
 
         // ============================================================
-        // 18. УНИВЕРСАЛЬНЫЙ ЭКСПОРТ
+        // 19. УНИВЕРСАЛЬНЫЙ ЭКСПОРТ
         // ============================================================
         function exportData(data, fileName, format) {
             if (!data || data.length === 0) { showToast('Нет данных', 'error'); return; }
@@ -2294,7 +2599,7 @@
         }
 
         // ============================================================
-        // 19. SWITCH REPORT TAB
+        // 20. SWITCH REPORT TAB
         // ============================================================
         function switchReportTab(tab) {
             currentReportTab = tab;
@@ -2309,7 +2614,7 @@
         }
 
         // ============================================================
-        // 20. MODAL
+        // 21. MODAL
         // ============================================================
         const modalOverlay = document.getElementById('modalOverlay');
         const modalTitle = document.getElementById('modalTitle');
@@ -2413,6 +2718,9 @@
         document.getElementById('modalClose').addEventListener('click', closeModal);
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
+        // ============================================================
+        // 21.1. ОБРАБОТКА ФОРМЫ ТОВАРА С БЛОКИРОВКОЙ
+        // ============================================================
         productForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const action = fAction.value;
@@ -2444,49 +2752,162 @@
                 if (reserved > qty) { showToast('🔒 Резерв не может превышать общее количество!', 'error'); return; }
                 if (reserved > 0 && !reservedFor) { showToast('Укажите, на кого зарезервирован товар!', 'error'); return; }
             }
-            try {
-                if (action === 'add') {
-                    await saveProduct({ name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, reserved, reservedFor, createdAt: firebase.database.ServerValue.TIMESTAMP });
-                    showToast('Товар добавлен!', 'success'); closeModal();
-                } else if (action === 'edit' && id) {
-                    const existing = products.find(p => p.id === id);
-                    if (existing) await saveProduct({ ...existing, name, category, location, storageAddress, qty, unitType, customUnit, condition, barcode, supplier, date, image, issuedTo, object: objectValue, note, reserved, reservedFor }, id);
-                    showToast('Товар обновлен!', 'success'); closeModal();
-                } else if (action === 'issue' && id) {
+
+            const submitBtn = document.getElementById('modalSubmit');
+
+            // === ADD ===
+            if (action === 'add') {
+                const opKey = Locks.token('add-product', {
+                    name, category, location, qty, barcode: barcode || '', supplier: supplier || ''
+                });
+                if (!Locks.acquire(opKey)) {
+                    showToast('⏳ Такой товар уже добавляется, подождите...', 'info');
+                    return;
+                }
+                const lockBtn = Locks.lockButton(submitBtn);
+                try {
+                    OpOverlay.show('💾 Сохранение товара...', 'Пожалуйста, не закрывайте окно');
+                    await saveProduct({
+                        name, category, location, storageAddress, qty, unitType, customUnit,
+                        condition, barcode, supplier, date, image, issuedTo, object: objectValue,
+                        note, reserved, reservedFor,
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    Locks.markProcessed(opKey);
+                    showToast('✅ Товар добавлен!', 'success');
+                    closeModal();
+                } catch (err) {
+                    Locks.release(opKey);
+                    showToast('❌ Ошибка: ' + err.message, 'error');
+                } finally {
+                    OpOverlay.hide();
+                    lockBtn();
+                }
+                return;
+            }
+
+            // === EDIT ===
+            if (action === 'edit' && id) {
+                const opKey = Locks.token('edit-product', {
+                    id, name, category, location, qty, barcode, supplier, reserved, reservedFor
+                });
+                if (!Locks.acquire(opKey)) {
+                    showToast('⏳ Изменения уже сохраняются, подождите...', 'info');
+                    return;
+                }
+                const lockBtn = Locks.lockButton(submitBtn);
+                try {
+                    OpOverlay.show('💾 Обновление товара...', 'Пожалуйста, не закрывайте окно');
                     const existing = products.find(p => p.id === id);
                     if (existing) {
-                        const free = getFreeQty(existing);
-                        if (qty > free) {
-                            if (getReservedQty(existing) > 0) showToast(`🔒 Товар в резерве (${getReservedQty(existing)} шт. — ${existing.reservedFor || '—'}). Свободно: ${free}`, 'error');
-                            else showToast('Недостаточно товара!', 'error');
+                        await saveProduct({
+                            ...existing,
+                            name, category, location, storageAddress, qty, unitType, customUnit,
+                            condition, barcode, supplier, date, image, issuedTo, object: objectValue,
+                            note, reserved, reservedFor
+                        }, id);
+                    }
+                    Locks.markProcessed(opKey);
+                    showToast('✅ Товар обновлён!', 'success');
+                    closeModal();
+                } catch (err) {
+                    Locks.release(opKey);
+                    showToast('❌ Ошибка: ' + err.message, 'error');
+                } finally {
+                    OpOverlay.hide();
+                    lockBtn();
+                }
+                return;
+            }
+
+            // === ISSUE ===
+            if (action === 'issue' && id) {
+                const existing = products.find(p => p.id === id);
+                if (!existing) { showToast('Товар не найден', 'error'); return; }
+                const free = getFreeQty(existing);
+                if (qty > free) {
+                    if (getReservedQty(existing) > 0) showToast(`🔒 Товар в резерве (${getReservedQty(existing)} шт. — ${existing.reservedFor || '—'}). Свободно: ${free}`, 'error');
+                    else showToast('Недостаточно товара!', 'error');
+                    return;
+                }
+                const opKey = Locks.token('issue-product', {
+                    productId: id, qty, issuedTo: issuedTo || '', object: objectValue || '', date: date || ''
+                });
+                if (!Locks.acquire(opKey)) {
+                    showToast('⏳ Эта выдача уже выполняется, подождите...', 'info');
+                    return;
+                }
+                const lockBtn = Locks.lockButton(submitBtn);
+                try {
+                    OpOverlay.show('📤 Выдача товара...', 'Пожалуйста, не закрывайте окно');
+                    const newQty = (existing.qty || 0) - qty;
+                    const historyRef = db.ref(`${SKLAD_REF}/history`).push();
+                    await historyRef.set({
+                        productId: id, productName: existing.name, category: existing.category,
+                        location: existing.location, qty, issuedTo: issuedTo || 'Не указан',
+                        object: objectValue, supplier: existing.supplier || '—',
+                        date: date || new Date().toISOString().split('T')[0],
+                        note: note || 'Выдача со склада',
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        opToken: opKey
+                    });
+                    await saveProduct({
+                        ...existing, qty: newQty,
+                        issuedTo: issuedTo || existing.issuedTo,
+                        note: note || existing.note
+                    }, id);
+                    Locks.markProcessed(opKey);
+                    showToast(`✅ Выдано ${qty} шт.`, 'success');
+                    closeModal();
+                } catch (err) {
+                    console.error(err);
+                    try {
+                        const snap = await db.ref(`${SKLAD_REF}/products/${id}/qty`).once('value');
+                        const serverQty = snap.val();
+                        if (typeof serverQty === 'number' && serverQty <= (existing.qty - qty)) {
+                            Locks.markProcessed(opKey);
+                            showToast(`✅ Выдано ${qty} шт.`, 'success');
+                            closeModal();
                             return;
                         }
-                        const newQty = (existing.qty || 0) - qty;
-                        const historyRef = db.ref(`${SKLAD_REF}/history`).push();
-                        await historyRef.set({
-                            productId: id, productName: existing.name, category: existing.category,
-                            location: existing.location, qty, issuedTo: issuedTo || 'Не указан',
-                            object: objectValue, supplier: existing.supplier || '—',
-                            date: date || new Date().toISOString().split('T')[0],
-                            note: note || 'Выдача со склада',
-                            timestamp: firebase.database.ServerValue.TIMESTAMP
-                        });
-                        await saveProduct({ ...existing, qty: newQty, issuedTo: issuedTo || existing.issuedTo, note: note || existing.note }, id);
-                        showToast(`Выдано ${qty} шт.`, 'success');
-                    }
-                    closeModal();
+                    } catch (e) {}
+                    Locks.release(opKey);
+                    if (!navigator.onLine) showToast('📴 Нет интернета. Попробуйте позже.', 'error');
+                    else showToast('❌ Ошибка выдачи: ' + err.message, 'error');
+                } finally {
+                    OpOverlay.hide();
+                    lockBtn();
                 }
-            } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+                return;
+            }
         });
+
         modalDelete.addEventListener('click', async () => {
             const id = fProductId.value;
             if (!id || !confirm('Удалить товар?')) return;
-            try { await deleteProduct(id); showToast('Удален!', 'success'); closeModal(); }
-            catch (err) { showToast('Ошибка', 'error'); }
+            const lockKey = `delete-product:${id}`;
+            if (!Locks.acquire(lockKey)) {
+                showToast('⏳ Удаление уже выполняется...', 'info');
+                return;
+            }
+            const lockBtn = Locks.lockButton(modalDelete);
+            try {
+                OpOverlay.show('🗑️ Удаление товара...', 'Пожалуйста, не закрывайте окно');
+                await deleteProduct(id);
+                Locks.markProcessed(lockKey);
+                showToast('✅ Удалён!', 'success');
+                closeModal();
+            } catch (err) {
+                Locks.release(lockKey);
+                showToast('❌ Ошибка удаления: ' + err.message, 'error');
+            } finally {
+                OpOverlay.hide();
+                lockBtn();
+            }
         });
 
         // ============================================================
-        // 21. VIEW SWITCHING
+        // 22. VIEW SWITCHING
         // ============================================================
         function switchView(view) {
             currentView = view;
@@ -2504,7 +2925,7 @@
         }
 
         // ============================================================
-        // 22. BUTTONS
+        // 23. BUTTONS
         // ============================================================
         document.getElementById('btnAddProduct').addEventListener('click', () => {
             if (categories.length === 0) { showToast('Сначала создайте категорию!', 'error'); return; }
@@ -2540,7 +2961,7 @@
         document.getElementById('searchInput').addEventListener('input', handleSearchInput);
 
         // ============================================================
-        // 23. ПРИХОД
+        // 24. ПРИХОД
         // ============================================================
         function loadIncomes() {
             if (!db) return;
@@ -2676,39 +3097,103 @@
         }
         document.getElementById('incomeForm').addEventListener('submit', async (e) => { e.preventDefault(); await saveIncomeDocument(false); });
         document.getElementById('incomePostBtn').addEventListener('click', async () => {
-            if (!confirm('Провести документ?')) return;
+            if (!confirm('Провести документ? Товары будут добавлены на склад.')) return;
             await saveIncomeDocument(true);
         });
+
+        // ============================================================
+        // 24.1. СОХРАНЕНИЕ ПРИХОДА С БЛОКИРОВКОЙ
+        // ============================================================
         async function saveIncomeDocument(posted) {
             const invoiceNumber = document.getElementById('fInvoiceNumber').value.trim();
             const invoiceType = document.getElementById('fInvoiceType').value;
             const car = document.getElementById('fCar').value.trim();
             const invoiceDate = document.getElementById('fInvoiceDate').value;
             const supplier = document.getElementById('fSupplierIncome').value.trim();
-            if (!invoiceNumber || !invoiceDate || !supplier) { showToast('Заполните обязательные поля!', 'error'); return; }
+
+            if (!invoiceNumber || !invoiceDate || !supplier) {
+                showToast('Заполните обязательные поля!', 'error');
+                return;
+            }
             const items = getIncomeItems();
             if (!items) return;
+
             const incomeId = document.getElementById('fIncomeId').value;
             const action = document.getElementById('fIncomeAction').value;
-            const data = { invoiceNumber, invoiceType, car, invoiceDate, supplier, items, posted, timestamp: firebase.database.ServerValue.TIMESTAMP, updatedAt: firebase.database.ServerValue.TIMESTAMP };
-            if (!db) { showToast('Нет Firebase', 'error'); return; }
+
+            const itemsKey = Object.keys(items).sort().map(k => `${items[k].name}:${items[k].qty}`).join('|');
+            const opKey = Locks.token(posted ? 'post-income' : 'save-income', {
+                invoiceNumber, invoiceDate, supplier, itemsKey
+            });
+
+            if (!Locks.acquire(opKey)) {
+                showToast('⏳ Документ уже обрабатывается, подождите...', 'info');
+                return;
+            }
+
+            const btnId = posted ? 'incomePostBtn' : 'incomeSubmit';
+            const lockBtn = Locks.lockButton(document.getElementById(btnId));
+
             try {
+                OpOverlay.show(posted ? '📥 Проведение прихода...' : '💾 Сохранение прихода...', 'Пожалуйста, не закрывайте окно');
+
+                const data = {
+                    invoiceNumber, invoiceType, car, invoiceDate, supplier, items, posted,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                if (!db) {
+                    showToast('Нет Firebase', 'error');
+                    Locks.release(opKey);
+                    OpOverlay.hide();
+                    lockBtn();
+                    return;
+                }
+
                 if (action === 'edit' && incomeId) {
                     const existing = incomes.find(i => i.id === incomeId);
-                    if (existing && existing.posted) { showToast('Проведённый нельзя редактировать!', 'error'); return; }
+                    if (existing && existing.posted && posted) {
+                        showToast('Проведённый нельзя провести повторно!', 'error');
+                        Locks.release(opKey);
+                        OpOverlay.hide();
+                        lockBtn();
+                        return;
+                    }
                     await db.ref(`${SKLAD_REF}/incomes/${incomeId}`).update(data);
                     if (posted && !existing?.posted) await postIncomeItems(incomeId, items);
-                    showToast('Обновлено!', 'success');
+                    Locks.markProcessed(opKey);
+                    showToast('✅ Обновлено!', 'success');
                 } else {
                     const ref = db.ref(`${SKLAD_REF}/incomes`).push();
                     await ref.set(data);
                     if (posted) await postIncomeItems(ref.key, items);
-                    showToast('Сохранено!', 'success');
+                    Locks.markProcessed(opKey);
+                    showToast(posted ? '✅ Проведено!' : '✅ Сохранено!', 'success');
                 }
-                closeIncomeModal(); renderIncomes();
-            } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+                closeIncomeModal();
+                renderIncomes();
+            } catch (err) {
+                console.error(err);
+                Locks.release(opKey);
+                if (!navigator.onLine) showToast('📴 Нет интернета. Попробуйте позже.', 'error');
+                else showToast('❌ Ошибка: ' + err.message, 'error');
+            } finally {
+                OpOverlay.hide();
+                lockBtn();
+            }
         }
+
         async function postIncomeItems(incomeId, items) {
+            // Проверка: не оприходован ли уже этот документ
+            try {
+                const incomeSnap = await db.ref(`${SKLAD_REF}/incomes/${incomeId}/posted`).once('value');
+                if (incomeSnap.val() === true) {
+                    console.log('Документ уже проведён, пропускаем оприходование');
+                    return;
+                }
+            } catch (e) {}
+
             const itemKeys = Object.keys(items);
             const updates = {};
             for (let key of itemKeys) {
@@ -2720,12 +3205,22 @@
                 } else {
                     const newRef = db.ref(`${SKLAD_REF}/products`).push();
                     updates[`${SKLAD_REF}/products/${newRef.key}`] = {
-                        name: item.name, category: item.category || 'Прочее', location: item.location || 'Здание',
-                        storageAddress: item.storageAddress || '', qty: item.qty, unitType: 'шт', customUnit: '',
-                        condition: 'Новый', barcode: '', supplier: document.getElementById('fSupplierIncome').value.trim(),
-                        date: document.getElementById('fInvoiceDate').value, image: item.image || '', issuedTo: '',
+                        name: item.name,
+                        category: item.category || 'Прочее',
+                        location: item.location || 'Здание',
+                        storageAddress: item.storageAddress || '',
+                        qty: item.qty,
+                        unitType: 'шт',
+                        customUnit: '',
+                        condition: 'Новый',
+                        barcode: '',
+                        supplier: document.getElementById('fSupplierIncome').value.trim(),
+                        date: document.getElementById('fInvoiceDate').value,
+                        image: item.image || '',
+                        issuedTo: '',
                         note: `Приход по накладной ${document.getElementById('fInvoiceNumber').value}`,
-                        reserved: 0, reservedFor: '',
+                        reserved: 0,
+                        reservedFor: '',
                         createdAt: firebase.database.ServerValue.TIMESTAMP
                     };
                 }
@@ -2734,20 +3229,38 @@
             await db.ref().update(updates);
             showToast('✅ Товары оприходованы!', 'success');
         }
+
         document.getElementById('incomeDeleteBtn')?.addEventListener('click', async () => {
             const id = document.getElementById('fIncomeId').value;
             if (!id || !confirm('Удалить документ?') || !db) return;
-            const income = incomes.find(i => i.id === id);
-            if (income && income.posted && income.items) {
-                for (let key of Object.keys(income.items)) {
-                    const item = income.items[key];
-                    const existing = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
-                    if (existing) await db.ref(`${SKLAD_REF}/products/${existing.id}/qty`).set(Math.max(0, (existing.qty || 0) - item.qty));
-                }
+            const lockKey = `delete-income:${id}`;
+            if (!Locks.acquire(lockKey)) {
+                showToast('⏳ Удаление уже выполняется...', 'info');
+                return;
             }
-            await db.ref(`${SKLAD_REF}/incomes/${id}`).remove();
-            showToast('Удалено', 'success');
-            closeIncomeModal(); renderIncomes();
+            const lockBtn = Locks.lockButton(document.getElementById('incomeDeleteBtn'));
+            try {
+                OpOverlay.show('🗑️ Удаление прихода...', 'Пожалуйста, не закрывайте окно');
+                const income = incomes.find(i => i.id === id);
+                if (income && income.posted && income.items) {
+                    for (let key of Object.keys(income.items)) {
+                        const item = income.items[key];
+                        const existing = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+                        if (existing) await db.ref(`${SKLAD_REF}/products/${existing.id}/qty`).set(Math.max(0, (existing.qty || 0) - item.qty));
+                    }
+                }
+                await db.ref(`${SKLAD_REF}/incomes/${id}`).remove();
+                Locks.markProcessed(lockKey);
+                showToast('Удалено', 'success');
+                closeIncomeModal();
+                renderIncomes();
+            } catch (err) {
+                Locks.release(lockKey);
+                showToast('Ошибка удаления: ' + err.message, 'error');
+            } finally {
+                OpOverlay.hide();
+                lockBtn();
+            }
         });
         function viewIncome(incomeId) {
             const income = incomes.find(i => i.id === incomeId);
@@ -2776,7 +3289,7 @@
         }
 
         // ============================================================
-        // 24. СЕРВИС
+        // 25. СЕРВИС
         // ============================================================
         function loadService() {
             if (!db) return;
@@ -2884,6 +3397,7 @@
             modal.classList.add('open');
         }
         function closeServiceModal() { document.getElementById('serviceModalOverlay').classList.remove('open'); }
+
         document.addEventListener('DOMContentLoaded', () => {
             const svImage = document.getElementById('svImage');
             if (svImage) {
@@ -2920,16 +3434,35 @@
                         showToast('Заполните обязательные поля!', 'error'); return;
                     }
                     if (!db) { showToast('Нет Firebase', 'error'); return; }
+
+                    const opKey = Locks.token('service-save', {
+                        id: id || '', model: data.model, purpose: data.purpose,
+                        givenBy: data.givenBy, broken: data.broken, qty: data.qty
+                    });
+                    if (!Locks.acquire(opKey)) {
+                        showToast('⏳ Запись уже сохраняется, подождите...', 'info');
+                        return;
+                    }
+                    const lockBtn = Locks.lockButton(document.getElementById('svSubmit'));
                     try {
-                        if (action === 'edit' && id) await db.ref(`${SKLAD_REF}/service/${id}`).update(data);
-                        else {
+                        OpOverlay.show('💾 Сохранение сервиса...', 'Пожалуйста, не закрывайте окно');
+                        if (action === 'edit' && id) {
+                            await db.ref(`${SKLAD_REF}/service/${id}`).update(data);
+                        } else {
                             data.createdAt = firebase.database.ServerValue.TIMESTAMP;
                             data.timestamp = firebase.database.ServerValue.TIMESTAMP;
                             await db.ref(`${SKLAD_REF}/service`).push().set(data);
                         }
+                        Locks.markProcessed(opKey);
                         showToast('✅ Сохранено!', 'success');
                         closeServiceModal();
-                    } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+                    } catch (err) {
+                        Locks.release(opKey);
+                        showToast('❌ Ошибка: ' + err.message, 'error');
+                    } finally {
+                        OpOverlay.hide();
+                        lockBtn();
+                    }
                 });
             }
             const svDeleteBtn = document.getElementById('svDeleteBtn');
@@ -2937,11 +3470,29 @@
                 svDeleteBtn.addEventListener('click', async () => {
                     const id = document.getElementById('svId').value;
                     if (!id || !confirm('Удалить запись?') || !db) return;
-                    try { await db.ref(`${SKLAD_REF}/service/${id}`).remove(); showToast('🗑️ Удалено', 'success'); closeServiceModal(); }
-                    catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+                    const lockKey = `delete-service:${id}`;
+                    if (!Locks.acquire(lockKey)) {
+                        showToast('⏳ Удаление уже выполняется...', 'info');
+                        return;
+                    }
+                    const lockBtn = Locks.lockButton(svDeleteBtn);
+                    try {
+                        OpOverlay.show('🗑️ Удаление записи...', 'Пожалуйста, не закрывайте окно');
+                        await db.ref(`${SKLAD_REF}/service/${id}`).remove();
+                        Locks.markProcessed(lockKey);
+                        showToast('🗑️ Удалено', 'success');
+                        closeServiceModal();
+                    } catch (err) {
+                        Locks.release(lockKey);
+                        showToast('Ошибка: ' + err.message, 'error');
+                    } finally {
+                        OpOverlay.hide();
+                        lockBtn();
+                    }
                 });
             }
         });
+
         function exportService(format) {
             const data = serviceItems.map((s, i) => ({
                 '№': i + 1, 'Марка и модель': s.model || '', 'Предназначение': s.purpose || '',
@@ -2955,7 +3506,7 @@
         }
 
         // ============================================================
-        // 25. ПЕЧАТЬ ЭТИКЕТКИ
+        // 26. ПЕЧАТЬ ЭТИКЕТКИ
         // ============================================================
         function printLabel() {
             const id = fProductId.value;
@@ -3052,8 +3603,10 @@
         }
 
         // ============================================================
-        // 26. INIT
+        // 27. INIT
         // ============================================================
+        OpOverlay.init();
+
         try {
             if (db) {
                 const connectedRef = db.ref('.info/connected');
@@ -3071,7 +3624,7 @@
             console.error('Ошибка loadData:', err);
             showToast('Ошибка загрузки данных: ' + err.message, 'error');
         }
-        console.log('🚀 Приложение запущено. Карта удалена. Версия 1.3');
+        console.log('🚀 Приложение запущено. v1.4 (с блокировкой двойных операций)');
     </script>
 
 </body>
