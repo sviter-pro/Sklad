@@ -1912,14 +1912,31 @@
             const lockBtn = Locks.lockButton(document.getElementById('historyEditSubmit'));
             try {
                 OpOverlay.show('💾 Сохранение записи...', 'Пожалуйста, не закрывайте окно');
-                await db.ref(`${SKLAD_REF}/history/${id}`).update({ qty: newQty, date, issuedTo, object: objectValue, note });
-                const product = products.find(p => p.id === productId);
-                if (product) {
-                    const diff = newQty - oldQty;
-                    await db.ref(`${SKLAD_REF}/products/${productId}/qty`).set(Math.max(0, product.qty + diff));
+
+                // 🔑 Берём АКТУАЛЬНЫЙ остаток с сервера, а не из локального массива
+                // (локальный массив может быть устаревшим)
+                let currentQty = 0;
+                if (productId) {
+                    const snap = await db.ref(`${SKLAD_REF}/products/${productId}/qty`).once('value');
+                    currentQty = parseInt(snap.val()) || 0;
                 }
+
+                // 🔑 Правильная формула:
+                // старый остаток ДО списания = currentQty + oldQty
+                // новый остаток ПОСЛЕ нового списания = (currentQty + oldQty) - newQty
+                // = currentQty + oldQty - newQty
+                const newStockQty = Math.max(0, currentQty + oldQty - newQty);
+
+                // Обновляем запись истории
+                await db.ref(`${SKLAD_REF}/history/${id}`).update({ qty: newQty, date, issuedTo, object: objectValue, note });
+
+                // Обновляем остаток товара
+                if (productId) {
+                    await db.ref(`${SKLAD_REF}/products/${productId}/qty`).set(newStockQty);
+                }
+
                 Locks.markProcessed(opKey);
-                showToast('✅ Обновлено!', 'success');
+                showToast(`✅ Обновлено! Остаток: ${newStockQty}`, 'success');
                 closeHistoryEditModal();
                 loadReports();
             } catch (err) {
@@ -3151,7 +3168,7 @@
                     return;
                 }
 
-                if (action === 'edit' && incomeId) {
+                 if (action === 'edit' && incomeId) {
                     const existing = incomes.find(i => i.id === incomeId);
                     if (existing && existing.posted && posted) {
                         showToast('Проведённый нельзя провести повторно!', 'error');
@@ -3160,14 +3177,29 @@
                         lockBtn();
                         return;
                     }
-                    await db.ref(`${SKLAD_REF}/incomes/${incomeId}`).update(data);
-                    if (posted && !existing?.posted) await postIncomeItems(incomeId, items);
+                    // Если документ уже был проведён ранее, а сейчас просто редактируем — не трогаем posted
+                    const wasPosted = !!(existing && existing.posted);
+                    // Сохраняем документ, НО posted ставим только после оприходования
+                    const dataToSave = { ...data };
+                    if (posted && !wasPosted) {
+                        dataToSave.posted = false; // временно снимаем, поставим после
+                    }
+                    await db.ref(`${SKLAD_REF}/incomes/${incomeId}`).update(dataToSave);
+                    if (posted && !wasPosted) {
+                        // Сначала оприходуем, потом ставим posted
+                        await postIncomeItems(incomeId, items, true);
+                    }
                     Locks.markProcessed(opKey);
-                    showToast('✅ Обновлено!', 'success');
+                    showToast(posted && !wasPosted ? '✅ Проведено!' : '✅ Обновлено!', 'success');
                 } else {
                     const ref = db.ref(`${SKLAD_REF}/incomes`).push();
-                    await ref.set(data);
-                    if (posted) await postIncomeItems(ref.key, items);
+                    // Создаём документ со статусом posted=false
+                    const dataToSave = { ...data, posted: false };
+                    await ref.set(dataToSave);
+                    if (posted) {
+                        // Оприходуем товары, затем ставим posted=true
+                        await postIncomeItems(ref.key, items, true);
+                    }
                     Locks.markProcessed(opKey);
                     showToast(posted ? '✅ Проведено!' : '✅ Сохранено!', 'success');
                 }
@@ -3184,51 +3216,54 @@
             }
         }
 
-        async function postIncomeItems(incomeId, items) {
-            // Проверка: не оприходован ли уже этот документ
-            try {
-                const incomeSnap = await db.ref(`${SKLAD_REF}/incomes/${incomeId}/posted`).once('value');
-                if (incomeSnap.val() === true) {
-                    console.log('Документ уже проведён, пропускаем оприходование');
-                    return;
-                }
-            } catch (e) {}
-
-            const itemKeys = Object.keys(items);
-            const updates = {};
-            for (let key of itemKeys) {
-                const item = items[key];
-                const existing = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
-                if (existing) {
-                    updates[`${SKLAD_REF}/products/${existing.id}/qty`] = (existing.qty || 0) + item.qty;
-                    updates[`${SKLAD_REF}/products/${existing.id}/date`] = document.getElementById('fInvoiceDate').value;
-                } else {
-                    const newRef = db.ref(`${SKLAD_REF}/products`).push();
-                    updates[`${SKLAD_REF}/products/${newRef.key}`] = {
-                        name: item.name,
-                        category: item.category || 'Прочее',
-                        location: item.location || 'Здание',
-                        storageAddress: item.storageAddress || '',
-                        qty: item.qty,
-                        unitType: 'шт',
-                        customUnit: '',
-                        condition: 'Новый',
-                        barcode: '',
-                        supplier: document.getElementById('fSupplierIncome').value.trim(),
-                        date: document.getElementById('fInvoiceDate').value,
-                        image: item.image || '',
-                        issuedTo: '',
-                        note: `Приход по накладной ${document.getElementById('fInvoiceNumber').value}`,
-                        reserved: 0,
-                        reservedFor: '',
-                        createdAt: firebase.database.ServerValue.TIMESTAMP
-                    };
-                }
+        async function postIncomeItems(incomeId, items, force = false) {
+    // Проверка: не оприходован ли уже этот документ (только если force=false)
+    if (!force) {
+        try {
+            const incomeSnap = await db.ref(`${SKLAD_REF}/incomes/${incomeId}/posted`).once('value');
+            if (incomeSnap.val() === true) {
+                console.log('Документ уже проведён, пропускаем оприходование');
+                return;
             }
-            updates[`${SKLAD_REF}/incomes/${incomeId}/posted`] = true;
-            await db.ref().update(updates);
-            showToast('✅ Товары оприходованы!', 'success');
+        } catch (e) {}
+    }
+
+    const itemKeys = Object.keys(items);
+    const updates = {};
+    for (let key of itemKeys) {
+        const item = items[key];
+        const existing = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+        if (existing) {
+            updates[`${SKLAD_REF}/products/${existing.id}/qty`] = (existing.qty || 0) + item.qty;
+            updates[`${SKLAD_REF}/products/${existing.id}/date`] = document.getElementById('fInvoiceDate').value;
+        } else {
+            const newRef = db.ref(`${SKLAD_REF}/products`).push();
+            updates[`${SKLAD_REF}/products/${newRef.key}`] = {
+                name: item.name,
+                category: item.category || 'Прочее',
+                location: item.location || 'Здание',
+                storageAddress: item.storageAddress || '',
+                qty: item.qty,
+                unitType: 'шт',
+                customUnit: '',
+                condition: 'Новый',
+                barcode: '',
+                supplier: document.getElementById('fSupplierIncome').value.trim(),
+                date: document.getElementById('fInvoiceDate').value,
+                image: item.image || '',
+                issuedTo: '',
+                note: `Приход по накладной ${document.getElementById('fInvoiceNumber').value}`,
+                reserved: 0,
+                reservedFor: '',
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
         }
+    }
+    updates[`${SKLAD_REF}/incomes/${incomeId}/posted`] = true;
+    updates[`${SKLAD_REF}/incomes/${incomeId}/postedAt`] = firebase.database.ServerValue.TIMESTAMP;
+    await db.ref().update(updates);
+    showToast('✅ Товары оприходованы!', 'success');
+}
 
         document.getElementById('incomeDeleteBtn')?.addEventListener('click', async () => {
             const id = document.getElementById('fIncomeId').value;
