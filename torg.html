@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Календарь с пометками</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+  h1 {
+    text-align: center;
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 2em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  .report-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  .report-panel h2 {
+    margin-bottom: 15px;
+    color: #764ba2;
+    font-size: 1.3em;
+  }
+  .report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .report-item {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .report-item .label {
+    font-size: 0.85em;
+    opacity: 0.9;
+    margin-bottom: 5px;
+  }
+  .report-item .value {
+    font-size: 1.4em;
+    font-weight: bold;
+  }
+  .months-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  .month {
+    background: #fff;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  .month h3 {
+    text-align: center;
+    margin-bottom: 12px;
+    color: #764ba2;
+    font-size: 1.2em;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+  }
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    margin-bottom: 5px;
+  }
+  .weekdays div {
+    text-align: center;
+    font-size: 0.7em;
+    font-weight: bold;
+    color: #999;
+    padding: 3px 0;
+  }
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+  .day {
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 0.75em;
+    position: relative;
+  }
+  .day:hover {
+    background: #e8e8ff;
+    transform: scale(1.03);
+  }
+  .day.empty {
+    background: transparent;
+    border: none;
+    cursor: default;
+  }
+  .day.empty:hover { transform: none; }
+  .day .num {
+    font-weight: bold;
+    color: #555;
+    font-size: 0.9em;
+  }
+  .day.has-mark {
+    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+    border-color: #fdcb6e;
+  }
+  .day .mark {
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #d63031;
+    margin-top: 2px;
+    text-align: center;
+    word-break: break-all;
+  }
+  .day .sum {
+    font-size: 0.7em;
+    color: #0984e3;
+    font-weight: bold;
+    margin-top: 1px;
+  }
+  .month-total {
+    margin-top: 10px;
+    text-align: center;
+    padding: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.95em;
+  }
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal h3 {
+    margin-bottom: 15px;
+    color: #764ba2;
+  }
+  .modal label {
+    display: block;
+    margin: 10px 0 5px;
+    font-size: 0.9em;
+    color: #666;
+    font-weight: 600;
+  }
+  .modal input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1em;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .modal input:focus { border-color: #764ba2; }
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-buttons button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.2s;
+  }
+  .modal-buttons button:hover { opacity: 0.85; }
+  .btn-save { background: #00b894; color: #fff; }
+  .btn-cancel { background: #ddd; color: #555; }
+  .btn-delete { background: #d63031; color: #fff; }
+  .loading {
+    text-align: center;
+    color: #fff;
+    font-size: 1.2em;
+    padding: 40px;
+  }
+  @media (max-width: 400px) {
+    .months-grid { grid-template-columns: 1fr; }
+    .report-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<h1>📅 Календарь пометок</h1>
+
+<div class="report-panel">
+  <h2>📊 Отчёт</h2>
+  <div class="report-grid">
+    <div class="report-item"><div class="label">За день (сегодня)</div><div class="value" id="rep-day">0</div></div>
+    <div class="report-item"><div class="label">За неделю</div><div class="value" id="rep-week">0</div></div>
+    <div class="report-item"><div class="label">За месяц (текущий)</div><div class="value" id="rep-month">0</div></div>
+    <div class="report-item"><div class="label">За полгода</div><div class="value" id="rep-halfyear">0</div></div>
+    <div class="report-item"><div class="label">За год</div><div class="value" id="rep-year">0</div></div>
+  </div>
+</div>
+
+<div id="loading" class="loading">Загрузка данных из Firebase...</div>
+
+<div class="months-grid" id="monthsGrid"></div>
+
+<!-- Модальное окно -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">День</h3>
+    <label for="markInput">Пометка (текст)</label>
+    <input type="text" id="markInput" placeholder="Например: Работа">
+    <label for="sumInput">Сумма</label>
+    <input type="number" id="sumInput" placeholder="0" step="0.01">
+    <div class="modal-buttons">
+      <button class="btn-delete" id="btnDelete">Удалить</button>
+      <button class="btn-cancel" id="btnCancel">Отмена</button>
+      <button class="btn-save" id="btnSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCfDe5HCEMS0YNGtDB_vEeBi0J_csb8X9A",
+  authDomain: "gameroyalkindom.firebaseapp.com",
+  databaseURL: "https://gameroyalkindom-default-rtdb.firebaseio.com",
+  projectId: "gameroyalkindom",
+  storageBucket: "gameroyalkindom.firebasestorage.app",
+  messagingSenderId: "340822620895",
+  appId: "1:340822620895:web:b76d74f218196411efc76a",
+  measurementId: "G-SSX2QPNSXF"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const MONTH_NAMES = ["Январь","Февраль","Март","Апрель","Май","Июнь",
+                     "Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+const WEEKDAYS = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+
+// Данные: { "2025-01-15": { mark: "Работа", sum: 1000 }, ... }
+let data = {};
+let currentYear = new Date().getFullYear();
+
+// Ключ даты: YYYY-MM-DD
+function dateKey(year, month, day) {
+  return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+
+function parseKey(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+// Рендер всех месяцев
+function render() {
+  const grid = document.getElementById('monthsGrid');
+  grid.innerHTML = '';
+
+  for (let m = 0; m < 12; m++) {
+    grid.appendChild(renderMonth(currentYear, m));
+  }
+  updateReports();
+}
+
+function renderMonth(year, month) {
+  const box = document.createElement('div');
+  box.className = 'month';
+
+  const h3 = document.createElement('h3');
+  h3.textContent = `${MONTH_NAMES[month]} ${year}`;
+  box.appendChild(h3);
+
+  const wd = document.createElement('div');
+  wd.className = 'weekdays';
+  WEEKDAYS.forEach(w => {
+    const d = document.createElement('div');
+    d.textContent = w;
+    wd.appendChild(d);
+  });
+  box.appendChild(wd);
+
+  const daysDiv = document.createElement('div');
+  daysDiv.className = 'days';
+
+  const firstDay = new Date(year, month, 1);
+  // Понедельник = 0
+  let startOffset = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+
+  // Пустые ячейки
+  for (let i = 0; i < startOffset; i++) {
+    const e = document.createElement('div');
+    e.className = 'day empty';
+    daysDiv.appendChild(e);
+  }
+
+  let monthTotal = 0;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = dateKey(year, month, d);
+    const rec = data[key];
+    const dayEl = document.createElement('div');
+    dayEl.className = 'day';
+    dayEl.dataset.key = key;
+
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.textContent = d;
+    dayEl.appendChild(num);
+
+    if (rec && (rec.mark || rec.sum)) {
+      dayEl.classList.add('has-mark');
+      if (rec.mark) {
+        const m = document.createElement('div');
+        m.className = 'mark';
+        m.textContent = rec.mark;
+        dayEl.appendChild(m);
+      }
+      if (rec.sum) {
+        const s = document.createElement('div');
+        s.className = 'sum';
+        s.textContent = formatSum(rec.sum);
+        dayEl.appendChild(s);
+        monthTotal += Number(rec.sum) || 0;
+      }
+    }
+
+    dayEl.addEventListener('click', () => openModal(key, `${d} ${MONTH_NAMES[month]} ${year}`));
+    daysDiv.appendChild(dayEl);
+  }
+
+  box.appendChild(daysDiv);
+
+  const totalEl = document.createElement('div');
+  totalEl.className = 'month-total';
+  totalEl.textContent = `Итого за месяц: ${formatSum(monthTotal)}`;
+  box.appendChild(totalEl);
+
+  return box;
+}
+
+function formatSum(v) {
+  const n = Number(v) || 0;
+  return n.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+// Модальное окно
+let editingKey = null;
+
+function openModal(key, title) {
+  editingKey = key;
+  const rec = data[key] || {};
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('markInput').value = rec.mark || '';
+  document.getElementById('sumInput').value = rec.sum ?? '';
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('markInput').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  editingKey = null;
+}
+
+document.getElementById('btnCancel').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') closeModal();
+});
+
+document.getElementById('btnSave').addEventListener('click', async () => {
+  if (!editingKey) return;
+  const mark = document.getElementById('markInput').value.trim();
+  const sum = parseFloat(document.getElementById('sumInput').value) || 0;
+
+  if (!mark && !sum) {
+    await remove(ref(db, 'marks/' + editingKey));
+  } else {
+    await set(ref(db, 'marks/' + editingKey), { mark, sum });
+  }
+  closeModal();
+});
+
+document.getElementById('btnDelete').addEventListener('click', async () => {
+  if (!editingKey) return;
+  await remove(ref(db, 'marks/' + editingKey));
+  closeModal();
+});
+
+// Отчёты
+function updateReports() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  let daySum = 0, weekSum = 0, monthSum = 0, halfYearSum = 0, yearSum = 0;
+
+  const weekAgo = new Date(today); weekAgo.setDate(today.getDate() - 6);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const halfYearAgo = new Date(today); halfYearAgo.setMonth(today.getMonth() - 6);
+  const yearStart = new Date(today.getFullYear(), 0, 1);
+
+  for (const [key, rec] of Object.entries(data)) {
+    const sum = Number(rec.sum) || 0;
+    if (!sum) continue;
+    const d = parseKey(key);
+    if (d.getFullYear() !== now.getFullYear() && d < yearStart) continue;
+
+    // За год (текущий год)
+    if (d >= yearStart && d <= today) yearSum += sum;
+    // За полгода
+    if (d >= halfYearAgo && d <= today) halfYearSum += sum;
+    // За месяц (текущий календарный месяц)
+    if (d >= monthStart && d <= today) monthSum += sum;
+    // За неделю (последние 7 дней включая сегодня)
+    if (d >= weekAgo && d <= today) weekSum += sum;
+    // За день
+    if (d.getTime() === today.getTime()) daySum += sum;
+  }
+
+  document.getElementById('rep-day').textContent = formatSum(daySum);
+  document.getElementById('rep-week').textContent = formatSum(weekSum);
+  document.getElementById('rep-month').textContent = formatSum(monthSum);
+  document.getElementById('rep-halfyear').textContent = formatSum(halfYearSum);
+  document.getElementById('rep-year').textContent = formatSum(yearSum);
+}
+
+// Загрузка из Firebase
+const marksRef = ref(db, 'marks');
+onValue(marksRef, (snapshot) => {
+  data = snapshot.val() || {};
+  document.getElementById('loading').style.display = 'none';
+  render();
+}, (error) => {
+  console.error(error);
+  document.getElementById('loading').textContent = 'Ошибка загрузки данных: ' + error.message;
+});
+</script>
+
+</body>
+</html>
