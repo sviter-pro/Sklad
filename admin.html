@@ -410,6 +410,136 @@
         }
         .op-overlay .op-box .op-text { font-size: 13px; }
         .op-overlay .op-box .op-subtext { font-size: 11px; color: #94a3b8; }
+
+        /* ============================================================
+           ТОП-ПОЗИЦИИ
+           ============================================================ */
+        .top-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .top-item:hover {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .top-item .top-rank {
+            font-size: 20px;
+            font-weight: 800;
+            width: 40px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .top-item .top-rank.rank-1 { color: #dc2626; }
+        .top-item .top-rank.rank-2 { color: #f97316; }
+        .top-item .top-rank.rank-3 { color: #eab308; }
+        .top-item .top-rank.rank-other { color: #94a3b8; font-size: 16px; }
+        .top-item .top-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #f1f5f9;
+            flex-shrink: 0;
+        }
+        .top-item .top-img-placeholder {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #cbd5e1;
+            background: #f1f5f9;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .top-item .top-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .top-item .top-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+        .top-item .top-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .top-item .top-tag {
+            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .top-item .top-stats {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .top-item .top-stat {
+            text-align: right;
+            min-width: 70px;
+        }
+        .top-item .top-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .top-item .top-stat-label {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .top-item .top-stat.issued .top-stat-value { color: #dc2626; }
+        .top-item .top-stat.stock-low .top-stat-value { color: #f59e0b; }
+        .top-item .top-stat.stock-zero .top-stat-value { color: #dc2626; }
+        .top-item .top-stat.stock-good .top-stat-value { color: #16a34a; }
+        .top-item .top-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 11px;
+            background: #dcfce7;
+            color: #16a34a;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .top-item .top-btn:hover {
+            background: #22c55e;
+            color: white;
+        }
+        .top-item .top-btn:disabled {
+            background: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+        .top-summary {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 12px;
+        }
+        .top-summary span { color: #64748b; }
+        .top-summary strong { color: #0f172a; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -493,7 +623,7 @@
                 <button id="btnRefresh">🔄 Обновить</button>
                 <button id="btnDebug" style="background:#334155;margin-top:4px;">🐛 Debug</button>
             </div>
-            <div class="footer">Firebase Sync • v1.4</div>
+            <div class="footer">Firebase Sync • v1.5</div>
         </div>
 
         <div class="main-content">
@@ -549,6 +679,7 @@
                     <div class="tab-buttons">
                         <button class="active" onclick="switchReportTab('history')">📋 История выдач</button>
                         <button onclick="switchReportTab('stock')">📦 Остатки</button>
+                        <button onclick="switchReportTab('top')" style="border-color:#dc2626;color:#dc2626;">🔥 Самые требуемые позиции</button>
                     </div>
                     <div class="report-tab active" id="tabHistory">
                         <div class="report-filters">
@@ -612,6 +743,30 @@
                                 <tbody id="stockBody"></tbody>
                             </table>
                         </div>
+                    </div>
+                    <!-- НОВАЯ ВКЛАДКА: ТОП-ПОЗИЦИИ -->
+                    <div class="report-tab" id="tabTop">
+                        <div class="report-filters">
+                            <select id="topFilterPeriod">
+                                <option value="30">📅 За 30 дней</option>
+                                <option value="90" selected>📅 За 90 дней</option>
+                                <option value="180">📅 За 180 дней</option>
+                                <option value="365">📅 За 365 дней</option>
+                                <option value="all">📅 За всё время</option>
+                            </select>
+                            <select id="topFilterMinStock">
+                                <option value="all">Все остатки</option>
+                                <option value="low">⚠️ Заканчиваются (1-10)</option>
+                                <option value="critical">🔴 Критично (1-5)</option>
+                            </select>
+                            <button class="btn" onclick="renderTopItems()">Обновить</button>
+                            <div class="export-buttons">
+                                <button class="btn-excel" onclick="exportTopItems('excel')">Excel</button>
+                                <button class="btn-pdf" onclick="exportTopItems('pdf')">PDF</button>
+                            </div>
+                        </div>
+                        <div class="top-summary" id="topSummary"></div>
+                        <div id="topItemsList"></div>
                     </div>
                 </div>
             </div>
@@ -909,7 +1064,7 @@
         const SKLAD_REF = 'SKLAD';
 
         // ============================================================
-        // 2. МЕНЕДЖЕР БЛОКИРОВОК (защита от двойных операций)
+        // 2. МЕНЕДЖЕР БЛОКИРОВОК
         // ============================================================
         const Locks = {
             active: new Set(),
@@ -984,7 +1139,6 @@
             }
         };
 
-        // Восстановить processed из localStorage
         try {
             const saved = JSON.parse(localStorage.getItem('sklad_processed_ops') || '[]');
             Locks.processed = new Set(saved);
@@ -993,26 +1147,20 @@
         }
 
         // ============================================================
-        // 2.1. ГЛОБАЛЬНЫЙ ОВЕРЛЕЙ ДЛЯ ОПЕРАЦИЙ
+        // 2.1. ГЛОБАЛЬНЫЙ ОВЕРЛЕЙ
         // ============================================================
         const OpOverlay = {
-            el: null,
-            textEl: null,
-            subtextEl: null,
-            timeout: null,
-
+            el: null, textEl: null, subtextEl: null, timeout: null,
             init() {
                 this.el = document.getElementById('opOverlay');
                 this.textEl = document.getElementById('opText');
                 this.subtextEl = document.getElementById('opSubtext');
             },
-
             show(text = '⏳ Выполняется операция...', subtext = 'Пожалуйста, не закрывайте окно') {
                 if (!this.el) return;
                 this.textEl.textContent = text;
                 this.subtextEl.textContent = subtext;
                 this.el.classList.add('active');
-                // Через 30 секунд предупреждаем о долгом соединении
                 this.timeout = setTimeout(() => {
                     if (this.subtextEl) {
                         this.subtextEl.textContent = '⏳ Соединение медленное. Подождите ещё...';
@@ -1020,7 +1168,6 @@
                     }
                 }, 15000);
             },
-
             hide() {
                 if (!this.el) return;
                 this.el.classList.remove('active');
@@ -1070,7 +1217,127 @@
         let orderFilter = 'active';
 
         // ============================================================
-        // 4. SIDEBAR
+        // 4. УПАКОВКИ — ПАРСИНГ
+        // ============================================================
+        /**
+         * Возвращает количество штук в одной единице упаковки.
+         * Например: "7 упаковок по 100 шт" → customUnit = "1уп=100шт" → 100.
+         * "бухта 1шт=200м" → 200.
+         * Если не удаётся распарсить — 1.
+         */
+        function getUnitsPerPack(product) {
+            if (!product) return 1;
+            const cu = (product.customUnit || '').trim().toLowerCase();
+            if (!cu) return 1;
+            // Ищем "1шт=100", "1уп=100шт", "=100", "по 100"
+            let m = cu.match(/=\s*([\d.,]+)/);
+            if (m) {
+                const n = parseFloat(m[1].replace(',', '.'));
+                return isNaN(n) || n <= 0 ? 1 : n;
+            }
+            m = cu.match(/по\s*([\d.,]+)/);
+            if (m) {
+                const n = parseFloat(m[1].replace(',', '.'));
+                return isNaN(n) || n <= 0 ? 1 : n;
+            }
+            // "100шт/уп"
+            m = cu.match(/([\d.,]+)\s*(?:шт|штук|м|кг|л)\s*\/\s*(?:уп|упак)/);
+            if (m) {
+                const n = parseFloat(m[1].replace(',', '.'));
+                return isNaN(n) || n <= 0 ? 1 : n;
+            }
+            return 1;
+        }
+
+        /**
+         * Это упаковочный товар?
+         * true, если unitType = 'упак' и есть customUnit с коэффициентом.
+         */
+        function isPackProduct(product) {
+            if (!product) return false;
+            const ut = (product.unitType || '').toLowerCase();
+            const cu = (product.customUnit || '').trim();
+            return ut === 'упак' && cu !== '' && getUnitsPerPack(product) > 1;
+        }
+
+        /**
+         * Вернуть количество в штуках по введённому количеству упаковок.
+         */
+        function packsToPieces(product, packs) {
+            const per = getUnitsPerPack(product);
+            return Math.round(packs * per * 100) / 100;
+        }
+
+        /**
+         * Вернуть количество упаковок по штукам (для отображения).
+         */
+        function piecesToPacks(product, pieces) {
+            const per = getUnitsPerPack(product);
+            if (per <= 1) return pieces;
+            return Math.floor(pieces / per);
+        }
+
+        // ============================================================
+        // 5. РЕЗЕРВ
+        // ============================================================
+        function getReservedQty(product) {
+            if (!product) return 0;
+            const r = parseInt(product.reserved);
+            return isNaN(r) || r < 0 ? 0 : r;
+        }
+        function getFreeQty(product) {
+            if (!product) return 0;
+            const qty = parseInt(product.qty) || 0;
+            return Math.max(0, qty - getReservedQty(product));
+        }
+        function getReserveInfo(product) {
+            const reserved = getReservedQty(product);
+            if (reserved <= 0) return null;
+            return { reserved, reservedFor: product.reservedFor || '—', free: getFreeQty(product) };
+        }
+        function getUnitLabel(product) {
+            if (!product) return '';
+            const ut = (product.unitType || '').trim();
+            if (ut) {
+                const map = { 'шт':'шт','м':'м','км':'км','см':'см','мм':'мм','кг':'кг','г':'г','т':'т','л':'л','мл':'мл','уп':'уп','упак':'уп','компл':'компл','рулон':'рул','лист':'лст','бухта':'бух','катушка':'кат','пачка':'пач' };
+                return map[ut] || ut;
+            }
+            const cu = (product.customUnit || '').trim();
+            if (cu) {
+                const m = cu.match(/=\s*[\d.,]+\s*([a-zA-Zа-яА-Я]+)/);
+                if (m && m[1]) {
+                    const u = m[1].toLowerCase();
+                    const map2 = { 'м':'м','км':'км','см':'см','мм':'мм','кг':'кг','г':'г','т':'т','л':'л','мл':'мл' };
+                    return map2[u] || u;
+                }
+                return cu.split(' ')[0] || '';
+            }
+            return '';
+        }
+
+        /**
+         * Человеко-читаемый остаток с учётом упаковок.
+         * 700шт при 100шт/уп → "700 шт (7 уп)"
+         */
+        function formatStockDisplay(product) {
+            if (!product) return '';
+            const qty = parseInt(product.qty) || 0;
+            const unit = product.unitType || 'шт';
+            if (isPackProduct(product)) {
+                const per = getUnitsPerPack(product);
+                const packs = Math.floor(qty / per);
+                const rest = qty - packs * per;
+                let s = `${qty} шт`;
+                if (packs > 0) s += ` (${packs} уп`;
+                if (rest > 0) s += packs > 0 ? ` + ${rest} шт` : '';
+                if (packs > 0) s += ')';
+                return s;
+            }
+            return `${qty} ${unit}`;
+        }
+
+        // ============================================================
+        // 6. SIDEBAR
         // ============================================================
         function toggleSidebar() {
             isSidebarOpen = !isSidebarOpen;
@@ -1121,7 +1388,7 @@
         });
 
         // ============================================================
-        // 5. DEBUG / TOAST / SOUND
+        // 7. DEBUG / TOAST / SOUND
         // ============================================================
         const debugConsole = document.getElementById('debugConsole');
         function debugLog(message, data = null) {
@@ -1192,7 +1459,7 @@
         });
 
         // ============================================================
-        // 6. ПОИСК
+        // 8. ПОИСК
         // ============================================================
         function handleSearchInput() {
             const input = document.getElementById('searchInput');
@@ -1210,7 +1477,7 @@
         }
 
         // ============================================================
-        // 7. ЭКСПОРТ/ИМПОРТ БД
+        // 9. ЭКСПОРТ/ИМПОРТ БД
         // ============================================================
         async function exportDatabase() {
             if (!db) { showToast('Нет подключения к Firebase', 'error'); return; }
@@ -1219,7 +1486,7 @@
                 const snapshot = await db.ref(SKLAD_REF).once('value');
                 const data = snapshot.val();
                 if (!data) { showToast('База данных пуста', 'error'); return; }
-                const exportData = { exportDate: new Date().toISOString(), version: '1.4', data: data };
+                const exportData = { exportDate: new Date().toISOString(), version: '1.5', data: data };
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -1251,45 +1518,7 @@
         }
 
         // ============================================================
-        // 8. РЕЗЕРВ
-        // ============================================================
-        function getReservedQty(product) {
-            if (!product) return 0;
-            const r = parseInt(product.reserved);
-            return isNaN(r) || r < 0 ? 0 : r;
-        }
-        function getFreeQty(product) {
-            if (!product) return 0;
-            const qty = parseInt(product.qty) || 0;
-            return Math.max(0, qty - getReservedQty(product));
-        }
-        function getReserveInfo(product) {
-            const reserved = getReservedQty(product);
-            if (reserved <= 0) return null;
-            return { reserved, reservedFor: product.reservedFor || '—', free: getFreeQty(product) };
-        }
-        function getUnitLabel(product) {
-            if (!product) return '';
-            const ut = (product.unitType || '').trim();
-            if (ut) {
-                const map = { 'шт':'шт','м':'м','км':'км','см':'см','мм':'мм','кг':'кг','г':'г','т':'т','л':'л','мл':'мл','уп':'уп','упак':'уп','компл':'компл','рулон':'рул','лист':'лст','бухта':'бух','катушка':'кат','пачка':'пач' };
-                return map[ut] || ut;
-            }
-            const cu = (product.customUnit || '').trim();
-            if (cu) {
-                const m = cu.match(/=\s*[\d.,]+\s*([a-zA-Zа-яА-Я]+)/);
-                if (m && m[1]) {
-                    const u = m[1].toLowerCase();
-                    const map2 = { 'м':'м','км':'км','см':'см','мм':'мм','кг':'кг','г':'г','т':'т','л':'л','мл':'мл' };
-                    return map2[u] || u;
-                }
-                return cu.split(' ')[0] || '';
-            }
-            return '';
-        }
-
-        // ============================================================
-        // 9. КАТЕГОРИИ
+        // 10. КАТЕГОРИИ
         // ============================================================
         function updateCategoryTree() {
             const container = document.getElementById('categoryTree');
@@ -1342,7 +1571,7 @@
         }
 
         // ============================================================
-        // 10. АДРЕСНОЕ ХРАНЕНИЕ
+        // 11. АДРЕСНОЕ ХРАНЕНИЕ
         // ============================================================
         function loadStorageAddresses() {
             if (!db) return;
@@ -1394,7 +1623,7 @@
         document.getElementById('btnAddStorage').addEventListener('click', addStorageAddress);
 
         // ============================================================
-        // 11. ЗАКАЗЫ
+        // 12. ЗАКАЗЫ
         // ============================================================
         function loadOrders() {
             if (!db) return;
@@ -1869,7 +2098,7 @@
         }
 
         // ============================================================
-        // 12. РЕДАКТИРОВАНИЕ ИСТОРИИ
+        // 13. РЕДАКТИРОВАНИЕ ИСТОРИИ
         // ============================================================
         function openHistoryEdit(historyId) {
             const record = history.find(h => h.id === historyId);
@@ -1913,24 +2142,16 @@
             try {
                 OpOverlay.show('💾 Сохранение записи...', 'Пожалуйста, не закрывайте окно');
 
-                // 🔑 Берём АКТУАЛЬНЫЙ остаток с сервера, а не из локального массива
-                // (локальный массив может быть устаревшим)
                 let currentQty = 0;
                 if (productId) {
                     const snap = await db.ref(`${SKLAD_REF}/products/${productId}/qty`).once('value');
                     currentQty = parseInt(snap.val()) || 0;
                 }
 
-                // 🔑 Правильная формула:
-                // старый остаток ДО списания = currentQty + oldQty
-                // новый остаток ПОСЛЕ нового списания = (currentQty + oldQty) - newQty
-                // = currentQty + oldQty - newQty
                 const newStockQty = Math.max(0, currentQty + oldQty - newQty);
 
-                // Обновляем запись истории
                 await db.ref(`${SKLAD_REF}/history/${id}`).update({ qty: newQty, date, issuedTo, object: objectValue, note });
 
-                // Обновляем остаток товара
                 if (productId) {
                     await db.ref(`${SKLAD_REF}/products/${productId}/qty`).set(newStockQty);
                 }
@@ -1968,7 +2189,7 @@
         }
 
         // ============================================================
-        // 13. ЗАГРУЗКА ДАННЫХ
+        // 14. ЗАГРУЗКА ДАННЫХ
         // ============================================================
         function loadData() {
             if (!db) { console.warn('loadData: Firebase не инициализирован'); return; }
@@ -2000,6 +2221,7 @@
                 if (data) Object.keys(data).forEach(key => products.push({ id: key, ...data[key] }));
                 updateUI();
                 if (currentReportTab === 'stock') renderStock();
+                if (currentReportTab === 'top') renderTopItems();
             });
             db.ref(`${SKLAD_REF}/history`).on('value', snap => {
                 const data = snap.val();
@@ -2007,6 +2229,7 @@
                 if (data) Object.keys(data).forEach(key => history.push({ id: key, ...data[key] }));
                 history.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 if (currentView === 'reports' && currentReportTab === 'history') renderReports();
+                if (currentView === 'reports' && currentReportTab === 'top') renderTopItems();
             });
         }
         function saveProduct(data, id = null) {
@@ -2025,7 +2248,7 @@
         }
 
         // ============================================================
-        // 14. UI UPDATES
+        // 15. UI UPDATES
         // ============================================================
         function updateUI() {
             updateTotalCount();
@@ -2108,7 +2331,7 @@
         }
 
         // ============================================================
-        // 15. PRODUCT LIST
+        // 16. PRODUCT LIST
         // ============================================================
         function setProductView(view) {
             productView = view;
@@ -2160,9 +2383,18 @@
                 const qty = parseInt(p.qty) || 0;
                 const reserved = getReservedQty(p);
                 const freeQty = getFreeQty(p);
+                const isPack = isPackProduct(p);
                 let stockClass = 'good', stockText = `✅ ${qty}`;
                 if (qty === 0) { stockClass = 'zero'; stockText = '❌ 0'; }
                 else if (qty < 5) { stockClass = 'low'; stockText = `⚠️ ${qty}`; }
+                // Показываем упаковки
+                let packInfo = '';
+                if (isPack) {
+                    const per = getUnitsPerPack(p);
+                    const packs = Math.floor(qty / per);
+                    const rest = qty - packs * per;
+                    packInfo = `<span class="card-tag" style="background:#fef3c7;color:#b45309;">📦 ${packs} уп × ${per} шт${rest > 0 ? ` + ${rest} шт` : ''}</span>`;
+                }
                 const imageHtml = p.image ? `<img src="${p.image}" class="card-image" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="card-image-placeholder" style="display:none;">📦</div>` : `<div class="card-image-placeholder">📦</div>`;
                 const unitDisplay = p.unitType ? `📏 ${p.unitType}` : '';
                 const customDisplay = p.customUnit ? `✏️ ${p.customUnit}` : '';
@@ -2180,6 +2412,7 @@
                                 <span class="card-tag category-tag">📁 ${p.category || '—'}</span>
                                 <span class="card-tag location-tag">${locEmojis[p.location] || '📍'} ${p.location || '—'}</span>
                                 ${storageDisplay ? `<span class="card-tag">${storageDisplay}</span>` : ''}
+                                ${packInfo}
                                 ${reserveTag}
                                 ${fullyReservedTag}
                                 ${p.condition ? `<span class="card-tag condition-tag">${p.condition}</span>` : ''}
@@ -2218,7 +2451,7 @@
         }
 
         // ============================================================
-        // 16. ЭКСПОРТ НОМЕНКЛАТУРЫ
+        // 17. ЭКСПОРТ НОМЕНКЛАТУРЫ
         // ============================================================
         function exportNomenclature(format) {
             const data = products.map((p, i) => ({
@@ -2232,7 +2465,7 @@
         }
 
         // ============================================================
-        // 17. REPORTS
+        // 18. REPORTS
         // ============================================================
         function loadReports() { renderReports(); }
         function renderReports() {
@@ -2345,7 +2578,193 @@
         }
 
         // ============================================================
-        // 17.1. ПЕЧАТЬ С-13
+        // 19. ТОП-ПОЗИЦИИ
+        // ============================================================
+        function renderTopItems() {
+            const container = document.getElementById('topItemsList');
+            const summary = document.getElementById('topSummary');
+            if (!container) return;
+
+            const periodEl = document.getElementById('topFilterPeriod');
+            const minStockEl = document.getElementById('topFilterMinStock');
+            const period = periodEl ? periodEl.value : '90';
+            const minStockFilter = minStockEl ? minStockEl.value : 'all';
+
+            // Считаем статистику списаний по productId за период
+            const now = Date.now();
+            const periodMs = period === 'all' ? Infinity : parseInt(period) * 24 * 60 * 60 * 1000;
+            const stats = {}; // productId -> { count, totalQty, lastIssuedAt }
+
+            history.forEach(h => {
+                const ts = h.timestamp || (h.date ? new Date(h.date).getTime() : 0);
+                if (!ts) return;
+                if (periodMs !== Infinity && (now - ts) > periodMs) return;
+                const pid = h.productId;
+                if (!pid) return;
+                if (!stats[pid]) stats[pid] = { count: 0, totalQty: 0, lastIssuedAt: 0 };
+                stats[pid].count++;
+                stats[pid].totalQty += (parseInt(h.qty) || 0);
+                if (ts > stats[pid].lastIssuedAt) stats[pid].lastIssuedAt = ts;
+            });
+
+            // Собираем позиции: только те, что есть в наличии (qty > 0)
+            const items = [];
+            Object.keys(stats).forEach(pid => {
+                const product = products.find(p => p.id === pid);
+                if (!product) return;
+                const qty = parseInt(product.qty) || 0;
+                if (qty <= 0) return; // только те, что есть в наличии
+                const st = stats[pid];
+                items.push({
+                    product,
+                    count: st.count,
+                    totalQty: st.totalQty,
+                    lastIssuedAt: st.lastIssuedAt,
+                    qty,
+                    freeQty: getFreeQty(product)
+                });
+            });
+
+            // Фильтр по остатку
+            let filtered = items;
+            if (minStockFilter === 'low') filtered = filtered.filter(i => i.qty >= 1 && i.qty <= 10);
+            else if (minStockFilter === 'critical') filtered = filtered.filter(i => i.qty >= 1 && i.qty <= 5);
+
+            // Сортировка: сначала частота, потом по остатку (меньше — выше)
+            filtered.sort((a, b) => {
+                if (b.count !== a.count) return b.count - a.count;
+                if (a.qty !== b.qty) return a.qty - b.qty;
+                return b.totalQty - a.totalQty;
+            });
+
+            // Обрезаем до 50
+            const top = filtered.slice(0, 50);
+
+            // Сводка
+            const totalIssued = filtered.reduce((s, i) => s + i.totalQty, 0);
+            const criticalCount = filtered.filter(i => i.qty <= 5).length;
+            const lowCount = filtered.filter(i => i.qty > 5 && i.qty <= 10).length;
+            summary.innerHTML = `
+                <span>📊 Всего позиций в топе: <strong>${top.length}</strong></span>
+                <span>📦 Всего списано за период: <strong>${totalIssued}</strong></span>
+                <span style="color:#dc2626;">🔴 Критично (≤5): <strong>${criticalCount}</strong></span>
+                <span style="color:#f59e0b;">⚠️ Заканчивается (6-10): <strong>${lowCount}</strong></span>
+            `;
+
+            if (top.length === 0) {
+                container.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#94a3b8;">
+                    <div style="font-size:48px;margin-bottom:12px;">📊</div>
+                    <h3 style="color:#64748b;">Нет данных за выбранный период</h3>
+                    <p style="font-size:14px;">Попробуйте увеличить период или выбрать другой фильтр</p>
+                </div>`;
+                return;
+            }
+
+            let html = '';
+            top.forEach((item, idx) => {
+                const p = item.product;
+                const locEmojis = { 'Въезд': '🚗', 'Здание': '🏢', 'Шатер': '⛺', 'КПП': '🛂', 'Улица': '🌳' };
+                const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other';
+                const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1);
+                const stockClass = item.qty <= 5 ? 'stock-zero' : item.qty <= 10 ? 'stock-low' : 'stock-good';
+                const imageHtml = p.image
+                    ? `<img src="${p.image}" class="top-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="top-img-placeholder" style="display:none;">📦</div>`
+                    : `<div class="top-img-placeholder">📦</div>`;
+                const packInfo = isPackProduct(p) ? (() => {
+                    const per = getUnitsPerPack(p);
+                    const packs = Math.floor(item.qty / per);
+                    return packs > 0 ? ` (${packs} уп × ${per})` : '';
+                })() : '';
+                html += `
+                    <div class="top-item" onclick="openModal('issue', '${p.id}')" title="Кликните, чтобы выдать">
+                        <div class="top-rank ${rankClass}">${rankIcon}</div>
+                        ${imageHtml}
+                        <div class="top-info">
+                            <div class="top-name">${p.name || '—'}</div>
+                            <div class="top-tags">
+                                <span class="top-tag">📁 ${p.category || '—'}</span>
+                                <span class="top-tag">${locEmojis[p.location] || '📍'} ${p.location || '—'}</span>
+                                ${p.storageAddress ? `<span class="top-tag">📍 ${p.storageAddress}</span>` : ''}
+                                ${p.supplier ? `<span class="top-tag">🏢 ${p.supplier}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="top-stats">
+                            <div class="top-stat issued">
+                                <div class="top-stat-value">${item.totalQty}</div>
+                                <div class="top-stat-label">списано<br>(${item.count} раз)</div>
+                            </div>
+                            <div class="top-stat ${stockClass}">
+                                <div class="top-stat-value">${item.qty}${packInfo}</div>
+                                <div class="top-stat-label">остаток</div>
+                            </div>
+                            <button class="top-btn" onclick="event.stopPropagation();openModal('issue', '${p.id}')" ${item.freeQty <= 0 ? 'disabled' : ''}>
+                                ${item.freeQty > 0 ? '📤 Выдать' : '🔒 Резерв'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function getTopItemsData() {
+            const periodEl = document.getElementById('topFilterPeriod');
+            const minStockEl = document.getElementById('topFilterMinStock');
+            const period = periodEl ? periodEl.value : '90';
+            const minStockFilter = minStockEl ? minStockEl.value : 'all';
+            const now = Date.now();
+            const periodMs = period === 'all' ? Infinity : parseInt(period) * 24 * 60 * 60 * 1000;
+            const stats = {};
+            history.forEach(h => {
+                const ts = h.timestamp || (h.date ? new Date(h.date).getTime() : 0);
+                if (!ts) return;
+                if (periodMs !== Infinity && (now - ts) > periodMs) return;
+                const pid = h.productId;
+                if (!pid) return;
+                if (!stats[pid]) stats[pid] = { count: 0, totalQty: 0, lastIssuedAt: 0 };
+                stats[pid].count++;
+                stats[pid].totalQty += (parseInt(h.qty) || 0);
+                if (ts > stats[pid].lastIssuedAt) stats[pid].lastIssuedAt = ts;
+            });
+            const items = [];
+            Object.keys(stats).forEach(pid => {
+                const product = products.find(p => p.id === pid);
+                if (!product) return;
+                const qty = parseInt(product.qty) || 0;
+                if (qty <= 0) return;
+                const st = stats[pid];
+                items.push({ product, count: st.count, totalQty: st.totalQty, qty });
+            });
+            let filtered = items;
+            if (minStockFilter === 'low') filtered = filtered.filter(i => i.qty >= 1 && i.qty <= 10);
+            else if (minStockFilter === 'critical') filtered = filtered.filter(i => i.qty >= 1 && i.qty <= 5);
+            filtered.sort((a, b) => {
+                if (b.count !== a.count) return b.count - a.count;
+                if (a.qty !== b.qty) return a.qty - b.qty;
+                return b.totalQty - a.totalQty;
+            });
+            return filtered.map((item, i) => ({
+                '№': i + 1,
+                'Товар': item.product.name || '',
+                'Категория': item.product.category || '',
+                'Локация': item.product.location || '',
+                'Адрес хранения': item.product.storageAddress || '',
+                'Списано раз': item.count,
+                'Списано всего': item.totalQty,
+                'Остаток': item.qty,
+                'Ед. изм.': item.product.unitType || 'шт',
+                'Поставщик': item.product.supplier || ''
+            }));
+        }
+
+        function exportTopItems(format) {
+            const data = getTopItemsData();
+            if (data.length === 0) { showToast('Нет данных', 'error'); return; }
+            exportData(data, `Топ_позиций_${new Date().toISOString().split('T')[0]}`, format);
+        }
+
+        // ============================================================
+        // 20. ПЕЧАТЬ С-13
         // ============================================================
         function printMovement() {
             if (selectedHistoryIds.size === 0) { showToast('Выберите позиции', 'error'); return; }
@@ -2456,7 +2875,7 @@
         }
 
         // ============================================================
-        // 18. STOCK
+        // 21. STOCK
         // ============================================================
         function renderStock() {
             const tbody = document.getElementById('stockBody');
@@ -2519,7 +2938,7 @@
         }
 
         // ============================================================
-        // 19. УНИВЕРСАЛЬНЫЙ ЭКСПОРТ
+        // 22. УНИВЕРСАЛЬНЫЙ ЭКСПОРТ
         // ============================================================
         function exportData(data, fileName, format) {
             if (!data || data.length === 0) { showToast('Нет данных', 'error'); return; }
@@ -2616,7 +3035,7 @@
         }
 
         // ============================================================
-        // 20. SWITCH REPORT TAB
+        // 23. SWITCH REPORT TAB
         // ============================================================
         function switchReportTab(tab) {
             currentReportTab = tab;
@@ -2624,14 +3043,18 @@
             document.querySelectorAll('.tab-buttons button').forEach(btn => {
                 if (btn.textContent.includes('История') && tab === 'history') btn.classList.add('active');
                 if (btn.textContent.includes('Остатки') && tab === 'stock') btn.classList.add('active');
+                if (btn.textContent.includes('требуемые') && tab === 'top') btn.classList.add('active');
             });
             document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
             document.getElementById('tabStock').classList.toggle('active', tab === 'stock');
-            if (tab === 'history') renderReports(); else if (tab === 'stock') renderStock();
+            document.getElementById('tabTop').classList.toggle('active', tab === 'top');
+            if (tab === 'history') renderReports();
+            else if (tab === 'stock') renderStock();
+            else if (tab === 'top') renderTopItems();
         }
 
         // ============================================================
-        // 21. MODAL
+        // 24. MODAL
         // ============================================================
         const modalOverlay = document.getElementById('modalOverlay');
         const modalTitle = document.getElementById('modalTitle');
@@ -2663,16 +3086,39 @@
             if (url) { previewImg.src = url; imagePreview.style.display = 'block'; previewImg.onerror = function() { imagePreview.style.display = 'none'; }; }
             else imagePreview.style.display = 'none';
         });
-        fQty.addEventListener('input', function() {
+
+        // === ОБНОВЛЕНИЕ ПОДСКАЗКИ ПРИ ВЫДАЧЕ (УПАКОВКИ) ===
+        function updateIssueNote() {
+            if (fAction.value !== 'issue') return;
+            const product = products.find(p => p.id === fProductId.value);
+            if (!product) return;
+            const qty = parseInt(fQty.value) || 0;
+            const free = getFreeQty(product);
+            const isPack = isPackProduct(product);
+            let hint = '';
+            if (isPack) {
+                const per = getUnitsPerPack(product);
+                const pieces = qty * per;
+                hint = `Выдано ${qty} уп × ${per} шт = ${pieces} шт. Свободно: ${free} шт (${Math.floor(free/per)} уп)`;
+            } else {
+                hint = `Выдано ${qty} шт. Свободный остаток: ${free - qty} шт`;
+            }
+            document.getElementById('fNote').value = hint;
+        }
+
+        fQty.addEventListener('input', updateIssueNote);
+        // Также при смене типа единицы
+        fUnitType.addEventListener('change', () => {
             if (fAction.value === 'issue') {
+                // Обновляем подсказку при изменении типа единицы
                 const product = products.find(p => p.id === fProductId.value);
                 if (product) {
-                    const qty = parseInt(this.value) || 0;
-                    const free = getFreeQty(product);
-                    document.getElementById('fNote').value = `Выдано ${qty} шт. Свободный остаток: ${free - qty}`;
+                    // Пересчитываем фри кол-во с учётом упаковок
+                    updateIssueNote();
                 }
             }
         });
+
         function openModal(action, productOrId = null) {
             let product = null;
             if (typeof productOrId === 'string') product = products.find(p => p.id === productOrId);
@@ -2714,20 +3160,23 @@
                 modalTitle.textContent = '📤 Выдать товар';
                 fName.value = product.name || ''; fCategory.value = product.category || '';
                 fLocation.value = product.location || ''; fStorageAddress.value = product.storageAddress || '';
-                fQty.value = 1; fUnitType.value = product.unitType || 'шт';
+                const isPack = isPackProduct(product);
+                const per = getUnitsPerPack(product);
+                // По умолчанию — 1 упаковка или 1 шт
+                fQty.value = 1;
+                fUnitType.value = product.unitType || 'шт';
                 fCustomUnit.value = product.customUnit || ''; fCondition.value = product.condition || 'Новый';
                 fBarcode.value = product.barcode || ''; fSupplier.value = product.supplier || '';
                 fDate.value = new Date().toISOString().split('T')[0]; fImage.value = product.image || '';
                 fIssuedTo.value = '';
-                const res = getReserveInfo(product);
-                const free = getFreeQty(product);
-                fNote.value = res ? `Выдано 1 шт. 🔒 Резерв: ${res.reserved} — ${res.reservedFor}. Свободно: ${free - 1}` : `Выдано 1 шт. Свободный остаток: ${free - 1}`;
                 fReserved.value = getReservedQty(product);
                 fReservedFor.value = product.reservedFor || '';
                 if (fObjectEl) fObjectEl.value = '';
                 fProductId.value = product.id;
                 imagePreview.style.display = 'none';
                 document.getElementById('modalSubmit').textContent = 'Выдать';
+                // Показываем подсказку
+                updateIssueNote();
             }
             modalOverlay.classList.add('open');
         }
@@ -2736,7 +3185,7 @@
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
         // ============================================================
-        // 21.1. ОБРАБОТКА ФОРМЫ ТОВАРА С БЛОКИРОВКОЙ
+        // 24.1. ОБРАБОТКА ФОРМЫ ТОВАРА (с упаковками)
         // ============================================================
         productForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2746,7 +3195,7 @@
             const category = fCategory.value;
             const location = fLocation.value;
             const storageAddress = fStorageAddress.value.trim();
-            const qty = parseInt(fQty.value) || 0;
+            const qtyInput = parseInt(fQty.value) || 0;
             const unitType = fUnitType.value;
             const customUnit = fCustomUnit.value.trim();
             const condition = fCondition.value;
@@ -2766,7 +3215,7 @@
             if (duplicate) { showToast(`Товар "${name}" уже существует!`, 'error'); return; }
 
             if (action === 'add' || action === 'edit') {
-                if (reserved > qty) { showToast('🔒 Резерв не может превышать общее количество!', 'error'); return; }
+                if (reserved > qtyInput) { showToast('🔒 Резерв не может превышать общее количество!', 'error'); return; }
                 if (reserved > 0 && !reservedFor) { showToast('Укажите, на кого зарезервирован товар!', 'error'); return; }
             }
 
@@ -2775,7 +3224,7 @@
             // === ADD ===
             if (action === 'add') {
                 const opKey = Locks.token('add-product', {
-                    name, category, location, qty, barcode: barcode || '', supplier: supplier || ''
+                    name, category, location, qty: qtyInput, barcode: barcode || '', supplier: supplier || ''
                 });
                 if (!Locks.acquire(opKey)) {
                     showToast('⏳ Такой товар уже добавляется, подождите...', 'info');
@@ -2785,7 +3234,7 @@
                 try {
                     OpOverlay.show('💾 Сохранение товара...', 'Пожалуйста, не закрывайте окно');
                     await saveProduct({
-                        name, category, location, storageAddress, qty, unitType, customUnit,
+                        name, category, location, storageAddress, qty: qtyInput, unitType, customUnit,
                         condition, barcode, supplier, date, image, issuedTo, object: objectValue,
                         note, reserved, reservedFor,
                         createdAt: firebase.database.ServerValue.TIMESTAMP
@@ -2806,7 +3255,7 @@
             // === EDIT ===
             if (action === 'edit' && id) {
                 const opKey = Locks.token('edit-product', {
-                    id, name, category, location, qty, barcode, supplier, reserved, reservedFor
+                    id, name, category, location, qty: qtyInput, barcode, supplier, reserved, reservedFor
                 });
                 if (!Locks.acquire(opKey)) {
                     showToast('⏳ Изменения уже сохраняются, подождите...', 'info');
@@ -2819,7 +3268,7 @@
                     if (existing) {
                         await saveProduct({
                             ...existing,
-                            name, category, location, storageAddress, qty, unitType, customUnit,
+                            name, category, location, storageAddress, qty: qtyInput, unitType, customUnit,
                             condition, barcode, supplier, date, image, issuedTo, object: objectValue,
                             note, reserved, reservedFor
                         }, id);
@@ -2841,14 +3290,29 @@
             if (action === 'issue' && id) {
                 const existing = products.find(p => p.id === id);
                 if (!existing) { showToast('Товар не найден', 'error'); return; }
+
+                // === ГЛАВНОЕ: пересчёт упаковок в штуки ===
+                const isPack = isPackProduct(existing);
+                let piecesToIssue;
+                let qtyDisplay;
+                if (isPack) {
+                    const per = getUnitsPerPack(existing);
+                    piecesToIssue = packsToPieces(existing, qtyInput);
+                    qtyDisplay = `${qtyInput} уп × ${per} шт = ${piecesToIssue} шт`;
+                } else {
+                    piecesToIssue = qtyInput;
+                    qtyDisplay = `${qtyInput} шт`;
+                }
+
                 const free = getFreeQty(existing);
-                if (qty > free) {
-                    if (getReservedQty(existing) > 0) showToast(`🔒 Товар в резерве (${getReservedQty(existing)} шт. — ${existing.reservedFor || '—'}). Свободно: ${free}`, 'error');
-                    else showToast('Недостаточно товара!', 'error');
+                if (piecesToIssue > free) {
+                    if (getReservedQty(existing) > 0) showToast(`🔒 Товар в резерве (${getReservedQty(existing)} шт. — ${existing.reservedFor || '—'}). Свободно: ${free}, нужно: ${piecesToIssue}`, 'error');
+                    else showToast(`❌ Недостаточно товара! Свободно: ${free}, нужно: ${piecesToIssue}`, 'error');
                     return;
                 }
+
                 const opKey = Locks.token('issue-product', {
-                    productId: id, qty, issuedTo: issuedTo || '', object: objectValue || '', date: date || ''
+                    productId: id, pieces: piecesToIssue, issuedTo: issuedTo || '', object: objectValue || '', date: date || ''
                 });
                 if (!Locks.acquire(opKey)) {
                     showToast('⏳ Эта выдача уже выполняется, подождите...', 'info');
@@ -2857,16 +3321,19 @@
                 const lockBtn = Locks.lockButton(submitBtn);
                 try {
                     OpOverlay.show('📤 Выдача товара...', 'Пожалуйста, не закрывайте окно');
-                    const newQty = (existing.qty || 0) - qty;
+                    const newQty = (existing.qty || 0) - piecesToIssue;
                     const historyRef = db.ref(`${SKLAD_REF}/history`).push();
                     await historyRef.set({
                         productId: id, productName: existing.name, category: existing.category,
-                        location: existing.location, qty, issuedTo: issuedTo || 'Не указан',
+                        location: existing.location, qty: piecesToIssue,
+                        issuedTo: issuedTo || 'Не указан',
                         object: objectValue, supplier: existing.supplier || '—',
                         date: date || new Date().toISOString().split('T')[0],
-                        note: note || 'Выдача со склада',
+                        note: (note ? note + ' | ' : '') + `Выдано ${qtyDisplay}`,
                         timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        opToken: opKey
+                        opToken: opKey,
+                        packsIssued: isPack ? qtyInput : null,
+                        unitsPerPack: isPack ? getUnitsPerPack(existing) : null
                     });
                     await saveProduct({
                         ...existing, qty: newQty,
@@ -2874,16 +3341,16 @@
                         note: note || existing.note
                     }, id);
                     Locks.markProcessed(opKey);
-                    showToast(`✅ Выдано ${qty} шт.`, 'success');
+                    showToast(`✅ Выдано: ${qtyDisplay}`, 'success');
                     closeModal();
                 } catch (err) {
                     console.error(err);
                     try {
                         const snap = await db.ref(`${SKLAD_REF}/products/${id}/qty`).once('value');
                         const serverQty = snap.val();
-                        if (typeof serverQty === 'number' && serverQty <= (existing.qty - qty)) {
+                        if (typeof serverQty === 'number' && serverQty <= (existing.qty - piecesToIssue)) {
                             Locks.markProcessed(opKey);
-                            showToast(`✅ Выдано ${qty} шт.`, 'success');
+                            showToast(`✅ Выдано: ${qtyDisplay}`, 'success');
                             closeModal();
                             return;
                         }
@@ -2924,7 +3391,7 @@
         });
 
         // ============================================================
-        // 22. VIEW SWITCHING
+        // 25. VIEW SWITCHING
         // ============================================================
         function switchView(view) {
             currentView = view;
@@ -2934,6 +3401,7 @@
             if (view === 'reports') {
                 if (currentReportTab === 'history') renderReports();
                 else if (currentReportTab === 'stock') renderStock();
+                else if (currentReportTab === 'top') renderTopItems();
             }
             if (view === 'list') renderProductList();
             if (view === 'orders') renderOrders();
@@ -2942,7 +3410,7 @@
         }
 
         // ============================================================
-        // 23. BUTTONS
+        // 26. BUTTONS
         // ============================================================
         document.getElementById('btnAddProduct').addEventListener('click', () => {
             if (categories.length === 0) { showToast('Сначала создайте категорию!', 'error'); return; }
@@ -2978,7 +3446,7 @@
         document.getElementById('searchInput').addEventListener('input', handleSearchInput);
 
         // ============================================================
-        // 24. ПРИХОД
+        // 27. ПРИХОД
         // ============================================================
         function loadIncomes() {
             if (!db) return;
@@ -3119,7 +3587,7 @@
         });
 
         // ============================================================
-        // 24.1. СОХРАНЕНИЕ ПРИХОДА С БЛОКИРОВКОЙ
+        // 27.1. СОХРАНЕНИЕ ПРИХОДА
         // ============================================================
         async function saveIncomeDocument(posted) {
             const invoiceNumber = document.getElementById('fInvoiceNumber').value.trim();
@@ -3168,7 +3636,7 @@
                     return;
                 }
 
-                 if (action === 'edit' && incomeId) {
+                if (action === 'edit' && incomeId) {
                     const existing = incomes.find(i => i.id === incomeId);
                     if (existing && existing.posted && posted) {
                         showToast('Проведённый нельзя провести повторно!', 'error');
@@ -3177,27 +3645,22 @@
                         lockBtn();
                         return;
                     }
-                    // Если документ уже был проведён ранее, а сейчас просто редактируем — не трогаем posted
                     const wasPosted = !!(existing && existing.posted);
-                    // Сохраняем документ, НО posted ставим только после оприходования
                     const dataToSave = { ...data };
                     if (posted && !wasPosted) {
-                        dataToSave.posted = false; // временно снимаем, поставим после
+                        dataToSave.posted = false;
                     }
                     await db.ref(`${SKLAD_REF}/incomes/${incomeId}`).update(dataToSave);
                     if (posted && !wasPosted) {
-                        // Сначала оприходуем, потом ставим posted
                         await postIncomeItems(incomeId, items, true);
                     }
                     Locks.markProcessed(opKey);
                     showToast(posted && !wasPosted ? '✅ Проведено!' : '✅ Обновлено!', 'success');
                 } else {
                     const ref = db.ref(`${SKLAD_REF}/incomes`).push();
-                    // Создаём документ со статусом posted=false
                     const dataToSave = { ...data, posted: false };
                     await ref.set(dataToSave);
                     if (posted) {
-                        // Оприходуем товары, затем ставим posted=true
                         await postIncomeItems(ref.key, items, true);
                     }
                     Locks.markProcessed(opKey);
@@ -3217,53 +3680,52 @@
         }
 
         async function postIncomeItems(incomeId, items, force = false) {
-    // Проверка: не оприходован ли уже этот документ (только если force=false)
-    if (!force) {
-        try {
-            const incomeSnap = await db.ref(`${SKLAD_REF}/incomes/${incomeId}/posted`).once('value');
-            if (incomeSnap.val() === true) {
-                console.log('Документ уже проведён, пропускаем оприходование');
-                return;
+            if (!force) {
+                try {
+                    const incomeSnap = await db.ref(`${SKLAD_REF}/incomes/${incomeId}/posted`).once('value');
+                    if (incomeSnap.val() === true) {
+                        console.log('Документ уже проведён, пропускаем оприходование');
+                        return;
+                    }
+                } catch (e) {}
             }
-        } catch (e) {}
-    }
 
-    const itemKeys = Object.keys(items);
-    const updates = {};
-    for (let key of itemKeys) {
-        const item = items[key];
-        const existing = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
-        if (existing) {
-            updates[`${SKLAD_REF}/products/${existing.id}/qty`] = (existing.qty || 0) + item.qty;
-            updates[`${SKLAD_REF}/products/${existing.id}/date`] = document.getElementById('fInvoiceDate').value;
-        } else {
-            const newRef = db.ref(`${SKLAD_REF}/products`).push();
-            updates[`${SKLAD_REF}/products/${newRef.key}`] = {
-                name: item.name,
-                category: item.category || 'Прочее',
-                location: item.location || 'Здание',
-                storageAddress: item.storageAddress || '',
-                qty: item.qty,
-                unitType: 'шт',
-                customUnit: '',
-                condition: 'Новый',
-                barcode: '',
-                supplier: document.getElementById('fSupplierIncome').value.trim(),
-                date: document.getElementById('fInvoiceDate').value,
-                image: item.image || '',
-                issuedTo: '',
-                note: `Приход по накладной ${document.getElementById('fInvoiceNumber').value}`,
-                reserved: 0,
-                reservedFor: '',
-                createdAt: firebase.database.ServerValue.TIMESTAMP
-            };
+            const itemKeys = Object.keys(items);
+            const updates = {};
+            for (let key of itemKeys) {
+                const item = items[key];
+                const existing = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+                if (existing) {
+                    updates[`${SKLAD_REF}/products/${existing.id}/qty`] = (existing.qty || 0) + item.qty;
+                    updates[`${SKLAD_REF}/products/${existing.id}/date`] = document.getElementById('fInvoiceDate').value;
+                } else {
+                    const newRef = db.ref(`${SKLAD_REF}/products`).push();
+                    updates[`${SKLAD_REF}/products/${newRef.key}`] = {
+                        name: item.name,
+                        category: item.category || 'Прочее',
+                        location: item.location || 'Здание',
+                        storageAddress: item.storageAddress || '',
+                        qty: item.qty,
+                        unitType: 'шт',
+                        customUnit: '',
+                        condition: 'Новый',
+                        barcode: '',
+                        supplier: document.getElementById('fSupplierIncome').value.trim(),
+                        date: document.getElementById('fInvoiceDate').value,
+                        image: item.image || '',
+                        issuedTo: '',
+                        note: `Приход по накладной ${document.getElementById('fInvoiceNumber').value}`,
+                        reserved: 0,
+                        reservedFor: '',
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    };
+                }
+            }
+            updates[`${SKLAD_REF}/incomes/${incomeId}/posted`] = true;
+            updates[`${SKLAD_REF}/incomes/${incomeId}/postedAt`] = firebase.database.ServerValue.TIMESTAMP;
+            await db.ref().update(updates);
+            showToast('✅ Товары оприходованы!', 'success');
         }
-    }
-    updates[`${SKLAD_REF}/incomes/${incomeId}/posted`] = true;
-    updates[`${SKLAD_REF}/incomes/${incomeId}/postedAt`] = firebase.database.ServerValue.TIMESTAMP;
-    await db.ref().update(updates);
-    showToast('✅ Товары оприходованы!', 'success');
-}
 
         document.getElementById('incomeDeleteBtn')?.addEventListener('click', async () => {
             const id = document.getElementById('fIncomeId').value;
@@ -3324,7 +3786,7 @@
         }
 
         // ============================================================
-        // 25. СЕРВИС
+        // 28. СЕРВИС
         // ============================================================
         function loadService() {
             if (!db) return;
@@ -3541,7 +4003,7 @@
         }
 
         // ============================================================
-        // 26. ПЕЧАТЬ ЭТИКЕТКИ
+        // 29. ПЕЧАТЬ ЭТИКЕТКИ
         // ============================================================
         function printLabel() {
             const id = fProductId.value;
@@ -3623,12 +4085,19 @@
             const storageAddr = product.storageAddress || '';
             const reserved = getReservedQty(product);
             const reservedLine = reserved > 0 ? `<div style="color:#dc2626;"><strong>🔒 Резерв:</strong> ${reserved} шт. — ${product.reservedFor || '—'}</div>` : '';
+            const packLine = isPackProduct(product) ? (() => {
+                const per = getUnitsPerPack(product);
+                const packs = Math.floor(qtyText / per);
+                const rest = qtyText - packs * per;
+                return `<div><strong>Упаковок:</strong> ${packs} × ${per}${rest > 0 ? ` + ${rest} шт` : ''}</div>`;
+            })() : '';
             const contentHtml = `
                 <div><strong>${labelType}:</strong> ${product.barcode || 'не указан'}</div>
                 ${product.category ? `<div><strong>Категория:</strong> ${product.category}</div>` : ''}
                 ${storageAddr ? `<div><strong>Адрес:</strong> ${storageAddr}</div>` : ''}
                 ${product.location ? `<div><strong>Место:</strong> ${locEmojis[product.location] || ''} ${product.location}</div>` : ''}
                 <div><strong>Кол-во:</strong> ${qtyText} ${unitText}${customText}</div>
+                ${packLine}
                 ${reservedLine}
                 ${product.condition ? `<div><strong>Состояние:</strong> ${product.condition}</div>` : ''}
                 ${product.supplier ? `<div><strong>Поставщик:</strong> ${product.supplier}</div>` : ''}
@@ -3638,7 +4107,7 @@
         }
 
         // ============================================================
-        // 27. INIT
+        // 30. INIT
         // ============================================================
         OpOverlay.init();
 
@@ -3659,7 +4128,7 @@
             console.error('Ошибка loadData:', err);
             showToast('Ошибка загрузки данных: ' + err.message, 'error');
         }
-        console.log('🚀 Приложение запущено. v1.4 (с блокировкой двойных операций)');
+        console.log('🚀 Приложение запущено. v1.5 (упаковки + топ-позиции)');
     </script>
 
 </body>
