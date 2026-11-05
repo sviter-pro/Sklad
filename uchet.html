@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Учёт спецодежды</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: #f4f6f8; color: #1f2937;
+}
+header {
+  background: #fff; padding: 14px 20px; border-bottom: 1px solid #e5e7eb;
+  position: sticky; top: 0; z-index: 10;
+}
+h1 { margin: 0 0 10px; font-size: 20px; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.toolbar input[type=text] {
+  flex: 1; min-width: 220px; padding: 8px 12px;
+  border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;
+}
+button, .file-btn {
+  padding: 8px 12px; border: 1px solid #d1d5db; background: #fff;
+  border-radius: 8px; cursor: pointer; font-size: 13px;
+  transition: all .15s;
+}
+button:hover, .file-btn:hover { background: #f3f4f6; }
+button.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+button.primary:hover { background: #1d4ed8; }
+button.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+button.danger:hover { background: #b91c1c; }
+.legend { margin-top: 8px; font-size: 12px; color: #4b5563; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot.green { background: #22c55e; }
+.dot.yellow { background: #f59e0b; }
+.dot.red { background: #ef4444; }
+
+main { padding: 16px 20px; max-width: 1600px; margin: 0 auto; }
+.cards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.card {
+  background: #fff; border-radius: 10px; padding: 10px 12px;
+  border: 2px solid #e5e7eb; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  cursor: pointer; transition: transform .1s, box-shadow .1s;
+  font-size: 12.5px;
+}
+.card:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,.08); }
+.card.status-yellow { border-color: #f59e0b; background: #fffbeb; }
+.card.status-red    { border-color: #ef4444; background: #fef2f2; }
+.card.fired { opacity: .55; }
+
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px; }
+.card-head .name { font-weight: 700; font-size: 13.5px; line-height: 1.2; }
+.card .meta { font-size: 12px; color: #4b5563; line-height: 1.45; }
+.card .meta b { color: #1f2937; font-weight: 600; }
+
+.badge {
+  display: inline-block; padding: 1px 6px; border-radius: 5px;
+  font-size: 10.5px; font-weight: 700; white-space: nowrap;
+}
+.badge.yellow { background: #fef3c7; color: #92400e; }
+.badge.red    { background: #fee2e2; color: #991b1b; }
+.badge.green  { background: #dcfce7; color: #166534; }
+.badge.fired  { background: #e5e7eb; color: #374151; }
+.badge.active { background: #dbeafe; color: #1e40af; }
+
+/* ===== Модальное окно ===== */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.modal[hidden] { display: none; }
+.modal-content { background: #fff; border-radius: 12px; padding: 20px; max-width: 900px; width: 100%; max-height: 92vh; overflow: auto; }
+.modal-content h2 { margin: 0 0 14px; font-size: 19px; }
+fieldset { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin: 0 0 14px; }
+legend { padding: 0 8px; font-weight: 600; font-size: 13.5px; color: #374151; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+label { display: flex; flex-direction: column; font-size: 12.5px; color: #4b5563; gap: 4px; }
+label input, label select { padding: 7px 9px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13.5px; background: #fff; }
+
+.items { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.item-box { border: 1px solid #e5e7eb; padding: 9px; border-radius: 8px; background: #fafafa; }
+.item-box .name { font-weight: 600; font-size: 13px; margin-bottom: 6px; color: #111827; }
+.item-box .row { display: grid; grid-template-columns: 56px 60px 1fr 1fr; gap: 6px; align-items: center; }
+.item-box .row input, .item-box .row select {
+  padding: 6px 7px; border: 1px solid #d1d5db; border-radius: 5px;
+  font-size: 12.5px; min-width: 0;
+}
+.item-box .labels { display: grid; grid-template-columns: 56px 60px 1fr 1fr; gap: 6px; font-size: 10.5px; color: #9ca3af; margin-bottom: 3px; }
+.item-box .hint { font-size: 10.5px; color: #9ca3af; grid-column: 1 / -1; margin-top: 4px; }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.empty { text-align: center; padding: 60px 20px; color: #6b7280; }
+
+/* ===== Просмотр ===== */
+.view-info { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; font-size: 13.5px; margin-bottom: 14px; }
+.view-info b { color: #111827; }
+.view-section { margin-bottom: 14px; }
+.view-section .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin: 8px 0 6px; }
+.view-items { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.view-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; border-radius: 5px; gap: 10px; }
+.view-item.expiring { background: #fef3c7; color: #92400e; }
+.view-item.overdue  { background: #fee2e2; color: #991b1b; }
+.view-item.ok       { color: #374151; }
+.view-item .cnt { font-weight: 700; margin-left: 6px; }
+.view-item .sub { font-size: 11.5px; color: #6b7280; margin-left: 6px; }
+
+@media (max-width: 700px) {
+  .grid-2, .items, .view-info { grid-template-columns: 1fr; }
+  .cards { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .item-box .row, .item-box .labels { grid-template-columns: 1fr 1fr; }
+  .item-box .row input[type=date] { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧥 Учёт спецодежды</h1>
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Поиск по ФИО / должности / прорабу...">
+    <button id="btnAdd">➕ Добавить</button>
+    <label class="file-btn">
+      📥 Импорт Excel
+      <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" hidden>
+    </label>
+    <button id="btnExport">📤 Экспорт Excel</button>
+  </div>
+  <div class="legend">
+    <span><span class="dot green"></span>Всё в порядке</span>
+    <span><span class="dot yellow"></span>Осталось &lt; 60 дней</span>
+    <span><span class="dot red"></span>Просрочено / &lt; 14 дней</span>
+  </div>
+</header>
+
+<main>
+  <div id="cards" class="cards"></div>
+  <div id="empty" class="empty" hidden>Нет сотрудников. Добавьте вручную или импортируйте Excel.</div>
+</main>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-content">
+    <h2 id="modalTitle">Сотрудник</h2>
+
+    <!-- Просмотр -->
+    <div id="viewPane" hidden>
+      <div class="view-info" id="viewInfo"></div>
+      <div id="viewSections"></div>
+      <div class="modal-actions" style="margin-top:16px">
+        <button type="button" id="btnCloseView">Закрыть</button>
+        <div style="flex:1"></div>
+        <button type="button" id="btnToEdit" class="primary">✏️ Редактировать</button>
+      </div>
+    </div>
+
+    <!-- Форма -->
+    <form id="empForm">
+      <input type="hidden" id="empId">
+
+      <fieldset>
+        <legend>Данные сотрудника</legend>
+        <div class="grid-2">
+          <label>ФИО <input type="text" id="fio" required></label>
+          <label>Должность <input type="text" id="position" required></label>
+          <label>Прораб <input type="text" id="foreman"></label>
+          <label>Телефон <input type="tel" id="phone"></label>
+          <label>Дата устройства <input type="date" id="hireDate"></label>
+          <label>Статус
+            <select id="empStatus">
+              <option value="active">Работает</option>
+              <option value="fired">Уволен</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Летняя форма</legend>
+        <div class="items" id="summerItems"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Зимняя форма</legend>
+        <div class="items" id="winterItems"></div>
+      </fieldset>
+
+      <div class="modal-actions">
+        <button type="button" id="btnDelete" class="danger" hidden>🗑 Удалить</button>
+        <div style="flex:1"></div>
+        <button type="button" id="btnCancel">Отмена</button>
+        <button type="submit" class="primary">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ===================== Firebase =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyDnNNNj1t9emqXhbjYz1Z-NxPaS83g0uzA",
+  authDomain: "dostavkarabota-3841a.firebaseapp.com",
+  databaseURL: "https://dostavkarabota-3841a-default-rtdb.firebaseio.com",
+  projectId: "dostavkarabota-3841a",
+  storageBucket: "dostavkarabota-3841a.firebasestorage.app",
+  messagingSenderId: "400198490257",
+  appId: "1:400198490257:web:368382409bd2c17c9f4730"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const BASE = "specialized_clothing/employees";
+
+// ===================== Константы =====================
+const ITEMS = [
+  { key: "pants",    label: "Брюки" },
+  { key: "jacket",   label: "Куртка" },
+  { key: "helmet",   label: "Каска" },
+  { key: "shoes",    label: "Обувь" },
+  { key: "boots",    label: "Сапоги" },
+  { key: "raincoat", label: "Дождевик" },
+];
+const TERMS = [1, 2, 3, 4, 5, 6];
+
+const WARN_DAYS   = 60;
+const DANGER_DAYS = 14;
+
+let employees = {};
+let search = "";
+let currentEditId = null;
+let currentViewId = null;
+
+// ===================== Утилиты =====================
+function daysLeft(expiry) {
+  if (!expiry) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(expiry); d.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+function fmtDate(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (isNaN(d)) return v;
+  return d.toLocaleDateString("ru-RU");
+}
+function statusOfEmployee(emp) {
+  if (emp.status === "fired") return "green";
+  let minDays = Infinity;
+  for (const season of ["summer", "winter"]) {
+    const sec = emp[season] || {};
+    for (const it of ITEMS) {
+      const entry = sec[it.key];
+      if (!entry || !entry.expiry) continue;
+      const d = daysLeft(entry.expiry);
+      if (d !== null && d < minDays) minDays = d;
+    }
+  }
+  if (minDays === Infinity) return "green";
+  if (minDays < 0 || minDays <= DANGER_DAYS) return "red";
+  if (minDays <= WARN_DAYS) return "yellow";
+  return "green";
+}
+function statusBadge(st) {
+  if (st === "red")    return '<span class="badge red">Пора выдавать</span>';
+  if (st === "yellow") return '<span class="badge yellow">Внимание</span>';
+  return '<span class="badge green">OK</span>';
+}
+function empStatusBadge(emp) {
+  if (emp.status === "fired") return '<span class="badge fired">Уволен</span>';
+  return '<span class="badge active">Работает</span>';
+}
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function normalizeDate(v) {
+  if (!v) return "";
+  if (v instanceof Date) {
+    const y = v.getFullYear(), m = String(v.getMonth()+1).padStart(2,"0"), d = String(v.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+  }
+  const s = String(v).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+  const d = new Date(s);
+  if (!isNaN(d)) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+  return "";
+}
+// прибавить N лет к дате (YYYY-MM-DD)
+function addYears(dateStr, years) {
+  const base = dateStr ? new Date(dateStr) : new Date();
+  if (isNaN(base)) return "";
+  base.setFullYear(base.getFullYear() + years);
+  const y = base.getFullYear(), m = String(base.getMonth()+1).padStart(2,"0"), d = String(base.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+// ===================== Загрузка и рендер =====================
+db.ref(BASE).on("value", snap => {
+  employees = snap.val() || {};
+  render();
+});
+
+function render() {
+  const container = document.getElementById("cards");
+  const empty = document.getElementById("empty");
+  const q = search.trim().toLowerCase();
+
+  const list = Object.entries(employees)
+    .filter(([id, e]) => {
+      if (!q) return true;
+      return [e.fio, e.position, e.foreman, e.phone].join(" ").toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      const fa = a[1].status === "fired" ? 1 : 0;
+      const fb = b[1].status === "fired" ? 1 : 0;
+      if (fa !== fb) return fa - fb;
+      const ord = { red: 0, yellow: 1, green: 2 };
+      const sa = ord[statusOfEmployee(a[1])];
+      const sb = ord[statusOfEmployee(b[1])];
+      if (sa !== sb) return sa - sb;
+      return (a[1].fio || "").localeCompare(b[1].fio || "");
+    });
+
+  container.innerHTML = "";
+  empty.hidden = list.length > 0;
+
+  for (const [id, e] of list) {
+    container.appendChild(renderCard(id, e));
+  }
+}
+
+function renderCard(id, e) {
+  const st = statusOfEmployee(e);
+  const div = document.createElement("div");
+  div.className = "card status-" + st + (e.status === "fired" ? " fired" : "");
+  const isFired = e.status === "fired";
+  const badge = isFired ? empStatusBadge(e) : statusBadge(st);
+
+  div.innerHTML = `
+    <div class="card-head">
+      <div class="name">${escapeHtml(e.fio || "Без имени")}</div>
+      ${badge}
+    </div>
+    <div class="meta">
+      <div><b>Должность:</b> ${escapeHtml(e.position || "—")}</div>
+      <div><b>Прораб:</b> ${escapeHtml(e.foreman || "—")}</div>
+      <div><b>Телефон:</b> ${escapeHtml(e.phone || "—")}</div>
+      <div><b>Устроен:</b> ${fmtDate(e.hireDate)}</div>
+    </div>
+  `;
+  div.onclick = () => openView(id);
+  return div;
+}
+
+// ===================== Просмотр =====================
+function openView(id) {
+  currentViewId = id;
+  const e = employees[id];
+  if (!e) return;
+
+  document.getElementById("modalTitle").textContent = e.fio || "Сотрудник";
+  document.getElementById("viewPane").hidden = false;
+  document.getElementById("empForm").hidden = true;
+
+  document.getElementById("viewInfo").innerHTML = `
+    <div><b>Должность:</b> ${escapeHtml(e.position || "—")}</div>
+    <div><b>Прораб:</b> ${escapeHtml(e.foreman || "—")}</div>
+    <div><b>Телефон:</b> ${escapeHtml(e.phone || "—")}</div>
+    <div><b>Устроен:</b> ${fmtDate(e.hireDate)}</div>
+    <div><b>Статус:</b> ${empStatusBadge(e)}</div>
+    <div><b>Общий статус:</b> ${e.status === "fired" ? "—" : statusBadge(statusOfEmployee(e))}</div>
+  `;
+
+  const secs = document.getElementById("viewSections");
+  let html = "";
+  for (const season of ["summer", "winter"]) {
+    const title = season === "summer" ? "Летняя форма" : "Зимняя форма";
+    const sec = e[season] || {};
+    let rowsHtml = "";
+    let hasAny = false;
+    for (const it of ITEMS) {
+      const entry = sec[it.key];
+      if (!entry || (!entry.issued && !entry.expiry)) continue;
+      hasAny = true;
+      const d = daysLeft(entry.expiry);
+      let cls = "ok", extra = "";
+      if (d !== null) {
+        if (d < 0)                 { cls = "overdue";  extra = ` · просрочено ${-d} дн.`; }
+        else if (d <= DANGER_DAYS) { cls = "overdue";  extra = ` · осталось ${d} дн.`; }
+        else if (d <= WARN_DAYS)   { cls = "expiring"; extra = ` · осталось ${d} дн.`; }
+      }
+      const termStr = entry.term ? ` · срок ${entry.term} г.` : "";
+      const issueStr = entry.issueDate ? `<span class="sub">выдано ${fmtDate(entry.issueDate)}</span>` : "";
+      rowsHtml += `<div class="view-item ${cls}">
+        <span>${it.label}<span class="cnt">×${entry.issued ?? 0}</span>${termStr}${issueStr}</span>
+        <span>до ${fmtDate(entry.expiry)}${extra}</span>
+      </div>`;
+    }
+    if (hasAny) {
+      html += `<div class="view-section">
+        <div class="sec-title">${title}</div>
+        <div class="view-items">${rowsHtml}</div>
+      </div>`;
+    }
+  }
+  if (!html) html = `<div style="color:#6b7280;font-size:13px">Спецодежда не выдавалась.</div>`;
+  secs.innerHTML = html;
+
+  document.getElementById("modal").hidden = false;
+}
+
+// ===================== Форма =====================
+function buildItemsFields() {
+  for (const season of ["summer", "winter"]) {
+    const box = document.getElementById(season + "Items");
+    box.innerHTML = ITEMS.map(it => `
+      <div class="item-box">
+        <div class="name">${it.label}</div>
+        <div class="labels">
+          <span>Кол-во</span>
+          <span>Срок</span>
+          <span>Дата выдачи</span>
+          <span>Действует до</span>
+        </div>
+        <div class="row">
+          <input type="number" min="0" placeholder="0" id="${season}_${it.key}_issued">
+          <select id="${season}_${it.key}_term" title="Срок">
+            <option value="">—</option>
+            ${TERMS.map(t => `<option value="${t}">${t} г.</option>`).join("")}
+          </select>
+          <input type="date" id="${season}_${it.key}_issueDate" title="Дата выдачи">
+          <input type="date" id="${season}_${it.key}_expiry" title="Действует до">
+        </div>
+        <div class="hint">«Действует до» = дата выдачи + срок. Если дата выдачи пуста — считается от сегодня.</div>
+      </div>
+    `).join("");
+
+    for (const it of ITEMS) {
+      const sel = document.getElementById(`${season}_${it.key}_term`);
+      const issue = document.getElementById(`${season}_${it.key}_issueDate`);
+      const exp = document.getElementById(`${season}_${it.key}_expiry`);
+      const cnt = document.getElementById(`${season}_${it.key}_issued`);
+
+      const recalc = () => {
+        if (!sel.value) return;
+        const base = issue.value || todayISO();
+        exp.value = addYears(base, Number(sel.value));
+      };
+
+      sel.addEventListener("change", () => {
+        if (sel.value) {
+          if (!issue.value) issue.value = todayISO();
+          if (!cnt.value) cnt.value = "1";
+          recalc();
+        }
+      });
+      issue.addEventListener("change", recalc);
+    }
+  }
+}
+buildItemsFields();
+
+function openForm(id = null) {
+  currentEditId = id;
+  const form = document.getElementById("empForm");
+  form.reset();
+  form.hidden = false;
+  document.getElementById("viewPane").hidden = true;
+
+  document.getElementById("empId").value = id || "";
+  document.getElementById("modalTitle").textContent = id ? "Редактирование" : "Новый сотрудник";
+  document.getElementById("btnDelete").hidden = !id;
+
+  for (const season of ["summer", "winter"]) {
+    for (const it of ITEMS) {
+      document.getElementById(`${season}_${it.key}_issued`).value = "";
+      document.getElementById(`${season}_${it.key}_term`).value = "";
+      document.getElementById(`${season}_${it.key}_issueDate`).value = "";
+      document.getElementById(`${season}_${it.key}_expiry`).value = "";
+    }
+  }
+
+  if (id && employees[id]) {
+    const e = employees[id];
+    document.getElementById("fio").value = e.fio || "";
+    document.getElementById("position").value = e.position || "";
+    document.getElementById("foreman").value = e.foreman || "";
+    document.getElementById("phone").value = e.phone || "";
+    document.getElementById("hireDate").value = e.hireDate || "";
+    document.getElementById("empStatus").value = e.status || "active";
+    for (const season of ["summer", "winter"]) {
+      const sec = e[season] || {};
+      for (const it of ITEMS) {
+        const entry = sec[it.key] || {};
+        document.getElementById(`${season}_${it.key}_issued`).value = entry.issued ?? "";
+        document.getElementById(`${season}_${it.key}_term`).value = entry.term ?? "";
+        document.getElementById(`${season}_${it.key}_issueDate`).value = entry.issueDate ?? "";
+        document.getElementById(`${season}_${it.key}_expiry`).value = entry.expiry ?? "";
+      }
+    }
+  } else {
+    document.getElementById("empStatus").value = "active";
+  }
+
+  document.getElementById("modal").hidden = false;
+}
+
+function closeModal() {
+  document.getElementById("modal").hidden = true;
+  currentEditId = null;
+  currentViewId = null;
+}
+
+document.getElementById("btnAdd").onclick = () => openForm(null);
+document.getElementById("btnCancel").onclick = closeModal;
+document.getElementById("btnCloseView").onclick = closeModal;
+document.getElementById("btnToEdit").onclick = () => {
+  if (currentViewId) openForm(currentViewId);
+};
+document.getElementById("modal").addEventListener("click", e => {
+  if (e.target.id === "modal") closeModal();
+});
+
+document.getElementById("empForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const id = document.getElementById("empId").value;
+  const data = {
+    fio: document.getElementById("fio").value.trim(),
+    position: document.getElementById("position").value.trim(),
+    foreman: document.getElementById("foreman").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    hireDate: document.getElementById("hireDate").value || "",
+    status: document.getElementById("empStatus").value || "active",
+    summer: {}, winter: {}
+  };
+  for (const season of ["summer", "winter"]) {
+    for (const it of ITEMS) {
+      const cnt = document.getElementById(`${season}_${it.key}_issued`).value;
+      const term = document.getElementById(`${season}_${it.key}_term`).value;
+      const issue = document.getElementById(`${season}_${it.key}_issueDate`).value;
+      const exp = document.getElementById(`${season}_${it.key}_expiry`).value;
+      if (!cnt && !exp && !term && !issue) continue;
+      data[season][it.key] = {
+        issued: cnt ? Number(cnt) : 0,
+        term: term ? Number(term) : null,
+        issueDate: issue || "",
+        expiry: exp || ""
+      };
+    }
+  }
+  try {
+    if (id) {
+      await db.ref(`${BASE}/${id}`).set(data);
+    } else {
+      await db.ref(BASE).push(data);
+    }
+    closeModal();
+  } catch (err) {
+    alert("Ошибка сохранения: " + err.message);
+  }
+});
+
+document.getElementById("btnDelete").onclick = async () => {
+  if (!currentEditId) return;
+  if (!confirm("Удалить сотрудника?")) return;
+  await db.ref(`${BASE}/${currentEditId}`).remove();
+  closeModal();
+};
+
+// ===================== Поиск =====================
+document.getElementById("search").addEventListener("input", e => {
+  search = e.target.value;
+  render();
+});
+
+// ===================== Excel =====================
+const EXCEL_HEADERS = [
+  "ФИО", "Должность", "Прораб", "Телефон", "Дата устройства", "Статус",
+  ...ITEMS.map(it => `Лето ${it.label} кол-во`),
+  ...ITEMS.map(it => `Лето ${it.label} срок`),
+  ...ITEMS.map(it => `Лето ${it.label} выдано`),
+  ...ITEMS.map(it => `Лето ${it.label} до`),
+  ...ITEMS.map(it => `Зима ${it.label} кол-во`),
+  ...ITEMS.map(it => `Зима ${it.label} срок`),
+  ...ITEMS.map(it => `Зима ${it.label} выдано`),
+  ...ITEMS.map(it => `Зима ${it.label} до`),
+];
+
+document.getElementById("excelInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: "array", cellDates: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false, dateNF: "yyyy-mm-dd" });
+
+    if (!rows.length) { alert("Файл пуст"); return; }
+
+    const updates = {};
+    let imported = 0;
+    for (const r of rows) {
+      const emp = {
+        fio: String(r["ФИО"] || "").trim(),
+        position: String(r["Должность"] || "").trim(),
+        foreman: String(r["Прораб"] || "").trim(),
+        phone: String(r["Телефон"] || "").trim(),
+        hireDate: normalizeDate(r["Дата устройства"]),
+        status: String(r["Статус"] || "").trim().toLowerCase().startsWith("увол") ? "fired" : "active",
+        summer: {}, winter: {},
+      };
+      if (!emp.fio) continue;
+
+      for (const season of ["summer", "winter"]) {
+        const pref = season === "summer" ? "Лето" : "Зима";
+        for (const it of ITEMS) {
+          const cnt = r[`${pref} ${it.label} кол-во`];
+          const term = r[`${pref} ${it.label} срок`];
+          const issue = normalizeDate(r[`${pref} ${it.label} выдано`]);
+          const exp = normalizeDate(r[`${pref} ${it.label} до`]);
+          if (!cnt && !exp && !term && !issue) continue;
+          emp[season][it.key] = {
+            issued: Number(cnt) || 0,
+            term: term ? Number(term) : null,
+            issueDate: issue || "",
+            expiry: exp || ""
+          };
+        }
+      }
+
+      const newRef = db.ref(BASE).push();
+      updates[newRef.key] = emp;
+      imported++;
+    }
+
+    if (imported) {
+      await db.ref(BASE).update(updates);
+      alert(`Импортировано: ${imported}`);
+    } else {
+      alert("Не найдено валидных строк (проверьте заголовки)");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Ошибка чтения файла: " + err.message);
+  } finally {
+    e.target.value = "";
+  }
+});
+
+document.getElementById("btnExport").onclick = () => {
+  const rows = Object.values(employees).map(e => {
+    const row = {
+      "ФИО": e.fio || "",
+      "Должность": e.position || "",
+      "Прораб": e.foreman || "",
+      "Телефон": e.phone || "",
+      "Дата устройства": e.hireDate || "",
+      "Статус": e.status === "fired" ? "Уволен" : "Работает",
+    };
+    for (const season of ["summer", "winter"]) {
+      const pref = season === "summer" ? "Лето" : "Зима";
+      for (const it of ITEMS) {
+        const entry = (e[season]||{})[it.key] || {};
+        row[`${pref} ${it.label} кол-во`] = entry.issued ?? "";
+        row[`${pref} ${it.label} срок`]  = entry.term ?? "";
+        row[`${pref} ${it.label} выдано`] = entry.issueDate ?? "";
+        row[`${pref} ${it.label} до`]     = entry.expiry ?? "";
+      }
+    }
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows, { header: EXCEL_HEADERS });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Спецодежда");
+  XLSX.writeFile(wb, `spetsodezhda_${new Date().toISOString().slice(0,10)}.xlsx`);
+};
+</script>
+</body>
+</html>
