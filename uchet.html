@@ -95,6 +95,19 @@ label input, label select { padding: 7px 9px; border: 1px solid #d1d5db; border-
 .modal-actions { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
 .empty { text-align: center; padding: 60px 20px; color: #6b7280; }
 
+/* Блок массовых действий внизу формы */
+.bulk-actions {
+  margin-top: 16px; padding-top: 14px; border-top: 1px dashed #e5e7eb;
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+.bulk-actions .title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  color: #9ca3af; letter-spacing: .5px; margin-right: 4px;
+}
+.bulk-actions button, .bulk-actions .file-btn {
+  padding: 6px 10px; font-size: 12.5px;
+}
+
 /* ===== Просмотр ===== */
 .view-info { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; font-size: 13.5px; margin-bottom: 14px; }
 .view-info b { color: #111827; }
@@ -123,11 +136,6 @@ label input, label select { padding: 7px 9px; border: 1px solid #d1d5db; border-
   <div class="toolbar">
     <input type="text" id="search" placeholder="Поиск по ФИО / должности / прорабу...">
     <button id="btnAdd">➕ Добавить</button>
-    <label class="file-btn">
-      📥 Импорт Excel
-      <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" hidden>
-    </label>
-    <button id="btnExport">📤 Экспорт Excel</button>
   </div>
   <div class="legend">
     <span><span class="dot green"></span>Всё в порядке</span>
@@ -192,6 +200,16 @@ label input, label select { padding: 7px 9px; border: 1px solid #d1d5db; border-
         <div style="flex:1"></div>
         <button type="button" id="btnCancel">Отмена</button>
         <button type="submit" class="primary">Сохранить</button>
+      </div>
+
+      <!-- Массовые действия (импорт/экспорт) -->
+      <div class="bulk-actions">
+        <span class="title">Массовые действия</span>
+        <label class="file-btn">
+          📥 Импорт Excel
+          <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" hidden>
+        </label>
+        <button type="button" id="btnExport">📤 Экспорт Excel</button>
       </div>
     </form>
   </div>
@@ -290,7 +308,6 @@ function normalizeDate(v) {
   }
   return "";
 }
-// прибавить N лет к дате (YYYY-MM-DD)
 function addYears(dateStr, years) {
   const base = dateStr ? new Date(dateStr) : new Date();
   if (isNaN(base)) return "";
