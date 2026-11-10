@@ -231,15 +231,47 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const BASE = "specialized_clothing/employees";
 
-// ===================== Константы =====================
-const ITEMS = [
+// ===================== Константы позиций =====================
+// Летняя форма
+const SUMMER_ITEMS = [
   { key: "pants",    label: "Брюки" },
   { key: "jacket",   label: "Куртка" },
   { key: "helmet",   label: "Каска" },
   { key: "shoes",    label: "Обувь" },
   { key: "boots",    label: "Сапоги" },
   { key: "raincoat", label: "Дождевик" },
+  { key: "tshirt",   label: "Майка" },
+  { key: "flannel",  label: "Байка" },
+  { key: "vest",     label: "Жилетка" },
 ];
+
+// Зимняя форма (плюс ватные штаны)
+const WINTER_ITEMS = [
+  { key: "pants",       label: "Брюки" },
+  { key: "jacket",      label: "Куртка" },
+  { key: "helmet",      label: "Каска" },
+  { key: "shoes",       label: "Обувь" },
+  { key: "boots",       label: "Сапоги" },
+  { key: "raincoat",    label: "Дождевик" },
+  { key: "tshirt",      label: "Майка" },
+  { key: "flannel",     label: "Байка" },
+  { key: "vest",        label: "Жилетка" },
+  { key: "cottonPants", label: "Ватные штаны" },
+];
+
+// Удобный список всех уникальных ключей для статусов/экспорта
+function allItems() {
+  const seen = new Set();
+  const out = [];
+  for (const it of [...SUMMER_ITEMS, ...WINTER_ITEMS]) {
+    if (seen.has(it.key)) continue;
+    seen.add(it.key);
+    out.push(it);
+  }
+  return out;
+}
+const ALL_ITEMS = allItems();
+
 const TERMS = [1, 2, 3, 4, 5, 6];
 
 const WARN_DAYS   = 60;
@@ -268,8 +300,8 @@ function statusOfEmployee(emp) {
   let minDays = Infinity;
   for (const season of ["summer", "winter"]) {
     const sec = emp[season] || {};
-    for (const it of ITEMS) {
-      const entry = sec[it.key];
+    for (const key of Object.keys(sec)) {
+      const entry = sec[key];
       if (!entry || !entry.expiry) continue;
       const d = daysLeft(entry.expiry);
       if (d !== null && d < minDays) minDays = d;
@@ -399,12 +431,15 @@ function openView(id) {
 
   const secs = document.getElementById("viewSections");
   let html = "";
-  for (const season of ["summer", "winter"]) {
-    const title = season === "summer" ? "Летняя форма" : "Зимняя форма";
-    const sec = e[season] || {};
+  const seasonConfig = [
+    { key: "summer", title: "Летняя форма", items: SUMMER_ITEMS },
+    { key: "winter", title: "Зимняя форма", items: WINTER_ITEMS },
+  ];
+  for (const cfg of seasonConfig) {
+    const sec = e[cfg.key] || {};
     let rowsHtml = "";
     let hasAny = false;
-    for (const it of ITEMS) {
+    for (const it of cfg.items) {
       const entry = sec[it.key];
       if (!entry || (!entry.issued && !entry.expiry)) continue;
       hasAny = true;
@@ -424,7 +459,7 @@ function openView(id) {
     }
     if (hasAny) {
       html += `<div class="view-section">
-        <div class="sec-title">${title}</div>
+        <div class="sec-title">${cfg.title}</div>
         <div class="view-items">${rowsHtml}</div>
       </div>`;
     }
@@ -437,9 +472,13 @@ function openView(id) {
 
 // ===================== Форма =====================
 function buildItemsFields() {
-  for (const season of ["summer", "winter"]) {
-    const box = document.getElementById(season + "Items");
-    box.innerHTML = ITEMS.map(it => `
+  const seasonConfig = [
+    { key: "summer", items: SUMMER_ITEMS },
+    { key: "winter", items: WINTER_ITEMS },
+  ];
+  for (const cfg of seasonConfig) {
+    const box = document.getElementById(cfg.key + "Items");
+    box.innerHTML = cfg.items.map(it => `
       <div class="item-box">
         <div class="name">${it.label}</div>
         <div class="labels">
@@ -449,23 +488,23 @@ function buildItemsFields() {
           <span>Действует до</span>
         </div>
         <div class="row">
-          <input type="number" min="0" placeholder="0" id="${season}_${it.key}_issued">
-          <select id="${season}_${it.key}_term" title="Срок">
+          <input type="number" min="0" placeholder="0" id="${cfg.key}_${it.key}_issued">
+          <select id="${cfg.key}_${it.key}_term" title="Срок">
             <option value="">—</option>
             ${TERMS.map(t => `<option value="${t}">${t} г.</option>`).join("")}
           </select>
-          <input type="date" id="${season}_${it.key}_issueDate" title="Дата выдачи">
-          <input type="date" id="${season}_${it.key}_expiry" title="Действует до">
+          <input type="date" id="${cfg.key}_${it.key}_issueDate" title="Дата выдачи">
+          <input type="date" id="${cfg.key}_${it.key}_expiry" title="Действует до">
         </div>
         <div class="hint">«Действует до» = дата выдачи + срок. Если дата выдачи пуста — считается от сегодня.</div>
       </div>
     `).join("");
 
-    for (const it of ITEMS) {
-      const sel = document.getElementById(`${season}_${it.key}_term`);
-      const issue = document.getElementById(`${season}_${it.key}_issueDate`);
-      const exp = document.getElementById(`${season}_${it.key}_expiry`);
-      const cnt = document.getElementById(`${season}_${it.key}_issued`);
+    for (const it of cfg.items) {
+      const sel = document.getElementById(`${cfg.key}_${it.key}_term`);
+      const issue = document.getElementById(`${cfg.key}_${it.key}_issueDate`);
+      const exp = document.getElementById(`${cfg.key}_${it.key}_expiry`);
+      const cnt = document.getElementById(`${cfg.key}_${it.key}_issued`);
 
       const recalc = () => {
         if (!sel.value) return;
@@ -497,12 +536,16 @@ function openForm(id = null) {
   document.getElementById("modalTitle").textContent = id ? "Редактирование" : "Новый сотрудник";
   document.getElementById("btnDelete").hidden = !id;
 
-  for (const season of ["summer", "winter"]) {
-    for (const it of ITEMS) {
-      document.getElementById(`${season}_${it.key}_issued`).value = "";
-      document.getElementById(`${season}_${it.key}_term`).value = "";
-      document.getElementById(`${season}_${it.key}_issueDate`).value = "";
-      document.getElementById(`${season}_${it.key}_expiry`).value = "";
+  const seasonConfig = [
+    { key: "summer", items: SUMMER_ITEMS },
+    { key: "winter", items: WINTER_ITEMS },
+  ];
+  for (const cfg of seasonConfig) {
+    for (const it of cfg.items) {
+      document.getElementById(`${cfg.key}_${it.key}_issued`).value = "";
+      document.getElementById(`${cfg.key}_${it.key}_term`).value = "";
+      document.getElementById(`${cfg.key}_${it.key}_issueDate`).value = "";
+      document.getElementById(`${cfg.key}_${it.key}_expiry`).value = "";
     }
   }
 
@@ -514,14 +557,14 @@ function openForm(id = null) {
     document.getElementById("phone").value = e.phone || "";
     document.getElementById("hireDate").value = e.hireDate || "";
     document.getElementById("empStatus").value = e.status || "active";
-    for (const season of ["summer", "winter"]) {
-      const sec = e[season] || {};
-      for (const it of ITEMS) {
+    for (const cfg of seasonConfig) {
+      const sec = e[cfg.key] || {};
+      for (const it of cfg.items) {
         const entry = sec[it.key] || {};
-        document.getElementById(`${season}_${it.key}_issued`).value = entry.issued ?? "";
-        document.getElementById(`${season}_${it.key}_term`).value = entry.term ?? "";
-        document.getElementById(`${season}_${it.key}_issueDate`).value = entry.issueDate ?? "";
-        document.getElementById(`${season}_${it.key}_expiry`).value = entry.expiry ?? "";
+        document.getElementById(`${cfg.key}_${it.key}_issued`).value = entry.issued ?? "";
+        document.getElementById(`${cfg.key}_${it.key}_term`).value = entry.term ?? "";
+        document.getElementById(`${cfg.key}_${it.key}_issueDate`).value = entry.issueDate ?? "";
+        document.getElementById(`${cfg.key}_${it.key}_expiry`).value = entry.expiry ?? "";
       }
     }
   } else {
@@ -559,14 +602,18 @@ document.getElementById("empForm").addEventListener("submit", async e => {
     status: document.getElementById("empStatus").value || "active",
     summer: {}, winter: {}
   };
-  for (const season of ["summer", "winter"]) {
-    for (const it of ITEMS) {
-      const cnt = document.getElementById(`${season}_${it.key}_issued`).value;
-      const term = document.getElementById(`${season}_${it.key}_term`).value;
-      const issue = document.getElementById(`${season}_${it.key}_issueDate`).value;
-      const exp = document.getElementById(`${season}_${it.key}_expiry`).value;
+  const seasonConfig = [
+    { key: "summer", items: SUMMER_ITEMS },
+    { key: "winter", items: WINTER_ITEMS },
+  ];
+  for (const cfg of seasonConfig) {
+    for (const it of cfg.items) {
+      const cnt = document.getElementById(`${cfg.key}_${it.key}_issued`).value;
+      const term = document.getElementById(`${cfg.key}_${it.key}_term`).value;
+      const issue = document.getElementById(`${cfg.key}_${it.key}_issueDate`).value;
+      const exp = document.getElementById(`${cfg.key}_${it.key}_expiry`).value;
       if (!cnt && !exp && !term && !issue) continue;
-      data[season][it.key] = {
+      data[cfg.key][it.key] = {
         issued: cnt ? Number(cnt) : 0,
         term: term ? Number(term) : null,
         issueDate: issue || "",
@@ -600,16 +647,17 @@ document.getElementById("search").addEventListener("input", e => {
 });
 
 // ===================== Excel =====================
+// Заголовки строятся по каждой форме отдельно
 const EXCEL_HEADERS = [
   "ФИО", "Должность", "Прораб", "Телефон", "Дата устройства", "Статус",
-  ...ITEMS.map(it => `Лето ${it.label} кол-во`),
-  ...ITEMS.map(it => `Лето ${it.label} срок`),
-  ...ITEMS.map(it => `Лето ${it.label} выдано`),
-  ...ITEMS.map(it => `Лето ${it.label} до`),
-  ...ITEMS.map(it => `Зима ${it.label} кол-во`),
-  ...ITEMS.map(it => `Зима ${it.label} срок`),
-  ...ITEMS.map(it => `Зима ${it.label} выдано`),
-  ...ITEMS.map(it => `Зима ${it.label} до`),
+  ...SUMMER_ITEMS.map(it => `Лето ${it.label} кол-во`),
+  ...SUMMER_ITEMS.map(it => `Лето ${it.label} срок`),
+  ...SUMMER_ITEMS.map(it => `Лето ${it.label} выдано`),
+  ...SUMMER_ITEMS.map(it => `Лето ${it.label} до`),
+  ...WINTER_ITEMS.map(it => `Зима ${it.label} кол-во`),
+  ...WINTER_ITEMS.map(it => `Зима ${it.label} срок`),
+  ...WINTER_ITEMS.map(it => `Зима ${it.label} выдано`),
+  ...WINTER_ITEMS.map(it => `Зима ${it.label} до`),
 ];
 
 document.getElementById("excelInput").addEventListener("change", async (e) => {
@@ -622,6 +670,11 @@ document.getElementById("excelInput").addEventListener("change", async (e) => {
     const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false, dateNF: "yyyy-mm-dd" });
 
     if (!rows.length) { alert("Файл пуст"); return; }
+
+    const seasonConfig = [
+      { key: "summer", items: SUMMER_ITEMS, pref: "Лето" },
+      { key: "winter", items: WINTER_ITEMS, pref: "Зима" },
+    ];
 
     const updates = {};
     let imported = 0;
@@ -637,15 +690,14 @@ document.getElementById("excelInput").addEventListener("change", async (e) => {
       };
       if (!emp.fio) continue;
 
-      for (const season of ["summer", "winter"]) {
-        const pref = season === "summer" ? "Лето" : "Зима";
-        for (const it of ITEMS) {
-          const cnt = r[`${pref} ${it.label} кол-во`];
-          const term = r[`${pref} ${it.label} срок`];
-          const issue = normalizeDate(r[`${pref} ${it.label} выдано`]);
-          const exp = normalizeDate(r[`${pref} ${it.label} до`]);
+      for (const cfg of seasonConfig) {
+        for (const it of cfg.items) {
+          const cnt = r[`${cfg.pref} ${it.label} кол-во`];
+          const term = r[`${cfg.pref} ${it.label} срок`];
+          const issue = normalizeDate(r[`${cfg.pref} ${it.label} выдано`]);
+          const exp = normalizeDate(r[`${cfg.pref} ${it.label} до`]);
           if (!cnt && !exp && !term && !issue) continue;
-          emp[season][it.key] = {
+          emp[cfg.key][it.key] = {
             issued: Number(cnt) || 0,
             term: term ? Number(term) : null,
             issueDate: issue || "",
@@ -674,6 +726,11 @@ document.getElementById("excelInput").addEventListener("change", async (e) => {
 });
 
 document.getElementById("btnExport").onclick = () => {
+  const seasonConfig = [
+    { key: "summer", items: SUMMER_ITEMS, pref: "Лето" },
+    { key: "winter", items: WINTER_ITEMS, pref: "Зима" },
+  ];
+
   const rows = Object.values(employees).map(e => {
     const row = {
       "ФИО": e.fio || "",
@@ -683,14 +740,13 @@ document.getElementById("btnExport").onclick = () => {
       "Дата устройства": e.hireDate || "",
       "Статус": e.status === "fired" ? "Уволен" : "Работает",
     };
-    for (const season of ["summer", "winter"]) {
-      const pref = season === "summer" ? "Лето" : "Зима";
-      for (const it of ITEMS) {
-        const entry = (e[season]||{})[it.key] || {};
-        row[`${pref} ${it.label} кол-во`] = entry.issued ?? "";
-        row[`${pref} ${it.label} срок`]  = entry.term ?? "";
-        row[`${pref} ${it.label} выдано`] = entry.issueDate ?? "";
-        row[`${pref} ${it.label} до`]     = entry.expiry ?? "";
+    for (const cfg of seasonConfig) {
+      for (const it of cfg.items) {
+        const entry = (e[cfg.key]||{})[it.key] || {};
+        row[`${cfg.pref} ${it.label} кол-во`] = entry.issued ?? "";
+        row[`${cfg.pref} ${it.label} срок`]   = entry.term ?? "";
+        row[`${cfg.pref} ${it.label} выдано`] = entry.issueDate ?? "";
+        row[`${cfg.pref} ${it.label} до`]     = entry.expiry ?? "";
       }
     }
     return row;
