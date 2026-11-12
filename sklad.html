@@ -1738,16 +1738,25 @@
             const location = document.getElementById('locationFilter').value;
 
             let filtered = products;
+
+            // Фильтр по категории
             if (currentCategory !== 'all') filtered = filtered.filter(p => p.category === currentCategory);
+
+            // Фильтр по поиску
             if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
+
+            // Фильтр по локации
             if (location !== 'all') filtered = filtered.filter(p => p.location === location);
+
+            // 👇 ПОКАЗЫВАЕМ ТОЛЬКО ТОВАРЫ, КОТОРЫЕ ЕСТЬ В НАЛИЧИИ (с учётом резерва)
+            filtered = filtered.filter(p => getFreeQty(p) > 0);
 
             if (filtered.length === 0) {
                 grid.innerHTML = `
                     <div style="grid-column:1/-1;text-align:center;padding:40px 16px;color:#94a3b8;">
                         <div style="font-size:48px;margin-bottom:12px;">🔍</div>
                         <h3 style="color:#64748b;font-size:18px;">Товары не найдены</h3>
-                        <p style="font-size:14px;">Попробуйте изменить параметры поиска</p>
+                        <p style="font-size:14px;">Попробуйте изменить параметры поиска или проверьте наличие</p>
                     </div>`;
                 return;
             }
