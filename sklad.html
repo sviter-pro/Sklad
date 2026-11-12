@@ -1748,8 +1748,12 @@
             // Фильтр по локации
             if (location !== 'all') filtered = filtered.filter(p => p.location === location);
 
-            // 👇 ПОКАЗЫВАЕМ ТОЛЬКО ТОВАРЫ, КОТОРЫЕ ЕСТЬ В НАЛИЧИИ (с учётом резерва)
-            filtered = filtered.filter(p => getFreeQty(p) > 0);
+            // 👇 ПОКАЗЫВАЕМ ТОВАРЫ, КОТОРЫЕ ЕСТЬ В НАЛИЧИИ, ИЛИ НАХОДЯТСЯ В РЕЗЕРВЕ
+            filtered = filtered.filter(p => {
+                const freeQty = getFreeQty(p);
+                const reserved = getReservedQty(p);
+                return freeQty > 0 || reserved > 0;
+            });
 
             if (filtered.length === 0) {
                 grid.innerHTML = `
